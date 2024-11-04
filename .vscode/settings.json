@@ -1,6 +1,12 @@
 {
     "nrf-connect.applications": [
         "${workspaceFolder}\\blinky",
-        "${workspaceFolder}\\hello_world"
-    ]
+        "${workspaceFolder}\\hello_world",
+        "${workspaceFolder}\\uart_bridge",
+        "${workspaceFolder}\\echo_bot"
+    ],
+    "files.associations": {
+        "kernel.h": "c",
+        "kernel_includes.h": "c"
+    }
 }

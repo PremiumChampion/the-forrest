@@ -29,3 +29,6 @@
 		zephyr,resolution = <12>;
 	};
 };
+&arduino_adc {
+	io-channel-map = <0 &adc 1>, <1 &adc 2>, <2 &adc 4>, <3 &adc 5>, <4 &adc 6>, <5 &adc 7>;
+};
