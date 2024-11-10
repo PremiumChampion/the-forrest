@@ -3,10 +3,18 @@
         "${workspaceFolder}\\blinky",
         "${workspaceFolder}\\hello_world",
         "${workspaceFolder}\\uart_bridge",
-        "${workspaceFolder}\\echo_bot"
+        "${workspaceFolder}\\echo_bot",
+        "${workspaceFolder}\\nb-iot"
     ],
     "files.associations": {
         "kernel.h": "c",
         "kernel_includes.h": "c"
-    }
+    },
+    "azureFunctions.deploySubpath": "Azure Function",
+    "azureFunctions.scmDoBuildDuringDeployment": true,
+    "azureFunctions.pythonVenv": "venv",
+    "azureFunctions.projectLanguage": "Python",
+    "azureFunctions.projectRuntime": "~4",
+    "debug.internalConsoleOptions": "neverOpen",
+    "azureFunctions.projectLanguageModel": 2
 }
