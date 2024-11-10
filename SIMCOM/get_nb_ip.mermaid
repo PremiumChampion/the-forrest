@@ -1,0 +1,85 @@
+sequenceDiagram
+    note over Serial,SIM7000e: Check if module is ready
+    Serial->>SIM7000e: AT
+    SIM7000e-->>Serial: OK
+
+    note over Serial,SIM7000e: Disable Echo
+    Serial->>SIM7000e: ATE0
+    SIM7000e-->>Serial: OK
+
+    note over Serial,SIM7000e: Set module to NB-IoT mode
+    Serial->>SIM7000e: AT+CNMP=38
+    SIM7000e-->>Serial: OK
+
+    note over Serial,SIM7000e: Enable Scrambling to improve <br>signal quality
+    Serial->>SIM7000e: AT+NBSC=1
+    SIM7000e-->>Serial: OK
+
+    note over Serial,SIM7000e: Check provider
+    Serial->>SIM7000e: AT+COPS?
+    SIM7000e-->>Serial: +COPS: 0,0,"o2 - de",7<br><br>OK
+
+    note over Serial,SIM7000e: Configure Bearer Profile
+    Serial->>SIM7000e: AT+SAPBR=3,1,"APN","internet"
+    SIM7000e-->>Serial: OK
+    
+    note over Serial,SIM7000e: Open Bearer
+    Serial->>SIM7000e: AT+SAPBR=1,1
+    activate SIM7000e
+    SIM7000e-->>Serial: OK
+    
+    note over Serial,SIM7000e: Get IP Address to check connectivity
+    Serial->>SIM7000e: AT+SAPBR=2,1
+    SIM7000e-->>Serial: +SAPBR: 1,1,"xxx.xxx.xxx.xxx"<br><br>OK
+    
+    note over Serial,SIM7000e: Start HTTP-Service
+    Serial->>SIM7000e: AT+HTTPINIT
+    activate SIM7000e
+    SIM7000e-->>Serial: OK
+
+    note over Serial,SIM7000e: Set Context Id
+    Serial->>SIM7000e: AT+HTTPPARA="CID",1
+    SIM7000e-->>Serial: OK
+
+    note over Serial,SIM7000e: Allow Redirections
+    Serial->>SIM7000e: AT+HTTPPARA="REDIR",1
+    SIM7000e-->>Serial: OK
+
+    note over Serial,SIM7000e: Set URL
+    Serial->>SIM7000e: AT+HTTPPARA="URL","http://static.woyte.dev/api/save_to_db"
+    SIM7000e-->>Serial: OK
+
+    note over Serial,SIM7000e: Set Content-Type
+    Serial->>SIM7000e: AT+HTTPPARA="CONTENT","application/json"
+    SIM7000e-->>Serial: OK
+
+    note over Serial,SIM7000e: Add body
+    Serial->>+SIM7000e: AT+HTTPDATA=39,10000
+    SIM7000e-->>Serial: DOWNLOAD
+    SIM7000e->>Serial: [DCD goes LOW]
+    SIM7000e->>Serial: ......
+    Serial->>SIM7000e: {"temperature": 25.5, "humidity": 50.5}
+    SIM7000e->>Serial: [DCD goes HIGH]
+    SIM7000e-->>-Serial: OK
+
+    note over Serial,SIM7000e: POST data
+    Serial->>+SIM7000e: AT+HTTPACTION=1
+    SIM7000e-->>Serial: OK
+    note over SIM7000e: sending data
+    SIM7000e-->>-Serial: +HTTPACTION: 1,200,0
+
+    note over Serial,SIM7000e: Read Response
+    Serial->>+SIM7000e: AT+HTTPREAD
+    SIM7000e-->>Serial: +HTTPREAD: [response.length]
+    SIM7000e-->>Serial: [response]
+    SIM7000e-->>-Serial: OK
+
+    note over Serial,SIM7000e: Terminate HTTP-Service
+    Serial->>SIM7000e: AT+HTTPTERM
+    SIM7000e-->>Serial: OK
+    deactivate SIM7000e
+
+    note over Serial,SIM7000e: Close Bearer
+    Serial->>SIM7000e: AT+SAPBR=0,1
+    SIM7000e-->>Serial: OK
+    deactivate SIM7000e
