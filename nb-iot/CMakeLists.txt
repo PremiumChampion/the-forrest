@@ -8,9 +8,7 @@ target_include_directories(app PRIVATE "include")
 target_sources(app PRIVATE 
     "include/at/commands.hpp"
     "include/uart/uart.hpp"
-    "include/uart/uart_callback.hpp"
 
     "src/main.cpp"
     "src/at/commands.cpp"
-    "src/uart/uart.cpp"
-    "src/uart/uart_callback.cpp")
+    "src/uart/uart.cpp")

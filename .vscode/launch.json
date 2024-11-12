@@ -1,15 +1,14 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Attach to Python Functions",
-            "type": "debugpy",
-            "request": "attach",
-            "connect": {
-                "host": "localhost",
-                "port": 9091
-            },
-            "preLaunchTask": "func: host start"
-        }
-    ]
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "nrf-connect",
+			"request": "launch",
+			"name": "Launch nb-iot\\build",
+			"config": "${workspaceFolder}/nb-iot/build",
+			"runToEntryPoint": "main",
+			
+			"preLaunchTask": "nRF Connect: Build: nb-iot/build (active)"
+		}
+	]
 }
