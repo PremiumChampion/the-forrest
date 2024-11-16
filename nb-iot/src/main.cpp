@@ -57,10 +57,10 @@ int main(void)
         LOG_ERR("SIM7000E trust all certificates failed\n");
     }
 
-    std::string body = at::commands::sim7000e::https::escape_body("{\"key\":\"value\"}");
+    std::string body = at::commands::sim7000e::https::escape_body("{\"temp\":69 \"humidity\":420}");
 
     // set_body_length
-    if (at::commands::sim7000e::https::set_body_length(1024) != at::commands::OK)  {
+    if (at::commands::sim7000e::https::set_body_length(body.length()) != at::commands::OK)  {
         LOG_ERR("SIM7000E body length set failed\n");
     }
 
@@ -69,9 +69,14 @@ int main(void)
         LOG_ERR("SIM7000E header length set failed\n");
     }
 
-    // set_domain
+    // set domain for Server Name Indication
     if (at::commands::sim7000e::https::set_domain("https://static.woyte.dev") != at::commands::OK)  {
         LOG_ERR("SIM7000E domain set failed\n");
+    }
+
+    // set time
+    if (at::commands::sim7000e::https::set_time() != at::commands::OK)  {
+        LOG_ERR("SIM7000E time set failed\n");
     }
 
     // start_ssl_session

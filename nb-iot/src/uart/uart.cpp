@@ -1,66 +1,68 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/uart.h>
 #include <zephyr/kernel/thread.h>
-#include "uart/uart.hpp"
 #include <zephyr/logging/log.h>
+#include <zephyr/pm/device.h>
 #include <string>
 
+#include "uart/uart.hpp"
+
 LOG_MODULE_REGISTER(uart);
+
+#define UART_MAX_MSG_SIZE 128
 
 namespace uart
 {
 
 	const struct device *uart = DEVICE_DT_GET(DT_NODELABEL(uart0));
 
-#define UART_MAX_MSG_SIZE 128
-
 	K_MSGQ_DEFINE(uart_msgq_rx, UART_MAX_MSG_SIZE, 10, 4);
 
 	/* receive buffer used in UART ISR callback */
 	char rx_buf[UART_MAX_MSG_SIZE] = {0};
-	int rx_buf_pos = 0;
+	size_t rx_buf_pos = 0;
 
-	std::string _escape_response(std::string response)
-    {
-        std::string escaped = "";
-        for (std::size_t i = 0; i < response.size(); i++)
-        {
-            switch (response[i])
-            {
-            case '\r':
-                escaped += "\\r";
-                break;
-            case '\n':
-                escaped += "\\n";
-                break;
-            default:
-                escaped += response[i];
-                break;
-            }
-        }
-        return escaped;
-    }
+	std::string escape_response(std::string response)
+	{
+		std::string escaped = "";
+		for (std::size_t i = 0; i < response.size(); i++)
+		{
+			switch (response[i])
+			{
+			case '\r':
+				escaped += "\\r";
+				break;
+			case '\n':
+				escaped += "\\n";
+				break;
+			default:
+				escaped += response[i];
+				break;
+			}
+		}
+		return escaped;
+	}
 
-	std::string _escape_response(char * response)
-    {
-        std::string escaped = "";
-        for (std::size_t i = 0; response[i] != '\0'; i++)
-        {
-            switch (response[i])
-            {
-            case '\r':
-                escaped += "\\r";
-                break;
-            case '\n':
-                escaped += "\\n";
-                break;
-            default:
-                escaped += response[i];
-                break;
-            }
-        }
-        return escaped;
-    }
+	std::string escape_response(char *response)
+	{
+		std::string escaped = "";
+		for (std::size_t i = 0; response[i] != '\0'; i++)
+		{
+			switch (response[i])
+			{
+			case '\r':
+				escaped += "\\r";
+				break;
+			case '\n':
+				escaped += "\\n";
+				break;
+			default:
+				escaped += response[i];
+				break;
+			}
+		}
+		return escaped;
+	}
 
 	void uart_cb(const struct device *dev, void *user_data)
 	{
@@ -90,7 +92,7 @@ namespace uart
 			if (rx_buf_pos == UART_MAX_MSG_SIZE - 1 || c == '\n')
 			{
 				rx_buf[rx_buf_pos] = '\0';
-				LOG_INF("Received: %s", _escape_response(rx_buf).c_str());
+				LOG_INF("Received: %s", escape_response(rx_buf).c_str());
 				// if queue is full, message is silently dropped
 				k_msgq_put(&uart_msgq_rx, &rx_buf, K_NO_WAIT);
 				// reset the buffer (it was copied to the msgq)
@@ -101,7 +103,7 @@ namespace uart
 
 	write_result uart_write(std::string data)
 	{
-		for (int i = 0; i < data.size(); i++)
+		for (std::size_t i = 0; i < data.size(); i++)
 		{
 			uart_poll_out(uart, data[i]);
 		}
@@ -124,7 +126,14 @@ namespace uart
 	{
 		if (!device_is_ready(uart))
 		{
-			printk("UART device not found!");
+			LOG_ERR("UART device not found!");
+			return -1;
+		}
+
+		// enable wakeup sources
+		if (!pm_device_wakeup_enable(uart, true))
+		{
+			LOG_ERR("Failed to enable UART wakeup sources");
 			return -1;
 		}
 
@@ -135,15 +144,15 @@ namespace uart
 		{
 			if (ret == -ENOTSUP)
 			{
-				printk("Interrupt-driven UART API support not enabled\n");
+				LOG_ERR("Interrupt-driven UART API support not enabled\n");
 			}
 			else if (ret == -ENOSYS)
 			{
-				printk("UART device does not support interrupt-driven API\n");
+				LOG_ERR("UART device does not support interrupt-driven API\n");
 			}
 			else
 			{
-				printk("Error setting UART callback: %d\n", ret);
+				LOG_ERR("Error setting UART callback: %d\n", ret);
 			}
 			return 0;
 		}
@@ -151,9 +160,9 @@ namespace uart
 
 		return 0;
 	}
-	
 
-	void flush(){
+	void flush()
+	{
 		char buf[UART_MAX_MSG_SIZE];
 		while (k_msgq_get(&uart_msgq_rx, &buf, K_NO_WAIT) == 0)
 		{

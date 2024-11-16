@@ -7,13 +7,11 @@ target_include_directories(app PRIVATE "include")
 
 target_sources(app PRIVATE 
     "include/at/prv.hpp"
-    "include/at/http.hpp"
     "include/at/https.hpp"
     "include/at/common.hpp"
     "include/uart/uart.hpp"
 
-    "src/main_https.cpp"
+    "src/main.cpp"
     "src/at/prv.cpp"
-    "src/at/http.cpp"
     "src/at/https.cpp"
     "src/uart/uart.cpp")

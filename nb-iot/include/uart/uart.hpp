@@ -33,7 +33,8 @@ namespace uart
     int uart_init();                            // initialize the UART
     void flush();
     int uart_switch(uart_config config);
-    std::string _escape_response(std::string response);
+    std::string escape_response(std::string response);
+    std::string escape_response(char *response);
 
 } // namespace uart
 

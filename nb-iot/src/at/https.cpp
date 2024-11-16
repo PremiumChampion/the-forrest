@@ -39,13 +39,18 @@ namespace at::commands::sim7000e::https
 
     result check_sim7000e_present()
     {
-        return at::commands::prv::at();
+        std::string response = "";
+        return at::commands::prv::_at("AT\r\n", response);
     }
     result setup_apn(std::string apn)
     {
         std::string response = "";
         result r = _at("AT+CNACT=1\r\n", response);
-        LOG_INF("APN setup response: %s", _escape_response(response.c_str()));
+
+        if (r != OK)
+        {
+            return r;
+        }
 
         // wait for the network to be ready
         int64_t start = k_uptime_get();
@@ -246,12 +251,14 @@ namespace at::commands::sim7000e::https
                     în_body = true;
                 }
 
-                if (în_body && response.length() == length)
+                if (în_body && response.length() == static_cast<size_t>(length))
                 {
                     return OK;
                 }
             }
         }
+
+        return ERROR;
     }
     result stop_ssl_session()
     {
