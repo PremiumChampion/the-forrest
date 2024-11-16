@@ -31,8 +31,9 @@ namespace uart
     read_result uart_read(std::string &result); // read from the UART
     write_result uart_write(std::string data);  // write to the UART
     int uart_init();                            // initialize the UART
-
+    void flush();
     int uart_switch(uart_config config);
+    std::string _escape_response(std::string response);
 
 } // namespace uart
 

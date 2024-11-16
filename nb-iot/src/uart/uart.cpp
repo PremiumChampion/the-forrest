@@ -2,8 +2,10 @@
 #include <zephyr/drivers/uart.h>
 #include <zephyr/kernel/thread.h>
 #include "uart/uart.hpp"
-
+#include <zephyr/logging/log.h>
 #include <string>
+
+LOG_MODULE_REGISTER(uart);
 
 namespace uart
 {
@@ -17,6 +19,48 @@ namespace uart
 	/* receive buffer used in UART ISR callback */
 	char rx_buf[UART_MAX_MSG_SIZE] = {0};
 	int rx_buf_pos = 0;
+
+	std::string _escape_response(std::string response)
+    {
+        std::string escaped = "";
+        for (std::size_t i = 0; i < response.size(); i++)
+        {
+            switch (response[i])
+            {
+            case '\r':
+                escaped += "\\r";
+                break;
+            case '\n':
+                escaped += "\\n";
+                break;
+            default:
+                escaped += response[i];
+                break;
+            }
+        }
+        return escaped;
+    }
+
+	std::string _escape_response(char * response)
+    {
+        std::string escaped = "";
+        for (std::size_t i = 0; response[i] != '\0'; i++)
+        {
+            switch (response[i])
+            {
+            case '\r':
+                escaped += "\\r";
+                break;
+            case '\n':
+                escaped += "\\n";
+                break;
+            default:
+                escaped += response[i];
+                break;
+            }
+        }
+        return escaped;
+    }
 
 	void uart_cb(const struct device *dev, void *user_data)
 	{
@@ -46,6 +90,7 @@ namespace uart
 			if (rx_buf_pos == UART_MAX_MSG_SIZE - 1 || c == '\n')
 			{
 				rx_buf[rx_buf_pos] = '\0';
+				LOG_INF("Received: %s", _escape_response(rx_buf).c_str());
 				// if queue is full, message is silently dropped
 				k_msgq_put(&uart_msgq_rx, &rx_buf, K_NO_WAIT);
 				// reset the buffer (it was copied to the msgq)
@@ -107,4 +152,12 @@ namespace uart
 		return 0;
 	}
 	
+
+	void flush(){
+		char buf[UART_MAX_MSG_SIZE];
+		while (k_msgq_get(&uart_msgq_rx, &buf, K_NO_WAIT) == 0)
+		{
+			// do nothing
+		}
+	}
 } // namespace uart
