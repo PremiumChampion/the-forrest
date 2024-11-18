@@ -4,7 +4,8 @@
         "${workspaceFolder}\\hello_world",
         "${workspaceFolder}\\uart_bridge",
         "${workspaceFolder}\\echo_bot",
-        "${workspaceFolder}\\nb-iot"
+        "${workspaceFolder}\\nb-iot",
+        "${workspaceFolder}\\node"
     ],
     "files.associations": {
         "kernel.h": "c",
