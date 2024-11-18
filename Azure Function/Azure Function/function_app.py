@@ -25,6 +25,8 @@ def save_to_db(req: func.HttpRequest) -> func.HttpResponse:
         req_body = req.get_json() 
         collection.insert_one(req_body)
     except ValueError:
+        req_text = req.get_body().decode('utf-8')
+        collection.insert_one({"data": req_text})
         return func.HttpResponse("Invalid JSON", status_code=400) 
         pass 
 

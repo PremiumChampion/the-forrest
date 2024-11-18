@@ -24,14 +24,13 @@ namespace at::commands::sim7000e::https
         std::string escaped = "";
         for (std::size_t i = 0; i < body.size(); i++)
         {
-            switch (body[i])
+            if (body[i] == '\"')
             {
-            case '\"':
                 escaped += "\\\"";
-                break;
-            default:
+            }
+            else
+            {
                 escaped += body[i];
-                break;
             }
         }
         return escaped;
@@ -45,10 +44,11 @@ namespace at::commands::sim7000e::https
     result setup_apn(std::string apn)
     {
         std::string response = "";
-        result r = _at("AT+CNACT=1\r\n", response);
+        result r = _at("AT+CNACT=1,\"internet\"\r\n", response);
 
         if (r != OK)
         {
+            LOG_ERR("%s", escape_body(response).c_str());
             return r;
         }
 
@@ -135,17 +135,27 @@ namespace at::commands::sim7000e::https
         std::string response = "";
         return _at("AT+SHCONF=\"URL\",\"" + url + "\"\r\n", response);
     }
-    result set_time(){
-        std::time_t time = std::time(nullptr);
-        struct tm *tm = std::gmtime(&time);
+    result set_time()
+    {
+        // std::time_t time = std::time(nullptr);
+        // struct tm *tm = std::gmtime(&time);
+        struct tm time = {0};
+        time.tm_year = 2024 - 2000 + 100;
+        time.tm_mon = 11 - 1;
+        time.tm_mday = 18;
+        time.tm_hour = 18;
+        time.tm_min = 15;
+        time.tm_sec = 58;
+
+        struct tm *tm = &time;
 
         int year = tm->tm_year + 1900 - 2000; // e.g. 2021 -> 21
-        int month = tm->tm_mon + 1;            // 0-indexed
+        int month = tm->tm_mon + 1;           // 0-indexed
         int day = tm->tm_mday;
         int hour = tm->tm_hour;
         int minute = tm->tm_min;
         int second = tm->tm_sec;
-        
+
         std::string response = "";
         // AT+CCLK="24/11/16,00:04:58+00"
         return _at("AT+CCLK=\"" + std::to_string(year) + "/" + std::to_string(month) + "/" + std::to_string(day) + "," + std::to_string(hour) + ":" + std::to_string(minute) + ":" + std::to_string(second) + "+00\"\r\n", response);
@@ -173,7 +183,8 @@ namespace at::commands::sim7000e::https
     result set_body(std::string body)
     {
         std::string response = "";
-        return _at("AT+SHBOD=\"" + body + "\"," + std::to_string(body.length()) + "\r\n", response);
+        std::string escaped = escape_body(body);
+        return _at("AT+SHBOD=\"" + escaped + "\"," + std::to_string(body.length()) + "\r\n", response);
     }
     result exec(std::string url, http_method method, int &http_status_code, int &length)
     {
@@ -231,13 +242,13 @@ namespace at::commands::sim7000e::https
 
         // wait for the response
         int64_t start = k_uptime_get();
-        bool în_body = false;
+        bool in_body = false;
         while (k_uptime_get() - start < 10000)
         {
             uart::read_result uart_res = uart::uart_read(response);
             if (uart_res == uart::read_result::UART_READ_OK)
             {
-                if (!în_body && response.find("+SHREAD: ") != std::string::npos)
+                if (!in_body && response.find("+SHREAD: ") != std::string::npos)
                 {
                     size_t start = response.find("+SHREAD: ");
                     size_t end = response.find("\r\n", start);
@@ -248,10 +259,10 @@ namespace at::commands::sim7000e::https
                     }
 
                     response = response.substr(end + 2); // remove "...\r\n+SHREAD: ...\r\n"
-                    în_body = true;
+                    in_body = true;
                 }
 
-                if (în_body && response.length() == static_cast<size_t>(length))
+                if (in_body && response.length() == static_cast<size_t>(length))
                 {
                     return OK;
                 }
