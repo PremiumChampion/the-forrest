@@ -29,6 +29,7 @@ namespace at::commands::sim7000e::https
     result set_header_length(int length);
     result set_domain(std::string url);
     result set_time();
+    result get_time();
     result start_ssl_session();
     result clear_header();
     result set_header(std::string header, std::string value);

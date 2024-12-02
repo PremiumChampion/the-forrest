@@ -2,6 +2,7 @@
     status = "okay";
     pinctrl-0 = <&uart1_default>;
     pinctrl-1 = <&uart1_sleep>;
+    wakeup-source;
 };
 
 // &uart1_default {
