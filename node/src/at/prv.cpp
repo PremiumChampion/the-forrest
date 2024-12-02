@@ -73,7 +73,7 @@ namespace at::commands::prv
             }
         }
 
-        return TIMEOUT;
+        return OK;
     }
 
     
