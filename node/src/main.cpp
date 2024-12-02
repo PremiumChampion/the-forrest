@@ -45,8 +45,10 @@ int init_lora_module() {
 
     // set antenna power
     
+    LOG_INF("Setting antenna power");
     uart::uart_write("AT+PARAMETER=9,7,1,12\r\n");
     k_sleep(K_MSEC(1000));
+    LOG_INF("Setting RF power");
     uart::uart_write("AT+CRFOP=22\r\n");
     k_sleep(K_MSEC(1000));
     return 0;
@@ -69,15 +71,15 @@ int main(void)
         return -1;
     }
 
-    k_sleep(K_MSEC(1000));
-    at::commands::prv::at();
     // Join the network
     if (GATEWAY)
     {
+        LOG_INF("Joining network as gateway");
         join_network(69, GATEWAY_ADDRESS);
     }
     else
     {
+        LOG_INF("Joining network as node");
         join_network(69, NODE_ADDRESS);
     }
 
