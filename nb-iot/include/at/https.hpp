@@ -35,7 +35,7 @@ namespace at::commands::sim7000e::https
     result set_header(std::string header, std::string value);
     result set_body(std::string escaped_body);
     result exec(std::string url, http_method method, int &http_status_code, int &length);
-    result read(std::string &response, int length);
+    result read(std::string &response, int length, int timeout_ms = 10000);
     result stop_ssl_session();
     result network_disconnect();
 

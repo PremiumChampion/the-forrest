@@ -16,7 +16,40 @@ namespace at::commands::sim7000e::https
     result reboot()
     {
         std::string response = "";
-        return _at("AT+CFUN=1,1\r\n", response);
+        result res = _at("AT+CFUN=1,1\r\n", response);
+        if (res != OK)
+        {
+            LOG_ERR("%s", escape_body(response).c_str());
+        }
+
+        uart::read_result uart_res = uart::uart_read(response);
+
+        k_sleep(K_MSEC(2000));
+
+        // wait for the module to reboot
+        
+        while (check_sim7000e_present() != at::commands::OK)
+        {
+            LOG_ERR("SIM7000E not responding");
+        }
+
+        // wait for the module to be ready
+
+        while (true)
+        {
+            response = "";
+            uart::read_result uart_res = uart::uart_read(response);
+            if (uart_res == uart::read_result::UART_READ_OK)
+            {
+                if (response.find("SMS Ready") != std::string::npos)
+                {
+                    return OK;
+                }
+            }
+        }
+        
+
+        return ERROR; 
     }
 
     std::string escape_body(std::string body)
@@ -196,7 +229,7 @@ namespace at::commands::sim7000e::https
     result start_ssl_session()
     {
         std::string response = "";
-        return _at("AT+SHCONN\r\n", response);
+        return _at("AT+SHCONN\r\n", response, 10000);
     }
     result clear_header()
     {
@@ -264,9 +297,13 @@ namespace at::commands::sim7000e::https
 
         return TIMEOUT;
     }
-    result read(std::string &response, int length)
+    result read(std::string &response, int length, int timeout_ms)
     {
-
+        if (length <= 0)
+        {
+            return ERROR;
+        }
+        
         result r = _at("AT+SHREAD=0," + std::to_string(length) + "\r\n", response);
         if (r != OK)
         {
@@ -275,13 +312,24 @@ namespace at::commands::sim7000e::https
 
         // wait for the response
         int64_t start = k_uptime_get();
-        bool in_body = false;
-        while (k_uptime_get() - start < 10000)
+        
+        // 0 - not in body
+        // 1 - in body
+        // 2 - has ok
+        uint8_t state = 0;
+
+        // we want to parse the following structure
+        // ...\r\n+SHREAD: num_of_bytes\r\n<data>\r\nOK\r\n
+        // we are interested in <data>
+
+        std::size_t indicated_length = 0;
+
+        while (k_uptime_get() - start < timeout_ms)
         {
             uart::read_result uart_res = uart::uart_read(response);
             if (uart_res == uart::read_result::UART_READ_OK)
             {
-                if (!in_body && response.find("+SHREAD: ") != std::string::npos)
+                if (state == 0 && response.find("+SHREAD: ") != std::string::npos)
                 {
                     size_t start = response.find("+SHREAD: ");
                     size_t end = response.find("\r\n", start);
@@ -291,12 +339,26 @@ namespace at::commands::sim7000e::https
                         return ERROR;
                     }
 
-                    response = response.substr(end + 2); // remove "...\r\n+SHREAD: ...\r\n"
-                    in_body = true;
+                    // extract the indicated number of bytes
+                    std::string status = response.substr(start, end - start);
+                    status = status.substr(9, status.size() - 9); // remove "+SHREAD: "
+                    // parse the number of bytes
+                    indicated_length = std::stoi(status);
+
+                    response = response.substr(end + 2); // remove "...\r\n+SHREAD: number_of_bytes\r\n"
+
+
+                    state = 1;
                 }
 
-                if (in_body && response.length() == static_cast<size_t>(length))
+                if (state == 1 && (response.length() >= static_cast<size_t>(length) || response.length() >= indicated_length))
                 {
+                    state = 2; // using this we are able to recieve OK\r\n in the response. only if we have recieved length bytes we interpret OK again
+                }
+
+                if (state == 2 && response.find("OK", length) != std::string::npos)
+                {
+                    response = response.substr(0, length);
                     return OK;
                 }
             }
@@ -304,11 +366,13 @@ namespace at::commands::sim7000e::https
 
         return ERROR;
     }
+
     result stop_ssl_session()
     {
         std::string response = "";
         return _at("AT+SHDISC\r\n", response);
     }
+    
     result network_disconnect()
     {
         std::string response = "";

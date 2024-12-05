@@ -9,9 +9,13 @@ target_sources(app PRIVATE
     "include/at/prv.hpp"
     "include/at/https.hpp"
     "include/at/common.hpp"
+    "include/at/power.hpp"
     "include/uart/uart.hpp"
+    "include/gpio/gpio.hpp"
 
     "src/main.cpp"
     "src/at/prv.cpp"
     "src/at/https.cpp"
-    "src/uart/uart.cpp")
+    "src/at/power.cpp"
+    "src/uart/uart.cpp"
+    "src/gpio/gpio.cpp")

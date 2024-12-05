@@ -8,14 +8,16 @@
 #include <stdio.h>
 #include "uart/uart.hpp"
 #include "at/https.hpp"
+#include "gpio/gpio.hpp"
 
 LOG_MODULE_REGISTER(main);
 
-int main(void)
-{
+
+int main_send_mb_iot_msg(){
+    
     if (uart::uart_init() != 0)
     {
-        printk("UART initialization failed\n");
+        LOG_ERR("UART initialization failed\n");
         return -1;
     }
 
@@ -28,7 +30,6 @@ int main(void)
 
     at::commands::sim7000e::https::reboot();
 
-    k_sleep(K_MSEC(1000));
 
     while (at::commands::sim7000e::https::check_sim7000e_present() != at::commands::OK)
     {
@@ -39,27 +40,26 @@ int main(void)
 
     bool ip_not_available = false;
     std::string ip;
-    if (at::commands::sim7000e::https::get_ip(ip) != at::commands::OK)
-    {
-        LOG_ERR("SIM7000E IP address retrieval failed");
-        ip_not_available = true;
-    }
+    // if (at::commands::sim7000e::https::get_ip(ip) != at::commands::OK)
+    // {
+    //     LOG_ERR("SIM7000E IP address retrieval failed");
+    //     ip_not_available = true;
+    // }
 
     ip_not_available = ip_not_available || ip.empty() || ip == "0.0.0.0";
+    k_sleep(K_MSEC(5000));
 
     if (ip_not_available && at::commands::sim7000e::https::setup_apn("internet") != at::commands::OK)
     {
         LOG_ERR("SIM7000E APN setup failed");
-        return -1;
     }
 
     k_sleep(K_MSEC(1000));
-    if (!ip_not_available)
+    if (ip_not_available)
     {
         if (at::commands::sim7000e::https::get_ip(ip) != at::commands::OK)
         {
             LOG_ERR("SIM7000E IP address retrieval failed");
-            return -1;
         }
         else
         {
@@ -70,21 +70,18 @@ int main(void)
     if (at::commands::sim7000e::https::ignore_ssl_timestamp() != at::commands::OK)
     {
         LOG_ERR("SIM7000E SSL timestamp ignore failed");
-        return -1;
     }
     k_sleep(K_MSEC(100));
 
     if (at::commands::sim7000e::https::set_ssl_version() != at::commands::OK)
     {
         LOG_ERR("SIM7000E SSL version set failed");
-        return -1;
     }
     k_sleep(K_MSEC(100));
 
     if (at::commands::sim7000e::https::set_server_name_indication("static.woyte.dev") != at::commands::OK)
     {
         LOG_ERR("SIM7000E server name indication set failed");
-        return -1;
     }
     k_sleep(K_MSEC(100));
 
@@ -111,7 +108,6 @@ int main(void)
         LOG_ERR("SIM7000E header length set failed");
         return -1;
     }
-    k_sleep(K_MSEC(100));
 
     // set domain for Server Name Indication
     if (at::commands::sim7000e::https::set_domain("https://static.woyte.dev") != at::commands::OK)
@@ -119,25 +115,24 @@ int main(void)
         LOG_ERR("SIM7000E domain set failed");
         return -1;
     }
-    k_sleep(K_MSEC(100));
 
     if(at::commands::sim7000e::https::get_time() != at::commands::OK)
     {
         LOG_ERR("SIM7000E time get failed");
     }
 
-    k_sleep(K_MSEC(100));
     // set time
     if (at::commands::sim7000e::https::set_time() != at::commands::OK)
     {
         LOG_ERR("SIM7000E time set failed");
     }
 
-    k_sleep(K_MSEC(100));
     // start_ssl_session
-    if (at::commands::sim7000e::https::start_ssl_session() != at::commands::OK)
+    at::commands::result sslstartresult  = at::commands::sim7000e::https::start_ssl_session();
+    if (sslstartresult != at::commands::OK)
     {
         LOG_ERR("SIM7000E SSL session start failed");
+        LOG_ERR("REASON: %d", sslstartresult);
         // return;
     }
 
@@ -149,7 +144,6 @@ int main(void)
         return -1;
     }
 
-    k_sleep(K_MSEC(100));
     // set_header
     if (at::commands::sim7000e::https::set_header("Content-Type", "application/json") != at::commands::OK)
     {
@@ -157,7 +151,6 @@ int main(void)
         return -1;
     }
 
-    k_sleep(K_MSEC(100));
     // AT+SHAHEAD="User-Agent","curl/7.47.0"
     if (at::commands::sim7000e::https::set_header("User-Agent", "curl/7.47.0") != at::commands::OK)
     {
@@ -165,7 +158,6 @@ int main(void)
         return -1;
     }
 
-    k_sleep(K_MSEC(100));
     // AT+SHAHEAD="Cache-control","no-cache"
     if (at::commands::sim7000e::https::set_header("Cache-control", "no-cache") != at::commands::OK)
     {
@@ -173,7 +165,6 @@ int main(void)
         return -1;
     }
 
-    k_sleep(K_MSEC(100));
     // AT+SHAHEAD="Accept","*/*"
     if (at::commands::sim7000e::https::set_header("Accept", "*/*") != at::commands::OK)
     {
@@ -181,7 +172,6 @@ int main(void)
         return -1;
     }
 
-    k_sleep(K_MSEC(100));
     // set_body
     if (at::commands::sim7000e::https::set_body(body) != at::commands::OK)
     {
@@ -225,4 +215,55 @@ int main(void)
         LOG_ERR("SIM7000E network disconnect failed");
         return -1;
     }
+}
+
+int main_send_to_sleep(){
+    if (uart::uart_init() != 0)
+    {
+        LOG_ERR("UART initialization failed");
+        return -1;
+    }
+
+    if(gpio::init() != gpio::OK)
+    {
+        LOG_ERR("GPIO initialization failed");
+        return -1;
+    }
+
+    // module powers on by default when recieving power for the first time
+    if(gpio::set(gpio::SIM7000_PWR, gpio::HIGH) != gpio::OK)
+    {
+        return -1;
+    }
+
+    k_sleep(K_MSEC(5000));
+
+    if (at::commands::sim7000e::https::check_sim7000e_present() != at::commands::OK)
+    {
+        LOG_INF("SIM7000E not responding");
+
+        // power on the module
+        if(gpio::set(gpio::SIM7000_PWR, gpio::HIGH) != gpio::OK)
+        {
+            return -1;
+        }
+
+        k_sleep(K_MSEC(100));
+
+        // wait for the module to boot
+        while (at::commands::sim7000e::https::check_sim7000e_present() != at::commands::OK)
+        {
+            LOG_INF("SIM7000E not responding");
+        }
+    }
+
+    // power off the module
+    
+
+
+} 
+
+int main(void)
+{
+    main_send_to_sleep();
 }
