@@ -4,8 +4,9 @@
 #include <time.h>
 #include <chrono>
 #include "at/prv.hpp"
-#include "at/https.hpp"
+#include "at/sim7000e/https.hpp"
 #include "uart/uart.hpp"
+#include "iic/time.hpp"
 
 LOG_MODULE_REGISTER(at_commands_https);
 
@@ -134,10 +135,6 @@ namespace at::commands::sim7000e::https
         return OK;
     }
 
-    result get_time(){
-        std::string response = "";
-        return _at("AT+CCLK?\r\n", response);
-    }
 
     result ignore_ssl_timestamp()
     {
@@ -174,58 +171,7 @@ namespace at::commands::sim7000e::https
         std::string response = "";
         return _at("AT+SHCONF=\"URL\",\"" + url + "\"\r\n", response);
     }
-    result set_time()
-    {
-        // std::time_t time = std::time(nullptr);
-        // struct tm *tm = std::gmtime(&time);
-        struct tm time = {0};
-        time.tm_year = 2024 - 2000 + 100;
-        time.tm_mon = 12 - 1;
-        time.tm_mday = 2;
-        time.tm_hour = 17;
-        time.tm_min = 38;
-        time.tm_sec = 58;
 
-        struct tm *tm = &time;
-
-        std::string year = std::to_string(tm->tm_year + 1900 - 2000); // e.g. 2021 -> 21
-        std::string month = std::to_string(tm->tm_mon + 1);           // 0-indexed
-        std::string day = std::to_string(tm->tm_mday);
-        std::string hour = std::to_string(tm->tm_hour);
-        std::string minute = std::to_string(tm->tm_min);
-        std::string second = std::to_string(tm->tm_sec);
-
-
-        // check if wee need to pad with a zero
-        if(year.length() == 1){
-            year = "0" + year;
-        }
-        if (month.length() == 1)
-        {
-            month = "0" + month;
-        }
-        if (day.length() == 1)
-        {
-            day = "0" + day;
-        }
-        if (hour.length() == 1)
-        {
-            hour = "0" + hour;
-        }
-        if (minute.length() == 1)
-        {
-            minute = "0" + minute;
-        }
-        if (second.length() == 1)
-        {
-            second = "0" + second;
-        }
-        
-
-        std::string response = "";
-        // AT+CCLK="24/11/16,00:04:58+00"
-        return _at("AT+CCLK=\"" + year + "/" + month + "/" + day + "," + hour + ":" + minute + ":" + second + "+00\"\r\n", response);
-    }
     result start_ssl_session()
     {
         std::string response = "";
@@ -354,11 +300,8 @@ namespace at::commands::sim7000e::https
                 if (state == 1 && (response.length() >= static_cast<size_t>(length) || response.length() >= indicated_length))
                 {
                     state = 2; // using this we are able to recieve OK\r\n in the response. only if we have recieved length bytes we interpret OK again
-                }
-
-                if (state == 2 && response.find("OK", length) != std::string::npos)
-                {
-                    response = response.substr(0, length);
+                    LOG_INF("Specified length: %d, Recieved length: %d", length, indicated_length);
+                    response = response.substr(0, indicated_length);
                     return OK;
                 }
             }

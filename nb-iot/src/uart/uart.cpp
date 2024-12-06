@@ -17,6 +17,7 @@ namespace uart
 	{
 		std::size_t start;
 		std::size_t size;
+		std::size_t end;
 	} uart_msg;
 	const struct device *uart = DEVICE_DT_GET(DT_NODELABEL(uart1));
 
@@ -41,7 +42,7 @@ namespace uart
 
 	uart_msg finalize_msg_in_buffer()
 	{
-		uart_msg msg{uart_current_message, uart_current_message_size};
+		uart_msg msg{uart_current_message, uart_current_message_size, uart_msg_buffer_right};
 		uart_current_message = uart_msg_buffer_right;
 		uart_current_message_size = 0;
 		return msg;
@@ -51,7 +52,6 @@ namespace uart
 	{
 		std::size_t start = msg.start;
 		std::size_t size = msg.size;
-
 		if (start != uart_msg_buffer_left)
 		{
 			return;
@@ -202,7 +202,7 @@ namespace uart
 
 	std::string escape_response(std::string response)
 	{
-		return escape_response(response.c_str());
+		return escape_response((char *)response.c_str());
 	}
 
 	std::string escape_response(char *response)

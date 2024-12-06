@@ -5,12 +5,13 @@
     wakeup-source;
 };
 
-&gpio1 {
-    status = "okay";  // Enable the GPIO controller
+&gpio0 {
+    status = "okay";
 };
 
-/ {
-    zephyr,user {
-        sim7000_pwr-gpios = <&gpio1 3 0>;
-    };
+
+&i2c0 {
+    compatible = "nordic,nrf-twim";
+    clock-frequency = <100000>;
+    status = "okay";
 };

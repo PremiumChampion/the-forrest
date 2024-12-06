@@ -1,5 +1,5 @@
 #include "zephyr/logging/log.h"
-#include "at/power.hpp"
+#include "at/sim7000e/power.hpp"
 #include "uart/uart.hpp"
 LOG_MODULE_REGISTER(at_commands_power);
 
@@ -39,7 +39,7 @@ namespace at::commands::sim7000e::power
             {
                 return ERROR;
             }
-        } while ();
+        } while (1);
         
 
         return OK;
