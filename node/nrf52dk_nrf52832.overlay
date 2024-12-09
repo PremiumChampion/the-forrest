@@ -17,10 +17,29 @@
   aliases {
 
     mycusgpio = &cusgpio0;
+    rtc = &rtc_ds1307;
 
   };
 };
 
+&i2c0 {
+  status = "okay";
+  //compatible = "nordic,nrf-twi";
+  clock-frequency = <I2C_BITRATE_STANDARD>;
+  //pinctrl-0 = <&i2c1_default>;
+  rtc_ds1307_i2c: ds1307_i2c@68 {
+    compatible = "i2c-device";
+    //status = "okay";
+    reg = <0x68>;
+
+  };
+
+  rtc_ds1307: ds1307@68 {
+      compatible = "maxim,ds1307";
+      reg = <0x68>;
+      status = "okay";
+  };
+};
 
 &uart0 {
   status = "okay";
@@ -55,5 +74,3 @@
 &clock {
   status = "okay";
 };
-
-
