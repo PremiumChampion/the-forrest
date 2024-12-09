@@ -148,11 +148,11 @@ static int set_date_time(const struct device *rtc)
     int ret = 0;
     struct rtc_time tm = {
         .tm_sec = 0,
-        .tm_min = 19,
+        .tm_min = 20,
         .tm_hour = 4,
-        .tm_mday = 17,
-        .tm_mon = 11 - 1,
-        .tm_year = 2024 - 1900,
+        .tm_mday = 11,
+        .tm_mon = 9 - 1,
+        .tm_year = 2001 - 1900,
     };
 
     if (!device_is_ready(rtc))
@@ -216,27 +216,27 @@ int main(void)
 
     // RTC Test
 
-    // if (!device_is_ready(rtc))
-    // {
-    //     printk("RTC device is not ready\n");
-    // }
+    if (!device_is_ready(rtc))
+    {
+        printk("RTC device is not ready\n");
+    }
 
-    // i2c_configure(rtc, I2C_SPEED_SET(I2C_SPEED_STANDARD | I2C_MODE_CONTROLLER));
+    //i2c_configure(rtc, I2C_SPEED_SET(I2C_SPEED_STANDARD | I2C_MODE_CONTROLLER));
 
-    // /* Check if the RTC is ready */
-    // if (!device_is_ready(rtc))
-    // {
-    //     LOG_INF("Device is not ready\n");
-    //     return 0;
-    // }
+    /* Check if the RTC is ready */
+    if (!device_is_ready(rtc))
+    {
+        LOG_INF("Device is not ready\n");
+        return 0;
+    }
 
-    // set_date_time(rtc);
+    //set_date_time(rtc);
 
-    // /* Continuously read the current date and time from the RTC */
-    // while (get_date_time(rtc) == 0)
-    // {
-    //     k_sleep(K_MSEC(1000));
-    // };
+    /* Continuously read the current date and time from the RTC */
+    while (get_date_time(rtc) == 0)
+    {
+        k_sleep(K_MSEC(1000));
+    };
 
     //Join the network
 
