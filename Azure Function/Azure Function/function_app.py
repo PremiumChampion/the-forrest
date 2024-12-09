@@ -30,4 +30,4 @@ def save_to_db(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse("Invalid JSON", status_code=400) 
         pass 
 
-    return func.HttpResponse(f"OK", status_code=200)
+    return func.HttpResponse(f"SUCCESS", status_code=200)

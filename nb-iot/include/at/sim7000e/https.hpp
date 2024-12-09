@@ -3,7 +3,7 @@
 
 #include <string> // std::string
 
-#include "common.hpp" // result
+#include "at/common.hpp" // result
 
 namespace at::commands::sim7000e::https
 {
@@ -28,13 +28,12 @@ namespace at::commands::sim7000e::https
     result set_body_length(int length);
     result set_header_length(int length);
     result set_domain(std::string url);
-    result set_time();
     result start_ssl_session();
     result clear_header();
     result set_header(std::string header, std::string value);
     result set_body(std::string escaped_body);
     result exec(std::string url, http_method method, int &http_status_code, int &length);
-    result read(std::string &response, int length);
+    result read(std::string &response, int length, int timeout_ms = 10000);
     result stop_ssl_session();
     result network_disconnect();
 

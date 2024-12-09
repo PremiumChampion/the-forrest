@@ -92,7 +92,7 @@ namespace uart
 			if (rx_buf_pos == UART_MAX_MSG_SIZE - 1 || c == '\n')
 			{
 				rx_buf[rx_buf_pos] = '\0';
-				LOG_INF("Received: %s", escape_response(rx_buf).c_str());
+				//LOG_INF("Received: %s", escape_response(rx_buf).c_str());
 				// if queue is full, message is silently dropped
 				k_msgq_put(&uart_msgq_rx, &rx_buf, K_NO_WAIT);
 				// reset the buffer (it was copied to the msgq)
