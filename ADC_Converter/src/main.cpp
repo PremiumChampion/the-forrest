@@ -30,9 +30,9 @@ int main(void)
     while (1)
     {
         gpio::adc::read_channel(0, voltage);
-        LOG_INF("ADC reading [%u]: %u  ", 0, voltage);
+        LOG_INF("ADC reading [%u]: %u  ", 4, voltage);
         gpio::adc::read_channel(1, voltage);
-        LOG_INF("ADC reading [%u]: %u", 1, voltage);
+        LOG_INF("ADC reading [%u]: %u", 5, voltage);
 
         k_sleep(K_MSEC(SLEEP_TIME_MS));
     }
