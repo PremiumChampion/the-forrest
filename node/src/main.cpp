@@ -12,6 +12,7 @@
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/drivers/rtc.h>
 #include <zephyr/sys/util.h>
+#include "gpio/adc.hpp"
 
 
 LOG_MODULE_REGISTER(main);
@@ -190,7 +191,7 @@ static int get_date_time(const struct device *rtc)
 
 // RTC Test End
 
-bool GATEWAY = true;
+bool GATEWAY = false;
 int GATEWAY_ADDRESS = 420;
 int NODE_ADDRESS = 1;
 
@@ -205,6 +206,11 @@ int main(void)
     if (uart::uart_init() != 0)
     {
         printk("UART initialization failed\n");
+        return -1;
+    }
+
+    if (gpio::adc::setup() != 0) {
+        printk("ADC initialization failed\n");
         return -1;
     }
 
@@ -271,8 +277,16 @@ int main(void)
         }
         else
         {
-            // send data
-            send_message(GATEWAY_ADDRESS, "We <3 embedded");
+            // send data read from ADC sensor
+            int32_t voltage0 = 0;
+            int32_t voltage1 = 0;
+            gpio::adc::read_channel(0, voltage0);
+            LOG_INF("ADC reading [%u]: %u  ", 4, voltage0);
+            gpio::adc::read_channel(1, voltage1);
+            LOG_INF("ADC reading [%u]: %u", 5, voltage1);
+
+            send_message(GATEWAY_ADDRESS, "Sensor 1: " + std::to_string(voltage0) + " Sensor 2: " + std::to_string(voltage1));
+            k_sleep(K_MSEC(1000));
         }
     }
 }

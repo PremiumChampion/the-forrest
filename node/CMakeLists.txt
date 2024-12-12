@@ -7,6 +7,7 @@ target_include_directories(app PRIVATE "include")
 
 target_sources(app PRIVATE 
     "include/at/prv.hpp"
+    "include/gpio/adc.hpp"
     "include/at/https.hpp"
     "include/at/common.hpp"
     "include/uart/uart.hpp"
@@ -14,4 +15,5 @@ target_sources(app PRIVATE
     "src/main.cpp"
     "src/at/prv.cpp"
     "src/at/https.cpp"
+    "src/gpio/adc.cpp"
     "src/uart/uart.cpp")
