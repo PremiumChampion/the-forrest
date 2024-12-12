@@ -233,10 +233,10 @@ int main(void)
     //set_date_time(rtc);
 
     /* Continuously read the current date and time from the RTC */
-    while (get_date_time(rtc) == 0)
-    {
-        k_sleep(K_MSEC(1000));
-    };
+    // while (get_date_time(rtc) == 0)
+    // {
+    //     k_sleep(K_MSEC(1000));
+    // };
 
     //Join the network
 
