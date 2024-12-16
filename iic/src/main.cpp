@@ -11,12 +11,30 @@
 LOG_MODULE_REGISTER(app);
 
 int main(void)
+
 {
     if (iic::bus::setup() < 0)
     {
         LOG_ERR("I2C setup failed");
         return -1;
     }
+
+    struct tm timeinfo;
+    // Set the time components
+    timeinfo.tm_year = 2024 - 1900; // Year since 1900
+    timeinfo.tm_mon = 12 - 1;       // Month (0-11)
+    timeinfo.tm_mday = 16;          // Day of the month (1-31)
+    timeinfo.tm_hour = 13;          // Hour (0-23)
+    timeinfo.tm_min = 16;           // Minutes (0-59)
+    timeinfo.tm_sec = 0;           // Seconds (0-60, 60 for leap seconds)
+    timeinfo.tm_isdst = 0;          // Daylight saving time flag (0 if not in effect)
+    
+
+    // if(iic::time::set_time(timeinfo)!= 0){
+    //     LOG_ERR("Failed to set time");
+    // }
+
+    // LOG_INF("Time set successfully");
 
     while (1)
     {
