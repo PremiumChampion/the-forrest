@@ -8,7 +8,10 @@ target_include_directories(app PRIVATE include)
 target_sources(app PRIVATE 
 
 "include/gpio/adc.hpp"
+"include/gpio/gpio.hpp"
+
 "src/gpio/adc.cpp"
+"src/gpio/gpio.cpp"
 
 "src/main.cpp"
 
