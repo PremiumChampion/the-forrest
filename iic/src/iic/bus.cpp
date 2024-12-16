@@ -51,11 +51,41 @@ namespace iic::bus
         return ret;
     }
     int write_read(uint8_t *write_data, size_t write_len, uint8_t *read_data, size_t read_len, uint8_t addr){
-        int ret = i2c_write_read(i2c_dev, addr, write_data, write_len, read_data, read_len);
+
+
+        int ret = write(write_data, write_len, addr);
         if (ret < 0)
         {
             // Handle error
-            LOG_ERR("I2C write-read failed: %d, [addr=%x]", ret, addr);
+            LOG_ERR("I2C write failed: %d, [addr=%x]", ret, addr);
+            return ret;
+        }
+
+        ret = read(read_data, read_len, addr);
+        if (ret < 0)
+        {
+            // Handle error
+            LOG_ERR("I2C read failed: %d, [addr=%x]", ret, addr);
+            return ret;
+        }
+
+        return ret;
+    }
+
+    int write_write(uint8_t *write_data1, size_t write_len1, uint8_t *write_data2, size_t write_len2, uint8_t addr){
+        int ret = write(write_data1, write_len1, addr);
+        if (ret < 0)
+        {
+            // Handle error
+            LOG_ERR("I2C write failed: %d, [addr=%x]", ret, addr);
+            return ret;
+        }
+
+        ret = write(write_data2, write_len2, addr);
+        if (ret < 0)
+        {
+            // Handle error
+            LOG_ERR("I2C write failed: %d, [addr=%x]", ret, addr);
             return ret;
         }
 

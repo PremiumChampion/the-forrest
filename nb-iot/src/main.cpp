@@ -2,14 +2,16 @@
 #include <zephyr/logging/log.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <zephyr/drivers/uart.h>
-#include <zephyr/device.h>
-#include <algorithm>
-#include <stdio.h>
+// uart
 #include "uart/uart.hpp"
-#include "at/sim7000e/https.hpp"
+// gpio
 #include "gpio/gpio.hpp"
+// sim7000e
+#include "at/sim7000e/https.hpp"
 #include "at/sim7000e/time.hpp"
+#include "at/sim7000e/network_configuration.hpp"
+#include "at/sim7000e/power.hpp"
+// iic
 #include "iic/bus.hpp"
 #include "iic/time.hpp"
 
@@ -54,14 +56,14 @@ int main_send_mb_iot_msg()
 
     ip_not_available = ip_not_available || ip.empty() || ip == "0.0.0.0";
 
-    while (ip_not_available && at::commands::sim7000e::https::setup_apn("internet") != at::commands::OK)
+    while (ip_not_available && at::commands::sim7000e::network_configuration::setup_apn("internet") != at::commands::OK)
     {
         LOG_ERR("SIM7000E APN setup failed");
     }
 
     if (ip_not_available)
     {
-        if (at::commands::sim7000e::https::get_ip(ip) != at::commands::OK)
+        if (at::commands::sim7000e::network_configuration::get_ip(ip) != at::commands::OK)
         {
             LOG_ERR("SIM7000E IP address retrieval failed");
         }
@@ -148,6 +150,13 @@ int main_send_mb_iot_msg()
         // return;
     }
 
+    // // start_header
+    // if (at::commands::sim7000e::https::start_header() != at::commands::OK)
+    // {
+    //     LOG_ERR("SIM7000E header start failed");
+    //     return -1;
+    // }
+
     // clear header
     if (at::commands::sim7000e::https::clear_header() != at::commands::OK)
     {
@@ -217,7 +226,7 @@ int main_send_mb_iot_msg()
         return -1;
     }
 
-    if (at::commands::sim7000e::https::network_disconnect() != at::commands::OK)
+    if (at::commands::sim7000e::network_configuration::network_disconnect() != at::commands::OK)
     {
         LOG_ERR("SIM7000E network disconnect failed");
         return -1;
@@ -276,10 +285,52 @@ int main_send_to_sleep()
 
     // power off the module
 
+    // Enable PSM event reporting
+    if (at::commands::sim7000e::power::set_psm_event_report(at::commands::sim7000e::power::PSM_EVENT_REPORT_ENABLE) != at::commands::OK)
+    {
+        LOG_ERR("SIM7000E PSM event report enable failed");
+        return -1;
+    }
+    // fix baud rate
+    if (at::commands::sim7000e::power::fix_baud_rate() != at::commands::OK)
+    {
+        LOG_ERR("SIM7000E fix baud rate failed");
+        return -1;
+    }
+    // Inquiry timers configured by network. (optional)
+    // Enable PSM mode and set the specific T3412_ext and T3324
+    if (at::commands::sim7000e::power::enable_PSM() != at::commands::OK)
+    {
+        LOG_ERR("SIM7000E enable PSM failed");
+        return -1;
+    }
+    // Inquiry timers configured by network. (optional)
+    // Disable network registration unsolicited result code (optional)
+    // Disable PSM
+    // if (at::commands::sim7000e::power::exit_PSM() != at::commands::OK)
+    // {
+    //     LOG_ERR("SIM7000E exit PSM failed");
+    //     return -1;
+    // }
+
+    // wait for wait_for_enter_psm
+    if (at::commands::sim7000e::power::wait_for_enter_psm() != at::commands::OK)
+    {
+        LOG_ERR("SIM7000E wait for enter PSM failed");
+        return -1;
+    }
+
+    // wait for wait_for_exit_psm
+    if (at::commands::sim7000e::power::wait_for_exit_psm() != at::commands::OK)
+    {
+        LOG_ERR("SIM7000E wait for exit PSM failed");
+        return -1;
+    }
+
     return 0;
 }
 
 int main(void)
 {
-    main_send_mb_iot_msg();
+    return main_send_to_sleep();
 }

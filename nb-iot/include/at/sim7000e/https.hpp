@@ -16,11 +16,9 @@ namespace at::commands::sim7000e::https
         HEAD = 5
     };
 
-    std::string escape_body(std::string body);
     result reboot();
+    std::string escape_body(std::string body);
     result check_sim7000e_present();
-    result setup_apn(std::string apn);
-    result get_ip(std::string &ip);
     result ignore_ssl_timestamp();
     result set_ssl_version();
     result set_server_name_indication(std::string server_name);
@@ -30,12 +28,12 @@ namespace at::commands::sim7000e::https
     result set_domain(std::string url);
     result start_ssl_session();
     result clear_header();
+    result start_header();
     result set_header(std::string header, std::string value);
     result set_body(std::string escaped_body);
     result exec(std::string url, http_method method, int &http_status_code, int &length);
     result read(std::string &response, int length, int timeout_ms = 10000);
     result stop_ssl_session();
-    result network_disconnect();
 
 } // namespace at::commands::sim7000e::http
 

@@ -75,65 +75,6 @@ namespace at::commands::sim7000e::https
         std::string response = "";
         return at::commands::prv::_at("AT\r\n", response);
     }
-    result setup_apn(std::string apn)
-    {
-        std::string response = "";
-        result r = _at("AT+CNACT=1,\"internet\"\r\n", response);
-
-        if (r != OK)
-        {
-            LOG_ERR("%s", escape_body(response).c_str());
-            return r;
-        }
-
-        // wait for the network to be ready
-        int64_t start = k_uptime_get();
-
-        while (k_uptime_get() - start < 10000)
-        {
-            uart::read_result uart_res = uart::uart_read(response);
-            if (uart_res == uart::read_result::UART_READ_OK)
-            {
-                if (response.find("+APP PDP: ACTIVE") != std::string::npos)
-                {
-                    return OK;
-                }
-            }
-        }
-
-        return TIMEOUT;
-    }
-    result get_ip(std::string &ip)
-    {
-        std::string response = "";
-        result r = _at("AT+CNACT?\r\n", response);
-
-        if (r != OK)
-        {
-            return r;
-        }
-
-        size_t start = response.find("+CNACT: ");
-        size_t end = response.find("\r\n", start);
-
-        if (start == std::string::npos || end == std::string::npos)
-        {
-            return ERROR;
-        }
-
-        std::string status = response.substr(start, end - start);
-        status = status.substr(8, status.size() - 8); // remove "+CNACT: "
-
-        std::vector<std::string> parts = split(status, ',');
-        if (parts.size() != 2)
-        {
-            return ERROR;
-        }
-
-        ip = parts[1].substr(1, parts[1].size() - 2); // remove quotes
-
-        return OK;
-    }
 
 
     result ignore_ssl_timestamp()
@@ -316,9 +257,5 @@ namespace at::commands::sim7000e::https
         return _at("AT+SHDISC\r\n", response);
     }
     
-    result network_disconnect()
-    {
-        std::string response = "";
-        return _at("AT+CNACT=0\r\n", response);
-    }
+
 } // namespace at::commands::sim7000e::https
