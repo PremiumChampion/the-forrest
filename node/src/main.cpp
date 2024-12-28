@@ -13,14 +13,20 @@
 #include <zephyr/drivers/rtc.h>
 #include <zephyr/sys/util.h>
 #include "gpio/adc.hpp"
-
+#include <zephyr/sys/poweroff.h>
+#include <zephyr/pm/device.h>
+#include <zephyr/drivers/rtc/maxim_ds3231.h>
+#include <zephyr/drivers/counter.h>
 
 LOG_MODULE_REGISTER(main);
+// syspoweroff test
+static const struct gpio_dt_spec sw0 = GPIO_DT_SPEC_GET(DT_ALIAS(sw0), gpios);
+const struct device *const cons = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
 
 // I2C Clock test
-const struct device *const rtc = DEVICE_DT_GET(DT_NODELABEL(rtc_ds1307));
-#define I2C0_NODE DT_NODELABEL(rtc_ds1307_i2c)
-static const struct i2c_dt_spec dev_i2c = I2C_DT_SPEC_GET(I2C0_NODE);
+const struct device *const rtc = DEVICE_DT_GET(DT_NODELABEL(rtc_ds3231));
+// #define I2C0_NODE DT_NODELABEL(rtc_ds1307_i2c)
+// static const struct i2c_dt_spec dev_i2c = I2C_DT_SPEC_GET(I2C0_NODE);
 
 // Lora startup init pin do not touch
 static const struct gpio_dt_spec reset_pin = GPIO_DT_SPEC_GET_OR(DT_ALIAS(mycusgpio), gpios, {0});
@@ -144,6 +150,112 @@ void lora_module_wake()
 }
 
 // RTC Test
+
+/* Format times as: YYYY-MM-DD HH:MM:SS DOW DOY */
+static const char *format_time(time_t time,
+                               long nsec)
+{
+    static char buf[64];
+    char *bp = buf;
+    char *const bpe = bp + sizeof(buf);
+    struct tm tv;
+    struct tm *tp = gmtime_r(&time, &tv);
+
+    bp += strftime(bp, bpe - bp, "%Y-%m-%d %H:%M:%S", tp);
+    if (nsec >= 0)
+    {
+        bp += snprintf(bp, bpe - bp, ".%09lu", nsec);
+    }
+    bp += strftime(bp, bpe - bp, " %a %j", tp);
+    return buf;
+}
+
+void enable_alarm_interrupt(const struct device *rtc)
+{
+    int ret;
+    uint8_t ctrl_reg;
+
+    // Read the current control register value
+    ctrl_reg = 0;
+
+    // Enable the Alarm1 interrupt (A1IE bit) and the INTCN bit
+    ctrl_reg |= BIT(0); // A1IE is bit 0 in the control register (for second precision)
+    ctrl_reg |= BIT(1); // A2IE is bit 1 in the control register
+    ctrl_reg |= BIT(2); // INTCN is bit 2 in the control register
+
+    // Write back the updated control register value
+    ret = maxim_ds3231_ctrl_update(rtc, ctrl_reg, 0);
+    if (ret < 0)
+    {
+        LOG_ERR("Failed to enable Alarm1 interrupt: %d", ret);
+        return;
+    }
+    else
+    {
+        LOG_INF("Alarm interrupt enabled.");
+    }
+
+    /* Show the DS3231 ctrl and ctrl_stat register values */
+    LOG_INF("\nDS3231 ctrl %02x ; ctrl_stat %02x\n",
+            maxim_ds3231_ctrl_update(rtc, 0, 0),
+            maxim_ds3231_stat_update(rtc, 0, 0));
+}
+
+void configure_ds3231_alarm(const struct device *rtc)
+{
+    struct maxim_ds3231_alarm min_alarm;
+    int rc = 0;
+    uint32_t now = 0;
+
+    struct rtc_time current_time;
+    rc = counter_get_value(rtc, &now);
+
+    time_t raw_time = now;
+    struct tm *time_info = gmtime(&raw_time);
+
+    current_time.tm_sec = time_info->tm_sec;
+    current_time.tm_min = time_info->tm_min;
+    current_time.tm_hour = time_info->tm_hour;
+    current_time.tm_mday = time_info->tm_mday;
+    current_time.tm_mon = time_info->tm_mon;
+    current_time.tm_year = time_info->tm_year;
+
+    if (rc < 0)
+    {
+
+        LOG_ERR("Failed to get current time: %d\n", rc);
+        return;
+    }
+
+    // Set the alarm time to 1 minute in the future
+    current_time.tm_min += 1;
+    if (current_time.tm_min >= 60)
+    {
+        current_time.tm_min -= 60;
+        current_time.tm_hour += 1;
+        if (current_time.tm_hour >= 24)
+        {
+            current_time.tm_hour -= 24;
+        }
+    }
+
+    struct tm tm_time;
+    tm_time.tm_sec = current_time.tm_sec;
+    tm_time.tm_min = current_time.tm_min;
+    tm_time.tm_hour = current_time.tm_hour;
+    tm_time.tm_mday = current_time.tm_mday;
+    tm_time.tm_mon = current_time.tm_mon;
+    tm_time.tm_year = current_time.tm_year;
+
+    min_alarm.time = mktime(&tm_time);
+    min_alarm.flags = 0 | MAXIM_DS3231_ALARM_FLAGS_IGNDA | MAXIM_DS3231_ALARM_FLAGS_IGNHR | MAXIM_DS3231_ALARM_FLAGS_IGNMN | MAXIM_DS3231_ALARM_FLAGS_IGNSE;
+
+    // Configure ALARM2 for daily trigger at 00:00:00
+    rc = maxim_ds3231_set_alarm(rtc, 1, &min_alarm);
+    LOG_INF("Set min alarm flags %x at %u ~ %s: %d\n", min_alarm.flags,
+            (uint32_t)min_alarm.time, format_time(min_alarm.time, -1), rc);
+}
+
 static int set_date_time(const struct device *rtc)
 {
     int ret = 0;
@@ -189,6 +301,26 @@ static int get_date_time(const struct device *rtc)
     return ret;
 }
 
+static void show_counter(const struct device *ds3231)
+{
+    uint32_t now = 0;
+
+    printk("\nCounter at %p\n", ds3231);
+    printk("\tMax top value: %u (%08x)\n",
+           counter_get_max_top_value(ds3231),
+           counter_get_max_top_value(ds3231));
+    printk("\t%u channels\n", counter_get_num_of_channels(ds3231));
+    printk("\t%u Hz\n", counter_get_frequency(ds3231));
+
+    printk("Top counter value: %u (%08x)\n",
+           counter_get_top_value(ds3231),
+           counter_get_top_value(ds3231));
+
+    (void)counter_get_value(ds3231, &now);
+
+    printk("Now %u: %s\n", now, format_time(now, -1));
+}
+
 // RTC Test End
 
 bool GATEWAY = false;
@@ -209,7 +341,8 @@ int main(void)
         return -1;
     }
 
-    if (gpio::adc::setup() != 0) {
+    if (gpio::adc::setup() != 0)
+    {
         printk("ADC initialization failed\n");
         return -1;
     }
@@ -220,14 +353,29 @@ int main(void)
         return -1;
     }
 
-    // RTC Test
-
-    if (!device_is_ready(rtc))
+    // Power off test
+    if (!device_is_ready(cons))
     {
-        printk("RTC device is not ready\n");
+        printf("%s: device not ready.\n", cons->name);
+        return 0;
+    }
+    int rc = 0;
+    /* Configure sw0 as input and set up interrupt */
+    rc = gpio_pin_configure_dt(&sw0, GPIO_INPUT);
+    if (rc < 0)
+    {
+        printf("Could not configure sw0 GPIO (%d)\n", rc);
+        return 0;
     }
 
-    //i2c_configure(rtc, I2C_SPEED_SET(I2C_SPEED_STANDARD | I2C_MODE_CONTROLLER));
+    rc = gpio_pin_interrupt_configure_dt(&sw0, GPIO_INT_EDGE_FALLING);
+    if (rc < 0)
+    {
+        printf("Could not configure sw0 GPIO interrupt (%d)\n", rc);
+        return 0;
+    }
+
+    // RTC Test
 
     /* Check if the RTC is ready */
     if (!device_is_ready(rtc))
@@ -236,15 +384,20 @@ int main(void)
         return 0;
     }
 
-    //set_date_time(rtc);
+    // Enable interrupt output on SQW pin
+    enable_alarm_interrupt(rtc);
+
+    configure_ds3231_alarm(rtc);
+    // set_date_time(rtc);
 
     /* Continuously read the current date and time from the RTC */
-    // while (get_date_time(rtc) == 0)
-    // {
-    //     k_sleep(K_MSEC(1000));
-    // };
 
-    //Join the network
+
+    show_counter(rtc);
+    k_sleep(K_MSEC(1000));
+
+
+    // Join the network
 
     if (GATEWAY)
     {
@@ -259,6 +412,7 @@ int main(void)
 
     while (1)
     {
+        // power off test working sys_poweroff();
 
         if (GATEWAY)
         {
@@ -287,6 +441,15 @@ int main(void)
 
             send_message(GATEWAY_ADDRESS, "Sensor 1: " + std::to_string(voltage0) + " Sensor 2: " + std::to_string(voltage1));
             k_sleep(K_MSEC(1000));
+
+            rc = pm_device_action_run(cons, PM_DEVICE_ACTION_SUSPEND);
+            if (rc < 0)
+            {
+                printf("Could not resume console (%d)\n", rc);
+                return 0;
+            }
+            
+            sys_poweroff();
         }
     }
 }

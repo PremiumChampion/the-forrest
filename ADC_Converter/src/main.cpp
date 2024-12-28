@@ -19,6 +19,7 @@
 #define SLEEP_TIME_MS 1000
 
 #include "gpio/adc.hpp"
+#include "gpio/gpio.hpp"
 
 int32_t voltage = 0;
 
@@ -27,6 +28,8 @@ LOG_MODULE_REGISTER(main);
 int main(void)
 {
     gpio::adc::setup();
+    gpio::gpio_result result = gpio::init();
+
     while (1)
     {
         gpio::adc::read_channel(0, voltage);

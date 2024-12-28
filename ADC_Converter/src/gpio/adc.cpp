@@ -11,6 +11,7 @@
 #include <zephyr/logging/log.h>
 
 #include "gpio/adc.hpp"
+#include "gpio/gpio.hpp"
 
 LOG_MODULE_REGISTER(gpio_adc);
 
@@ -86,6 +87,11 @@ namespace gpio::adc
             LOG_ERR("Could not read (%d)", err);
         }
 
+        if (index == 1)
+        {
+            gpio::gpio_result result = gpio::set(gpio::ADC_CONVERTER_TRANSISTOR, gpio::HIGH);
+        }
+
         /*
          * If using differential mode, the 16 bit value
          * in the ADC sample buffer should be a signed 2's
@@ -105,6 +111,11 @@ namespace gpio::adc
         if (err < 0)
         {
             LOG_ERR(" (value in mV not available)");
+        }
+
+        if (index == 1)
+        {
+            gpio::gpio_result result = gpio::set(gpio::ADC_CONVERTER_TRANSISTOR, gpio::LOW);
         }
     }
 }
