@@ -8,7 +8,7 @@ LOG_MODULE_REGISTER(at_commands_network_configuration);
 
 namespace at::commands::sim7000e::network_configuration
 {
-    result setup_apn(std::string apn)
+    result setup_apn(std::string apn, int timeout_ms)
     {
         std::string response = "";
         result r = at::commands::prv::_at("AT+CNACT=1,\""+apn+"\"\r\n", response);
@@ -20,8 +20,7 @@ namespace at::commands::sim7000e::network_configuration
 
         // wait for the network to be ready
         int64_t start = k_uptime_get();
-
-        while (k_uptime_get() - start < 10000)
+        while (k_uptime_get() - start < timeout_ms)
         {
             uart::read_result uart_res = uart::uart_read(response);
             if (uart_res == uart::read_result::UART_READ_OK)

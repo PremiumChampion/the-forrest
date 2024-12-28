@@ -14,6 +14,11 @@ namespace at::commands::sim7000e::power
             return ERROR;
         }
 
+        if (gpio::set(gpio::SIM7000_DTR, gpio::LOW) != gpio::OK)
+        {
+            return ERROR;
+        }
+
         return OK;
     }
 
@@ -66,6 +71,8 @@ namespace at::commands::sim7000e::power
         {
             return ERROR;
         }
+
+        return OK;
     }
 
     result fix_baud_rate()
@@ -73,6 +80,28 @@ namespace at::commands::sim7000e::power
         // set the baud rate to 115200
         std::string result = "";
         if (at::commands::prv::_at("AT+IPR=115200\r\n", result) != at::commands::OK)
+        {
+            return ERROR;
+        }
+
+        return OK;
+    }
+
+    result set_slow_clock(bool enable)
+    {
+        std::string result = "";
+        std::string command = "";
+
+        if (enable)
+        {
+            command = "AT+CSCLK=1\r\n";
+        }
+        else
+        {
+            command = "AT+CSCLK=0\r\n";
+        }
+
+        if (at::commands::prv::_at(command, result) != at::commands::OK)
         {
             return ERROR;
         }
@@ -96,8 +125,8 @@ namespace at::commands::sim7000e::power
 
         // binary_TAU = <unit (3bit)><value (5bit)>
 
-        uint8_t unit_TAU = 3;   // 2 sec // 0b010
-        uint8_t value_TAU = 15; // 15 units = 30 sec // 0b1111 // max 5 bits
+        uint8_t unit_TAU = 4;  // 30 sec
+        uint8_t value_TAU = 4; // 4 units = 120 sec
         std::string binary_TAU = std::bitset<3>(unit_TAU).to_string() + std::bitset<5>(value_TAU).to_string();
 
         // ActiveTime (unit)
@@ -107,9 +136,9 @@ namespace at::commands::sim7000e::power
         // 2 ->     6min    1800    3600
         // binary_T3324 = <unit (3bit)><value (5bit)>
 
-        uint8_t unit_T3324 = 0;  // 2 sec // 0b00
-        uint8_t value_T3324 = 4; // 4 units = 8 sec // 0b0100 // max 5 bits
-        std::string binary_T3324 = std::bitset<2>(unit_T3324).to_string() + std::bitset<4>(value_T3324).to_string();
+        uint8_t unit_T3324 = 1;   // 2 sec
+        uint8_t value_T3324 = 0; // 0 units = 0 sec
+        std::string binary_T3324 = std::bitset<3>(unit_T3324).to_string() + std::bitset<5>(value_T3324).to_string();
 
         if (at::commands::prv::_at("AT+CPSMS=1,,,\"" + binary_TAU + "\",\"" + binary_T3324 + "\"\r\n", result) != at::commands::OK)
         {
@@ -119,9 +148,22 @@ namespace at::commands::sim7000e::power
         return OK;
     }
 
-    result wait_for_enter_psm(){
+    result enter_idle_mode()
+    {
+        std::string result = "";
+        if (at::commands::prv::_at("AT+CFUN=0\r\n", result) != at::commands::OK)
+        {
+            return ERROR;
+        }
+
+        return OK;
+    }
+
+    result wait_for_enter_psm()
+    {
         std::string result = "";
         uart::read_result uart_res;
+
         do
         {
             result = "";
@@ -140,10 +182,11 @@ namespace at::commands::sim7000e::power
             }
         } while (1);
 
-        return OK;
+        return TIMEOUT;
     }
 
-    result wait_for_exit_psm(){
+    result wait_for_exit_psm()
+    {
         std::string result = "";
         uart::read_result uart_res;
         do
@@ -164,24 +207,70 @@ namespace at::commands::sim7000e::power
             }
         } while (1);
 
-        return OK;
+        return TIMEOUT;
     }
-
 
     result exit_PSM()
     {
         std::string result = "";
-
-        gpio::set(gpio::SIM7000_PWR, gpio::LOW);
 
         if (at::commands::prv::_at("AT+CPSMS=0\r\n", result) != at::commands::OK)
         {
             return ERROR;
         }
 
-        gpio::set(gpio::SIM7000_PWR, gpio::HIGH);
+        return OK;
+    }
+
+    result power_off(bool urgent)
+    {
+        std::string result = "";
+
+        // if (at::commands::prv::_at("AT+CPOF\r\n", result) != at::commands::OK)
+        // {
+        //     return ERROR;
+        // }
+
+        result = "";
+        if (urgent)
+        {
+            if (uart::uart_write("AT+CPOWD=1\r\n") != uart::write_result::UART_WRITE_OK)
+            {
+                return ERROR;
+            }
+
+            // we do not expect a response
+        }
+        else
+        {
+            // wait for the module to power off
+            if (uart::uart_write("AT+CPOWD=1\r\n") != uart::write_result::UART_WRITE_OK)
+            {
+                return ERROR;
+            }
+
+            result = "";
+            uart::read_result uart_res;
+            while (1)
+            {
+                uart_res = uart::uart_read(result);
+                if (uart_res == uart::read_result::UART_READ_OK)
+                {
+                    if (result.find("NORMAL POWER DOWN") != std::string::npos)
+                    {
+                        return OK;
+                    }
+                }
+
+                if (uart_res == uart::read_result::UART_READ_ERROR)
+                {
+                    return ERROR;
+                }
+            }
+        }
 
         return OK;
     }
+
 
 } // namespace at::commands::sim7000e::power

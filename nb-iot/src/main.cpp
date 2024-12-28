@@ -32,6 +32,18 @@ int main_send_mb_iot_msg()
         return -1;
     }
 
+    if (gpio::init() != gpio::OK)
+    {
+        LOG_ERR("GPIO initialization failed");
+        return -1;
+    }
+
+    if (gpio::set(gpio::SIM7000_PWR, gpio::HIGH) != gpio::OK)
+    {
+        LOG_ERR("SIM7000E power on failed");
+        return -1;
+    }
+
     // k_sleep(K_MSEC(5000));
 
     while (at::commands::sim7000e::https::check_sim7000e_present() != at::commands::OK)
@@ -72,7 +84,6 @@ int main_send_mb_iot_msg()
             LOG_INF("IP address: %s", ip.c_str());
         }
     }
-
     if (at::commands::sim7000e::https::ignore_ssl_timestamp() != at::commands::OK)
     {
         LOG_ERR("SIM7000E SSL timestamp ignore failed");
@@ -130,15 +141,22 @@ int main_send_mb_iot_msg()
         return -1;
     }
 
-    if (at::commands::sim7000e::time::get_time() != at::commands::OK)
+    std::string time_request = "";
+
+    if (at::commands::sim7000e::time::get_time(time_request) != at::commands::OK)
     {
         LOG_ERR("SIM7000E time get failed");
     }
 
-    // set time
-    if (at::commands::sim7000e::time::set_time() != at::commands::OK)
+    if (time_request.find("+CCLK: \"80") != std::string::npos)
     {
-        LOG_ERR("SIM7000E time set failed");
+        LOG_INF("Need to set time");
+        // set_time
+        if (at::commands::sim7000e::time::set_time() != at::commands::OK)
+        {
+            LOG_ERR("SIM7000E time set failed");
+            return -1;
+        }
     }
 
     // start_ssl_session
@@ -226,12 +244,88 @@ int main_send_mb_iot_msg()
         return -1;
     }
 
-    if (at::commands::sim7000e::network_configuration::network_disconnect() != at::commands::OK)
+    // if (at::commands::sim7000e::network_configuration::network_disconnect() != at::commands::OK)
+    // {
+    //     LOG_ERR("SIM7000E network disconnect failed");
+    //     return -1;
+    // }
+
+    return 0;
+}
+
+int send_to_sleep()
+{
+    // power off the module
+
+    // Enable PSM event reporting
+    if (at::commands::sim7000e::power::set_psm_event_report(at::commands::sim7000e::power::PSM_EVENT_REPORT_ENABLE) != at::commands::OK)
     {
-        LOG_ERR("SIM7000E network disconnect failed");
+        LOG_ERR("SIM7000E PSM event report enable failed");
+        return -1;
+    }
+    // fix baud rate
+    if (at::commands::sim7000e::power::fix_baud_rate() != at::commands::OK)
+    {
+        LOG_ERR("SIM7000E fix baud rate failed");
         return -1;
     }
 
+    // enable slow clock
+    if (at::commands::sim7000e::power::set_slow_clock(true) != at::commands::OK)
+    {
+        LOG_ERR("SIM7000E enable slow clock failed");
+        return -1;
+    }
+
+    // disconnect from networt to enter PSM
+    if (at::commands::sim7000e::network_configuration::network_disconnect() != at::commands::OK)
+    {
+        LOG_ERR("SIM7000E network disconnect failed");
+    }
+
+    if (at::commands::sim7000e::power::enter_idle_mode() != at::commands::OK)
+    {
+        LOG_ERR("SIM7000E enter idle mode failed");
+        return -1;
+    }
+
+    // Inquiry timers configured by network. (optional)
+    // Enable PSM mode and set the specific T3412_ext and T3324
+    if (at::commands::sim7000e::power::enable_PSM() != at::commands::OK)
+    {
+        LOG_ERR("SIM7000E enable PSM failed");
+        return -1;
+    }
+
+    // wait for wait_for_enter_psm
+    if (at::commands::sim7000e::power::wait_for_enter_psm() != at::commands::OK)
+    {
+        LOG_ERR("SIM7000E wait for enter PSM failed");
+        // k_sleep(K_MSEC(1000));
+    }
+    else
+    {
+        LOG_INF("Entering PSM successfully");
+    }
+
+    // wait for wait_for_exit_psm
+    if (at::commands::sim7000e::power::wait_for_exit_psm() != at::commands::OK)
+    {
+        LOG_ERR("SIM7000E wait for exit PSM failed");
+    }
+    else
+    {
+        LOG_INF("Exited PSM successfull");
+    }
+
+    // disable slow clock
+    if (at::commands::sim7000e::power::set_slow_clock(false) != at::commands::OK)
+    {
+        LOG_ERR("SIM7000E disable slow clock failed");
+        return -1;
+    }
+
+    k_sleep(K_MSEC(10000));
     return 0;
 }
 
@@ -250,7 +344,8 @@ int main_send_to_sleep()
     }
 
     // module powers on by default when recieving power for the first time
-    if (gpio::set(gpio::SIM7000_PWR, gpio::HIGH) != gpio::OK)
+    // we set it to low to power on the module from deep sleep
+    if (gpio::set(gpio::SIM7000_PWR, gpio::LOW) != gpio::OK)
     {
         LOG_ERR("SIM7000E GPIO power set failed");
         return -1;
@@ -262,7 +357,101 @@ int main_send_to_sleep()
         return -1;
     }
 
-    k_sleep(K_MSEC(5000));
+    // gpio::gpio_state state = gpio::LOW;
+
+    // for (size_t i = 0; i < 10; i++)
+    // {
+    //     if(gpio::set(gpio::SIM7000_PWR, state))
+    //     {
+    //         LOG_ERR("SIM7000E GPIO power set failed");
+    //         return -1;
+    //     }
+    //     k_sleep(K_MSEC(1000));
+    //     state = state == gpio::LOW ? gpio::HIGH : gpio::LOW;
+    // }
+
+    if (at::commands::sim7000e::https::check_sim7000e_present() != at::commands::OK)
+    {
+        LOG_INF("SIM7000E not responding");
+
+        // power on the module
+        if (gpio::set(gpio::SIM7000_PWR, gpio::HIGH) != gpio::OK)
+        {
+            return -1;
+        }
+
+        k_sleep(K_MSEC(100));
+
+        // wait for the module to boot
+        while (at::commands::sim7000e::https::check_sim7000e_present() != at::commands::OK)
+        {
+            LOG_INF("SIM7000E not responding");
+            k_sleep(K_MSEC(1000));
+        }
+    }
+
+    while (1)
+    {
+        bool ip_not_available = false;
+        std::string ip;
+        if (at::commands::sim7000e::network_configuration::get_ip(ip) != at::commands::OK)
+        {
+            LOG_ERR("SIM7000E IP address retrieval failed");
+            ip_not_available = true;
+        }
+
+        ip_not_available = ip_not_available || ip.empty() || ip == "0.0.0.0";
+
+        while (ip_not_available && at::commands::sim7000e::network_configuration::setup_apn("internet") != at::commands::OK)
+        {
+            LOG_ERR("SIM7000E APN setup failed");
+            k_sleep(K_MSEC(1000));
+        }
+
+        if (ip_not_available)
+        {
+            if (at::commands::sim7000e::network_configuration::get_ip(ip) != at::commands::OK)
+            {
+                LOG_ERR("SIM7000E IP address retrieval failed");
+            }
+            else
+            {
+                LOG_INF("IP address: %s", ip.c_str());
+            }
+        }
+
+        return 0;
+    }
+    send_to_sleep();
+}
+
+int main_power_off()
+{
+    if (uart::uart_init() != 0)
+    {
+        LOG_ERR("UART initialization failed");
+        return -1;
+    }
+
+    if (gpio::init() != gpio::OK)
+    {
+        LOG_ERR("GPIO initialization failed");
+        return -1;
+    }
+
+    // POWER THE MODULE
+    // we set it to low to power on the module from deep sleep
+    if (gpio::set(gpio::SIM7000_PWR, gpio::LOW) != gpio::OK)
+    {
+        LOG_ERR("SIM7000E GPIO power set failed");
+        return -1;
+    }
+
+    if (iic::bus::setup() != 0)
+    {
+        LOG_ERR("I2C bus setup failed");
+        return -1;
+    }
 
     if (at::commands::sim7000e::https::check_sim7000e_present() != at::commands::OK)
     {
@@ -282,55 +471,110 @@ int main_send_to_sleep()
             LOG_INF("SIM7000E not responding");
         }
     }
+    bool ip_not_available = false;
+    std::string ip;
+    if (at::commands::sim7000e::network_configuration::get_ip(ip) != at::commands::OK)
+    {
+        LOG_ERR("SIM7000E IP address retrieval failed");
+        ip_not_available = true;
+    }
+
+    ip_not_available = ip_not_available || ip.empty() || ip == "0.0.0.0";
+
+    while (ip_not_available && at::commands::sim7000e::network_configuration::setup_apn("internet") != at::commands::OK)
+    {
+        LOG_ERR("SIM7000E APN setup failed");
+        k_sleep(K_MSEC(1000));
+    }
+
+    if (ip_not_available)
+    {
+        if (at::commands::sim7000e::network_configuration::get_ip(ip) != at::commands::OK)
+        {
+            LOG_ERR("SIM7000E IP address retrieval failed");
+        }
+        else
+        {
+            LOG_INF("IP address: %s", ip.c_str());
+        }
+    }
 
     // power off the module
+    if (at::commands::sim7000e::power::power_off(false) != at::commands::OK)
+    {
+        LOG_ERR("SIM7000E power off failed");
+        return -1;
+    }
 
-    // Enable PSM event reporting
-    if (at::commands::sim7000e::power::set_psm_event_report(at::commands::sim7000e::power::PSM_EVENT_REPORT_ENABLE) != at::commands::OK)
-    {
-        LOG_ERR("SIM7000E PSM event report enable failed");
-        return -1;
-    }
-    // fix baud rate
-    if (at::commands::sim7000e::power::fix_baud_rate() != at::commands::OK)
-    {
-        LOG_ERR("SIM7000E fix baud rate failed");
-        return -1;
-    }
-    // Inquiry timers configured by network. (optional)
-    // Enable PSM mode and set the specific T3412_ext and T3324
-    if (at::commands::sim7000e::power::enable_PSM() != at::commands::OK)
-    {
-        LOG_ERR("SIM7000E enable PSM failed");
-        return -1;
-    }
-    // Inquiry timers configured by network. (optional)
-    // Disable network registration unsolicited result code (optional)
-    // Disable PSM
-    // if (at::commands::sim7000e::power::exit_PSM() != at::commands::OK)
+    LOG_INF("SIM7000E powered off");
+    gpio::set(gpio::SIM7000_PWR, gpio::LOW);
+
+    // k_sleep(K_MSEC(10000));
+
+    // LOG_INF("SIM7000E power on");
+    // at::commands::result present_check_result = at::commands::sim7000e::https::check_sim7000e_present();
+    // if (present_check_result != at::commands::TIMEOUT)
     // {
-    //     LOG_ERR("SIM7000E exit PSM failed");
+    //     LOG_INF("SIM7000E not responding");
+    // }
+    // else if (present_check_result == at::commands::OK)
+    // {
+    //     LOG_ERR("SIM7000E is responding");
+    // }
+
+    // // power on the module
+    // if (gpio::set(gpio::SIM7000_PWR, gpio::LOW) != gpio::OK)
+    // {
     //     return -1;
     // }
 
-    // wait for wait_for_enter_psm
-    if (at::commands::sim7000e::power::wait_for_enter_psm() != at::commands::OK)
-    {
-        LOG_ERR("SIM7000E wait for enter PSM failed");
-        return -1;
-    }
+    // // while (at::commands::sim7000e::https::check_sim7000e_present() != at::commands::OK)
+    // // {
+    // //     LOG_INF("SIM7000E not responding");
+    // //     k_sleep(K_MSEC(1000));
+    // // }
 
-    // wait for wait_for_exit_psm
-    if (at::commands::sim7000e::power::wait_for_exit_psm() != at::commands::OK)
-    {
-        LOG_ERR("SIM7000E wait for exit PSM failed");
-        return -1;
-    }
+    // if (at::commands::sim7000e::power::wait_for_boot() != at::commands::OK)
+    // {
+    //     LOG_ERR("SIM7000E wait for boot failed");
+    //     return -1;
+    // }
 
+    // LOG_INF("SIM7000E powered on and ready");
+
+    while (1)
+    {
+        k_sleep(K_MSEC(1000));
+    }
     return 0;
 }
 
 int main(void)
 {
-    return main_send_to_sleep();
+    main_send_mb_iot_msg();
+    // power off the module
+    if (at::commands::sim7000e::power::power_off(false) != at::commands::OK)
+    {
+        LOG_ERR("SIM7000E power off failed");
+        return -1;
+    }
+
+    gpio::set(gpio::SIM7000_PWR, gpio::LOW);
+
+    while (1)
+    {
+        uart::read_result uart_res;
+        std::string response = "";
+        uart_res = uart::uart_read(response);
+        if (uart_res == uart::read_result::UART_READ_OK)
+        {
+            LOG_INF("Response: %s", response.c_str());
+        }
+        if (uart_res == uart::read_result::UART_READ_ERROR)
+        {
+            LOG_ERR("UART read error");
+        }
+    }
+
+    return 0;
 }

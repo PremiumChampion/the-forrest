@@ -31,11 +31,13 @@ namespace at::commands::sim7000e::power
     };
 
     // result get_timer_configuration_by_network();
-
+    result set_slow_clock(bool enable);
     result enable_PSM();
+    result enter_idle_mode();
     result wait_for_enter_psm();
     result wait_for_exit_psm();
     result exit_PSM();
+    result power_off(bool urgent);
 
 } // namespace at::commands::sim7000e::power
 

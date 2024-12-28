@@ -7,7 +7,7 @@
 
 namespace at::commands::prv
 {
-    std::vector<std::string> split(std::string str, char delimiter);
+    std::vector<std::string> split(std::string str, char delimiter, int limit = -1);
     result _at(std::string command, std::string &response, int timeout_ms = 1000);
     
 }

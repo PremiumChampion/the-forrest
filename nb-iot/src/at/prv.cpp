@@ -7,7 +7,7 @@ LOG_MODULE_REGISTER(at_commands_prv);
 
 namespace at::commands::prv
 {
-    std::vector<std::string> split(std::string str, char delimiter)
+    std::vector<std::string> split(std::string str, char delimiter, int limit)
     {
         std::vector<std::string> v;
         if (!str.empty())
@@ -27,7 +27,7 @@ namespace at::commands::prv
                 int length = idx - start;
                 v.push_back(str.substr(start, length));
                 start += (length + 1); // Move the start to after the delimiter (1)
-            } while (true);
+            } while (limit == -1 || limit > v.size());
             v.push_back(str.substr(start));
         }
 
@@ -76,7 +76,6 @@ namespace at::commands::prv
         return TIMEOUT;
     }
 
-    
     /**
      * @brief Check for connectivity
      *

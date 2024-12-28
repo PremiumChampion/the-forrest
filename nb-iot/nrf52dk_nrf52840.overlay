@@ -1,4 +1,4 @@
-&uart1{
+&uart1 {
     status = "okay";
     pinctrl-0 = <&uart1_default>;
     pinctrl-1 = <&uart1_sleep>;
@@ -14,4 +14,26 @@
     compatible = "nordic,nrf-twim";
     clock-frequency = <100000>;
     status = "okay";
+};
+/{
+    custom_gpios {
+
+        compatible = "gpio-keys";
+
+        sim7000e_power: sim7000e_0 {
+            gpios = <&gpio1 4 GPIO_ACTIVE_HIGH>;
+            label = "SIM7000E Power Pin";
+        };
+
+        sim7000e_dtr: sim7000e_1 {
+            gpios = <&gpio1 3 GPIO_ACTIVE_HIGH>;
+            label = "SIM7000E DTR Pin";
+        };
+
+    };
+
+    aliases {
+        sim7000epower = &sim7000e_power;
+        sim7000edtr = &sim7000e_dtr;
+    };
 };

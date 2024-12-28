@@ -28,7 +28,7 @@ namespace at::commands::sim7000e::https
         k_sleep(K_MSEC(2000));
 
         // wait for the module to reboot
-        
+
         while (check_sim7000e_present() != at::commands::OK)
         {
             LOG_ERR("SIM7000E not responding");
@@ -48,9 +48,8 @@ namespace at::commands::sim7000e::https
                 }
             }
         }
-        
 
-        return ERROR; 
+        return ERROR;
     }
 
     std::string escape_body(std::string body)
@@ -76,68 +75,68 @@ namespace at::commands::sim7000e::https
         return at::commands::prv::_at("AT\r\n", response);
     }
 
-
     result ignore_ssl_timestamp()
     {
         std::string response = "";
-        return _at("AT+CSSLCFG=\"ignorertctime\",1,1\r\n", response);
+        return at::commands::prv::_at("AT+CSSLCFG=\"ignorertctime\",0,1\r\n", response);
     }
+
     result set_ssl_version()
     {
         std::string response = "";
-        return _at("AT+CSSLCFG=\"sslversion\",1,3\r\n", response);
+        return at::commands::prv::_at("AT+CSSLCFG=\"sslversion\",1,3\r\n", response);
     }
     result set_server_name_indication(std::string server_name)
     {
         std::string response = "";
-        return _at("AT+CSSLCFG=\"sni\",1,\"" + server_name + "\"\r\n", response);
+        return at::commands::prv::_at("AT+CSSLCFG=\"sni\",1,\"" + server_name + "\"\r\n", response);
     }
     result trust_all_certificates()
     {
         std::string response = "";
-        return _at("AT+SHSSL=1,\"\"\r\n", response);
+        return at::commands::prv::_at("AT+SHSSL=1,\"\"\r\n", response);
     }
     result set_body_length(int length)
     {
         std::string response = "";
-        return _at("AT+SHCONF=\"BODYLEN\"," + std::to_string(length) + "\r\n", response);
+        return at::commands::prv::_at("AT+SHCONF=\"BODYLEN\"," + std::to_string(length) + "\r\n", response);
     }
     result set_header_length(int length)
     {
         std::string response = "";
-        return _at("AT+SHCONF=\"HEADERLEN\"," + std::to_string(length) + "\r\n", response);
+        return at::commands::prv::_at("AT+SHCONF=\"HEADERLEN\"," + std::to_string(length) + "\r\n", response);
     }
     result set_domain(std::string url)
     {
         std::string response = "";
-        return _at("AT+SHCONF=\"URL\",\"" + url + "\"\r\n", response);
+        return at::commands::prv::_at("AT+SHCONF=\"URL\",\"" + url + "\"\r\n", response);
     }
 
     result start_ssl_session()
     {
         std::string response = "";
-        return _at("AT+SHCONN\r\n", response, 10000);
+        return at::commands::prv::_at("AT+SHCONN\r\n", response, 10000);
     }
     result clear_header()
     {
         std::string response = "";
-        return _at("AT+SHCHEAD\r\n", response);
+        return at::commands::prv::_at("AT+SHCHEAD\r\n", response);
     }
     result start_header()
     {
         std::string response = "";
-        return _at("AT+SHAHEAD\r\n", response);
+        return at::commands::prv::_at("AT+SHAHEAD\r\n", response);
     }
     result set_header(std::string header, std::string value)
     {
         std::string response = "";
-        return _at("AT+SHAHEAD=\"" + header + "\",\"" + value + "\"\r\n", response);
+        return at::commands::prv::_at("AT+SHAHEAD=\"" + header + "\",\"" + value + "\"\r\n", response);
     }
     result set_body(std::string body)
     {
         std::string response = "";
         std::string escaped = escape_body(body);
-        return _at("AT+SHBOD=\"" + escaped + "\"," + std::to_string(body.length()) + "\r\n", response);
+        return at::commands::prv::_at("AT+SHBOD=\"" + escaped + "\"," + std::to_string(body.length()) + "\r\n", response);
     }
     result exec(std::string url, http_method method, int &http_status_code, int &length)
     {
@@ -190,7 +189,7 @@ namespace at::commands::sim7000e::https
         {
             return ERROR;
         }
-        
+
         result r = _at("AT+SHREAD=0," + std::to_string(length) + "\r\n", response);
         if (r != OK)
         {
@@ -199,7 +198,7 @@ namespace at::commands::sim7000e::https
 
         // wait for the response
         int64_t start = k_uptime_get();
-        
+
         // 0 - not in body
         // 1 - in body
         // 2 - has ok
@@ -234,7 +233,6 @@ namespace at::commands::sim7000e::https
 
                     response = response.substr(end + 2); // remove "...\r\n+SHREAD: number_of_bytes\r\n"
 
-
                     state = 1;
                 }
 
@@ -256,6 +254,5 @@ namespace at::commands::sim7000e::https
         std::string response = "";
         return _at("AT+SHDISC\r\n", response);
     }
-    
 
 } // namespace at::commands::sim7000e::https

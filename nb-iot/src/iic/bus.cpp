@@ -18,7 +18,6 @@ namespace iic::bus
             LOG_ERR("I2C device not found");
             return -1;
         }
-        LOG_INF("I2C device found");
 
         int ret = i2c_configure(i2c_dev, I2C_SPEED_SET(I2C_SPEED_STANDARD) | I2C_MODE_CONTROLLER);
 
@@ -29,7 +28,6 @@ namespace iic::bus
             return -1;
         }
 
-        LOG_INF("I2C configured");
         return 0;
     }
     int write(uint8_t *data, size_t len, uint8_t addr){

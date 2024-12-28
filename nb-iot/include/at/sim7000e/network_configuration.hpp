@@ -8,7 +8,7 @@ namespace at::commands::sim7000e::network_configuration{
 
     // functions to setup the network connection
 
-    result setup_apn(std::string apn);
+    result setup_apn(std::string apn, int timeout_ms = 10000);
     result get_ip(std::string &ip);
     result network_disconnect();
 
