@@ -1,0 +1,71 @@
+&uart0 {
+    status = "okay";
+    current-speed = <115200>;
+};
+&uart1 {
+    status = "okay";
+    current-speed = <115200>;
+};
+
+&gpio0 {
+    status = "okay";
+};
+
+
+&i2c0 {
+    compatible = "nordic,nrf-twim";
+    clock-frequency = <100000>;
+    status = "okay";
+};
+/{
+    custom_gpios {
+
+        compatible = "gpio-keys";
+
+        sim7000e_power: sim7000e_0 {
+            gpios = <&gpio1 4 GPIO_ACTIVE_HIGH>;
+            label = "SIM7000E Power Pin";
+        };
+
+        sim7000e_dtr: sim7000e_1 {
+            gpios = <&gpio1 3 GPIO_ACTIVE_HIGH>;
+            label = "SIM7000E DTR Pin";
+        };
+
+        uart0_rx: uart0_rx_spy {
+            gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
+            label = "UART0 RX";
+        };
+
+        uart1_rx: uart1_rx {
+            gpios = <&gpio1 1 GPIO_ACTIVE_HIGH>;
+            label = "UART1 RX";
+        };
+
+
+
+    };
+
+    aliases {
+        sim7000epower = &sim7000e_power;
+        sim7000edtr = &sim7000e_dtr;
+        uart0rx = &uart0_rx;
+        uart1rx = &uart1_rx;
+    };
+};
+
+&mx25r64 {
+    status = "disabled";
+};
+
+&uart0_default {
+    group2 {
+        psels = <NRF_PSEL(UART_RX, 0, 8)>;
+    };
+};
+
+&uart0_default {
+    group1 {
+        psels = <NRF_PSEL(UART_TX, 0, 6)>;
+    };
+};
