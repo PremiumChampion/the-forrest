@@ -16,6 +16,7 @@ namespace uart::uart0
     int sleep();
     int wakeup();
     int change_baudrate(uart::baudrate baudrate);
+    int get_baudrate(uart::baudrate &baudrate);
 
     class uart0_implementation : public uart_driver
     {
@@ -24,11 +25,14 @@ namespace uart::uart0
         uart::read_result uart_read(std::string &result, k_timeout_t timeout = K_MSEC(100)) override; // read from the UART
         uart::write_result uart_write(std::string data) override;
         int change_baudrate(uart::baudrate baudrate) override;
+        int get_baudrate(uart::baudrate &baudrate) override;
         int uart_init() override;
         int sleep() override;
         int wakeup() override;
         void flush() override;
     };
+
+    extern uart0_implementation uart0_driver;
 } // namespace uart
 
 #endif // UART_HPP

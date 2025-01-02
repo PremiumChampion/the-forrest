@@ -37,6 +37,7 @@ namespace uart
         virtual uart::read_result uart_read(std::string &result, k_timeout_t timeout = K_MSEC(100)) = 0; // read from the UART
         virtual uart::write_result uart_write(std::string data) = 0;
         virtual int change_baudrate(uart::baudrate baudrate) = 0;
+        virtual int get_baudrate(uart::baudrate &baudrate) = 0;
         virtual int uart_init() = 0;
         virtual int sleep() = 0;
         virtual int wakeup() = 0;

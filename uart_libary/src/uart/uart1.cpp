@@ -23,6 +23,8 @@ namespace uart::uart1
 		std::size_t end;
 	} uart_msg;
 
+	uart1_implementation uart1_driver = uart1_implementation();
+
 	static const struct device *uart = DEVICE_DT_GET(DT_NODELABEL(uart1));
 
 	static const struct gpio_dt_spec uart1_rx_gpio = GPIO_DT_SPEC_GET(DT_ALIAS(uart1rx), gpios);
@@ -347,44 +349,70 @@ namespace uart::uart1
 		return rc;
 	}
 
+	int get_baudrate(baudrate &baudrate){
+		if (!is_initialized)
+		{
+			LOG_ERR("UART device not initialized!");
+			return -1;
+		}
+
+		struct uart_config cfg;
+		int rc;
+		rc = uart_config_get(uart, &cfg);
+		if (rc)
+		{
+			LOG_ERR("UART config get error %d", rc);
+			return rc;
+		}
+
+		baudrate = (uart::baudrate)cfg.baudrate;
+
+		return 0;
+	}
+
 	uart1_implementation::uart1_implementation() : uart_driver()
 	{
-		this->uart_msgq_rx = &uart1_msgq_rx;
+		this->uart_msgq_rx = &uart::uart1::uart1_msgq_rx;
 	}
 
 	read_result uart1_implementation::uart_read(std::string &result, k_timeout_t timeout)
 	{
-		return uart_read(result, timeout);
+		return uart::uart1::uart_read(result, timeout);
 	}
 
 	write_result uart1_implementation::uart_write(std::string data)
 	{
-		return uart_write(data);
+		return uart::uart1::uart_write(data);
 	}
 
 	int uart1_implementation::change_baudrate(uart::baudrate baudrate)
 	{
-		return change_baudrate(baudrate);
+		return uart::uart1::change_baudrate(baudrate);
+	}
+
+	int uart1_implementation::get_baudrate(uart::baudrate &baudrate)
+	{
+		return uart::uart1::get_baudrate(baudrate);
 	}
 
 	int uart1_implementation::uart_init()
 	{
-		return uart_init();
+		return uart::uart1::uart_init();
 	}
 
 	int uart1_implementation::sleep()
 	{
-		return sleep();
+		return uart::uart1::sleep();
 	}
 
 	int uart1_implementation::wakeup()
 	{
-		return wakeup();
+		return uart::uart1::wakeup();
 	}
 
 	void uart1_implementation::flush()
 	{
-		flush();
+		uart::uart1::flush();
 	}
 
 } // namespace uart::uart1

@@ -23,6 +23,8 @@ namespace uart::uart0
 		std::size_t end;
 	} uart_msg;
 
+	uart0_implementation uart0_driver = uart0_implementation();
+
 	// uart device we want to abstract
 	static const struct device *uart = DEVICE_DT_GET(DT_NODELABEL(uart0));
 	// gpio pin for the uart rx
@@ -357,44 +359,71 @@ namespace uart::uart0
 		return rc;
 	}
 
+	int get_baudrate(baudrate &baudrate)
+	{
+		if (!is_initialized)
+		{
+			LOG_ERR("UART device not initialized!");
+			return -1;
+		}
+
+		struct uart_config cfg;
+		int rc;
+		rc = uart_config_get(uart, &cfg);
+		if (rc)
+		{
+			LOG_ERR("UART config get error %d", rc);
+			return rc;
+		}
+
+		baudrate = (uart::baudrate)cfg.baudrate;
+
+		return 0;
+	}
+
 	uart0_implementation::uart0_implementation() : uart_driver()
 	{
-		uart_msgq_rx = &uart0_msgq_rx;
+		uart_msgq_rx = &uart::uart0::uart0_msgq_rx;
 	}
 
 	read_result uart0_implementation::uart_read(std::string &result, k_timeout_t timeout)
 	{
-		return uart_read(result, timeout);
+		return uart::uart0::uart_read(result, timeout);
 	}
 
 	write_result uart0_implementation::uart_write(std::string data)
 	{
-		return uart_write(data);
+		return uart::uart0::uart_write(data);
 	}
 
 	int uart0_implementation::change_baudrate(uart::baudrate baudrate)
 	{
-		return change_baudrate(baudrate);
+		return uart::uart0::change_baudrate(baudrate);
+	}
+
+	int uart0_implementation::get_baudrate(uart::baudrate &baudrate)
+	{
+		return uart::uart0::get_baudrate(baudrate);
 	}
 
 	int uart0_implementation::uart_init()
 	{
-		return uart_init();
+		return uart::uart0::uart_init();
 	}
 
 	int uart0_implementation::sleep()
 	{
-		return sleep();
+		return uart::uart0::sleep();
 	}
 
 	int uart0_implementation::wakeup()
 	{
-		return wakeup();
+		return uart::uart0::wakeup();
 	}
 
 	void uart0_implementation::flush()
 	{
-		flush();
+		uart::uart0::flush();
 	}
 
 } // namespace uart
