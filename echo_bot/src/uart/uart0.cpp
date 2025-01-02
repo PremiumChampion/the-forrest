@@ -294,10 +294,7 @@ namespace uart::uart0
 	{
 		uart_msgq_rx = &uart0_msgq_rx;
 	}
-	{
-		uart_msgq_rx = &uart0_msgq_rx;
-	}
-
+	
 	read_result uart0_implementation::uart_read(std::string &result, k_timeout_t timeout)
 	{
 		return uart_read(result, timeout);

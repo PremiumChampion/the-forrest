@@ -68,7 +68,7 @@ int main(void)
 	}
 
     // we can change the baudrate 
-	int rc = uart::uart1::change_baudrate(uart::baudrate::Baud9600);
+	rc = uart::uart1::change_baudrate(uart::baudrate::Baud9600);
 
 	if (rc != 0)
 	{
