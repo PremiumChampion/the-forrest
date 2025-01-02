@@ -24,14 +24,23 @@ namespace uart::uart0
 		std::size_t end;
 	} uart_msg;
 
+	// uart device we want to abstract
 	static const struct device *uart = DEVICE_DT_GET(DT_NODELABEL(uart0));
-
+	// gpio pin for the uart rx
 	static const struct gpio_dt_spec uart0_rx_gpio = GPIO_DT_SPEC_GET(DT_ALIAS(uart0rx), gpios);
-
+	// indicates if the uart device is initialized
+	static bool is_initialized = false;
+	// indicates if the uart device is sleeping
+	static bool is_sleeping = false;
+	
+	// callback data for the uart_rx falling edge interrupt
 	static struct gpio_callback uart_gpio_cb_data;
+	// callback function for the uart_rx falling edge interrupt
 	static void uart_interrupt(const struct device *dev, struct gpio_callback *cb, uint32_t pins);
 
+	// maximum size of a message
 #define UART_MAX_MESSAGE_SIZE 128
+	// size of the buffer where we store the incoming messages
 #define UART_MSG_BUFFER_SIZE 1024
 
 	// this is the buffer where we store the incoming messages
@@ -46,10 +55,10 @@ namespace uart::uart0
 	std::size_t uart_current_message = 0;
 	// this indicates the size of the current message
 	std::size_t uart_current_message_size = 0;
-
 	// this is the queue where we transmitt messages to the application
 	K_MSGQ_DEFINE(uart0_msgq_rx, sizeof(uart_msg), 128, 4);
 
+	// finalize the message in the buffer
 	uart_msg finalize_msg_in_buffer()
 	{
 		uart_msg msg{uart_current_message, uart_current_message_size, uart_msg_buffer_right};
@@ -58,6 +67,7 @@ namespace uart::uart0
 		return msg;
 	}
 
+	// free the message in the buffer
 	void free_msg_in_buffer(uart_msg msg)
 	{
 		std::size_t start = msg.start;
@@ -71,6 +81,10 @@ namespace uart::uart0
 		uart_buffer_filled -= size;
 	}
 
+	// callback function for the uart device
+	// this function is called when a new character is received
+	// it checks if the buffer is full, if not it adds the character to the buffer
+	// if a newline character is received, it finalizes the message and puts it in the message queue
 	void uart_cb(const struct device *dev, void *user_data)
 	{
 
@@ -123,9 +137,21 @@ namespace uart::uart0
 			}
 		}
 	}
-
+	// write data to the uart device
 	write_result uart_write(std::string data)
 	{
+		if(!is_initialized)
+		{
+			LOG_ERR("UART device not initialized!");
+			return write_result::UART_WRITE_ERROR;
+		}
+
+		if (is_sleeping)
+		{
+			LOG_ERR("UART device is sleeping!");
+			return write_result::UART_WRITE_ERROR;
+		}
+
 		for (std::size_t i = 0; i < data.size(); i++)
 		{
 			uart_poll_out(uart, data[i]);
@@ -136,6 +162,12 @@ namespace uart::uart0
 
 	read_result uart_read(std::string &response, k_timeout_t timeout)
 	{
+		if(!is_initialized)
+		{
+			LOG_ERR("UART device not initialized!");
+			return read_result::UART_READ_ERROR;
+		}
+
 		uart_msg msg{0, 0};
 		std::string _response = "";
 
@@ -169,6 +201,12 @@ namespace uart::uart0
 
 	int uart_init()
 	{
+		if(is_initialized)
+		{
+			LOG_ERR("UART device already initialized!");
+			return -1;
+		}
+
 		if (!device_is_ready(uart))
 		{
 			LOG_ERR("UART device not found!");
@@ -213,6 +251,9 @@ namespace uart::uart0
 			return rc;
 		}
 
+		is_initialized = true;
+		is_sleeping = false;
+
 		return 0;
 	}
 
@@ -235,6 +276,8 @@ namespace uart::uart0
 			return rc;
 		}
 
+		is_sleeping = true;
+
 		rc = gpio_add_callback(uart0_rx_gpio.port, &uart_gpio_cb_data);
 		if (rc < 0)
 		{
@@ -247,11 +290,24 @@ namespace uart::uart0
 
 	int wakeup()
 	{
-		return pm_device_action_run(uart, PM_DEVICE_ACTION_RESUME);
+		int rc = pm_device_action_run(uart, PM_DEVICE_ACTION_RESUME);
+		if(rc < 0)
+		{
+			LOG_ERR("Could not resume UART (%d)\n", rc);
+			return rc;
+		}
+		is_sleeping = false;
+		return rc;
 	}
 
 	void flush()
 	{
+		if(!is_initialized)
+		{
+			LOG_ERR("UART device not initialized!");
+			return;
+		}
+
 		uart_msg buf{};
 		while (k_msgq_get(&uart0_msgq_rx, &buf, K_NO_WAIT) == 0)
 		{
@@ -262,6 +318,18 @@ namespace uart::uart0
 
 	int change_baudrate(baudrate baudrate)
 	{
+		if(!is_initialized)
+		{
+			LOG_ERR("UART device not initialized!");
+			return -1;
+		}
+
+		if(is_sleeping)
+		{
+			LOG_ERR("UART device is sleeping!");
+			return -1;
+		}
+
 		struct uart_config cfg;
 		int rc;
 		rc = uart_config_get(uart, &cfg);
@@ -294,7 +362,7 @@ namespace uart::uart0
 	{
 		uart_msgq_rx = &uart0_msgq_rx;
 	}
-	
+
 	read_result uart0_implementation::uart_read(std::string &result, k_timeout_t timeout)
 	{
 		return uart_read(result, timeout);

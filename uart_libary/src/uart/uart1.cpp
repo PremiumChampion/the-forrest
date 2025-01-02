@@ -10,7 +10,6 @@
 #include <span>
 #include <tuple>
 #include "uart/uart1.hpp"
-#include "memory_retention/retained.h"
 
 LOG_MODULE_REGISTER(uart1);
 
@@ -27,7 +26,7 @@ namespace uart::uart1
 	static const struct device *uart = DEVICE_DT_GET(DT_NODELABEL(uart1));
 
 	static const struct gpio_dt_spec uart1_rx_gpio = GPIO_DT_SPEC_GET(DT_ALIAS(uart1rx), gpios);
-	
+
 	static struct gpio_callback uart_gpio_cb_data;
 	static void uart_interrupt(const struct device *dev, struct gpio_callback *cb, uint32_t pins);
 
@@ -46,6 +45,10 @@ namespace uart::uart1
 	std::size_t uart_current_message = 0;
 	// this indicates the size of the current message
 	std::size_t uart_current_message_size = 0;
+	// indicates if the uart device is initialized
+	static bool is_initialized = false;
+	// indicates if the uart device is sleeping
+	static bool is_sleeping = false;
 
 	// this is the queue where we transmitt messages to the application
 	K_MSGQ_DEFINE(uart1_msgq_rx, sizeof(uart_msg), 128, 4);
@@ -126,6 +129,18 @@ namespace uart::uart1
 
 	write_result uart_write(std::string data)
 	{
+		if (!is_initialized)
+		{
+			LOG_ERR("UART device not initialized!");
+			return write_result::UART_WRITE_ERROR;
+		}
+
+		if (is_sleeping)
+		{
+			LOG_ERR("UART device is sleeping!");
+			return write_result::UART_WRITE_ERROR;
+		}
+
 		for (std::size_t i = 0; i < data.size(); i++)
 		{
 			uart_poll_out(uart, data[i]);
@@ -136,6 +151,12 @@ namespace uart::uart1
 
 	read_result uart_read(std::string &response, k_timeout_t timeout)
 	{
+		if (!is_initialized)
+		{
+			LOG_ERR("UART device not initialized!");
+			return read_result::UART_READ_ERROR;
+		}
+
 		uart_msg msg{0, 0};
 		std::string _response = "";
 
@@ -169,6 +190,12 @@ namespace uart::uart1
 
 	int uart_init()
 	{
+		if (is_initialized)
+		{
+			LOG_ERR("UART device already initialized!");
+			return -1;
+		}
+
 		if (!device_is_ready(uart))
 		{
 			LOG_ERR("UART device not found!");
@@ -213,6 +240,9 @@ namespace uart::uart1
 			return rc;
 		}
 
+		is_initialized = true;
+		is_sleeping = false;
+
 		return 0;
 	}
 
@@ -242,16 +272,31 @@ namespace uart::uart1
 			return rc;
 		}
 
+		is_sleeping = true;
+
 		return 0;
 	}
 
 	int wakeup()
 	{
-		return pm_device_action_run(uart, PM_DEVICE_ACTION_RESUME);
+		int rc = pm_device_action_run(uart, PM_DEVICE_ACTION_RESUME);
+		if (rc < 0)
+		{
+			LOG_ERR("Could not resume UART (%d)\n", rc);
+			return rc;
+		}
+		is_sleeping = false;
+		return rc;
 	}
 
 	void flush()
 	{
+		if (!is_initialized)
+		{
+			LOG_ERR("UART device not initialized!");
+			return;
+		}
+
 		uart_msg buf{};
 		while (k_msgq_get(&uart1_msgq_rx, &buf, K_NO_WAIT) == 0)
 		{
@@ -262,6 +307,18 @@ namespace uart::uart1
 
 	int change_baudrate(baudrate baudrate)
 	{
+		if (!is_initialized)
+		{
+			LOG_ERR("UART device not initialized!");
+			return -1;
+		}
+
+		if (is_sleeping)
+		{
+			LOG_ERR("UART device is sleeping!");
+			return -1;
+		}
+
 		struct uart_config cfg;
 		int rc;
 		rc = uart_config_get(uart, &cfg);
@@ -290,7 +347,7 @@ namespace uart::uart1
 		return rc;
 	}
 
-	uart1_implementation::uart1_implementation()
+	uart1_implementation::uart1_implementation() : uart_driver()
 	{
 		this->uart_msgq_rx = &uart1_msgq_rx;
 	}
@@ -329,5 +386,5 @@ namespace uart::uart1
 	{
 		flush();
 	}
-	
+
 } // namespace uart::uart1
