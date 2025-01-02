@@ -29,6 +29,7 @@ def save_to_db(req: func.HttpRequest) -> func.HttpResponse:
         req_text = req.get_body().decode('utf-8')
         collection.insert_one({"data": req_text})
         return func.HttpResponse("Invalid JSON", status_code=400) 
-        pass 
+    
+    time = datetime.datetime.now(tz=datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
-    return func.HttpResponse(f"SUCCESS", status_code=200)
+    return func.HttpResponse(time, status_code=200)
