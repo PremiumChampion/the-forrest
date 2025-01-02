@@ -48,7 +48,7 @@ namespace uart::uart1
 	std::size_t uart_current_message_size = 0;
 
 	// this is the queue where we transmitt messages to the application
-	K_MSGQ_DEFINE(uart_msgq_rx, sizeof(uart_msg), 128, 4);
+	K_MSGQ_DEFINE(uart1_msgq_rx, sizeof(uart_msg), 128, 4);
 
 	uart_msg finalize_msg_in_buffer()
 	{
@@ -115,7 +115,7 @@ namespace uart::uart1
 				uart_msg msg = finalize_msg_in_buffer();
 
 				// if queue is full, drop the message
-				if (k_msgq_put(&uart_msgq_rx, &msg, K_NO_WAIT) == -EAGAIN)
+				if (k_msgq_put(&uart1_msgq_rx, &msg, K_NO_WAIT) == -EAGAIN)
 				{
 					LOG_ERR("RX message dropped");
 					free_msg_in_buffer(msg);
@@ -139,7 +139,7 @@ namespace uart::uart1
 		uart_msg msg{0, 0};
 		std::string _response = "";
 
-		if (k_msgq_get(&uart_msgq_rx, &msg, timeout) == 0)
+		if (k_msgq_get(&uart1_msgq_rx, &msg, timeout) == 0)
 		{
 			// LOG_INF("MSG: [start=%d] [end=%d] [size=%d]", msg.start, msg.end, msg.size);
 			if (msg.start < msg.end)
@@ -253,7 +253,7 @@ namespace uart::uart1
 	void flush()
 	{
 		uart_msg buf{};
-		while (k_msgq_get(&uart_msgq_rx, &buf, K_NO_WAIT) == 0)
+		while (k_msgq_get(&uart1_msgq_rx, &buf, K_NO_WAIT) == 0)
 		{
 			free_msg_in_buffer(buf);
 			// do nothing
@@ -290,4 +290,44 @@ namespace uart::uart1
 		return rc;
 	}
 
-} // namespace uart
+	uart1_implementation::uart1_implementation()
+	{
+		this->uart_msgq_rx = &uart1_msgq_rx;
+	}
+
+	read_result uart1_implementation::uart_read(std::string &result, k_timeout_t timeout)
+	{
+		return uart_read(result, timeout);
+	}
+
+	write_result uart1_implementation::uart_write(std::string data)
+	{
+		return uart_write(data);
+	}
+
+	int uart1_implementation::change_baudrate(uart::baudrate baudrate)
+	{
+		return change_baudrate(baudrate);
+	}
+
+	int uart1_implementation::uart_init()
+	{
+		return uart_init();
+	}
+
+	int uart1_implementation::sleep()
+	{
+		return sleep();
+	}
+
+	int uart1_implementation::wakeup()
+	{
+		return wakeup();
+	}
+
+	void uart1_implementation::flush()
+	{
+		flush();
+	}
+	
+} // namespace uart::uart1

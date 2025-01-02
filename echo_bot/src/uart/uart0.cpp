@@ -27,7 +27,7 @@ namespace uart::uart0
 	static const struct device *uart = DEVICE_DT_GET(DT_NODELABEL(uart0));
 
 	static const struct gpio_dt_spec uart0_rx_gpio = GPIO_DT_SPEC_GET(DT_ALIAS(uart0rx), gpios);
-	
+
 	static struct gpio_callback uart_gpio_cb_data;
 	static void uart_interrupt(const struct device *dev, struct gpio_callback *cb, uint32_t pins);
 
@@ -48,7 +48,7 @@ namespace uart::uart0
 	std::size_t uart_current_message_size = 0;
 
 	// this is the queue where we transmitt messages to the application
-	K_MSGQ_DEFINE(uart_msgq_rx, sizeof(uart_msg), 128, 4);
+	K_MSGQ_DEFINE(uart0_msgq_rx, sizeof(uart_msg), 128, 4);
 
 	uart_msg finalize_msg_in_buffer()
 	{
@@ -115,7 +115,7 @@ namespace uart::uart0
 				uart_msg msg = finalize_msg_in_buffer();
 
 				// if queue is full, drop the message
-				if (k_msgq_put(&uart_msgq_rx, &msg, K_NO_WAIT) == -EAGAIN)
+				if (k_msgq_put(&uart0_msgq_rx, &msg, K_NO_WAIT) == -EAGAIN)
 				{
 					LOG_ERR("RX message dropped");
 					free_msg_in_buffer(msg);
@@ -139,7 +139,7 @@ namespace uart::uart0
 		uart_msg msg{0, 0};
 		std::string _response = "";
 
-		if (k_msgq_get(&uart_msgq_rx, &msg, timeout) == 0)
+		if (k_msgq_get(&uart0_msgq_rx, &msg, timeout) == 0)
 		{
 			// LOG_INF("MSG: [start=%d] [end=%d] [size=%d]", msg.start, msg.end, msg.size);
 			if (msg.start < msg.end)
@@ -253,7 +253,7 @@ namespace uart::uart0
 	void flush()
 	{
 		uart_msg buf{};
-		while (k_msgq_get(&uart_msgq_rx, &buf, K_NO_WAIT) == 0)
+		while (k_msgq_get(&uart0_msgq_rx, &buf, K_NO_WAIT) == 0)
 		{
 			free_msg_in_buffer(buf);
 			// do nothing
@@ -288,6 +288,49 @@ namespace uart::uart0
 
 		LOG_INF("UART configured at %d baud", cfg.baudrate);
 		return rc;
+	}
+
+	uart0_implementation::uart0_implementation() : uart_driver()
+	{
+		uart_msgq_rx = &uart0_msgq_rx;
+	}
+	{
+		uart_msgq_rx = &uart0_msgq_rx;
+	}
+
+	read_result uart0_implementation::uart_read(std::string &result, k_timeout_t timeout)
+	{
+		return uart_read(result, timeout);
+	}
+
+	write_result uart0_implementation::uart_write(std::string data)
+	{
+		return uart_write(data);
+	}
+
+	int uart0_implementation::change_baudrate(uart::baudrate baudrate)
+	{
+		return change_baudrate(baudrate);
+	}
+
+	int uart0_implementation::uart_init()
+	{
+		return uart_init();
+	}
+
+	int uart0_implementation::sleep()
+	{
+		return sleep();
+	}
+
+	int uart0_implementation::wakeup()
+	{
+		return wakeup();
+	}
+
+	void uart0_implementation::flush()
+	{
+		flush();
 	}
 
 } // namespace uart
