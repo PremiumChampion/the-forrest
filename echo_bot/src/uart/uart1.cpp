@@ -27,6 +27,7 @@ namespace uart::uart1
 	static const struct device *uart = DEVICE_DT_GET(DT_NODELABEL(uart1));
 
 	static const struct gpio_dt_spec uart1_rx_gpio = GPIO_DT_SPEC_GET(DT_ALIAS(uart1rx), gpios);
+	
 	static struct gpio_callback uart_gpio_cb_data;
 	static void uart_interrupt(const struct device *dev, struct gpio_callback *cb, uint32_t pins);
 
