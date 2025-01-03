@@ -1,6 +1,10 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
+#include "gpio/adc.hpp"
+#include "iic/time.hpp"
+#include "data/storage.hpp"
+
 namespace data::collection
 {
 
@@ -10,8 +14,31 @@ namespace data::collection
     {
         while (1)
         {
-            LOG_INF("Data collection thread running");
-            k_sleep(K_SECONDS(1)); // Sleep for 1 second
+            // wait for 1 hour
+            // collect new datapoints
+            // add them to the storage
+
+            // wait for 1 hour
+            k_sleep(K_HOURS(1));
+
+            // collect new datapoints
+            int32_t humidity_voltag_mv, battery_voltage_mv;
+            gpio::adc::read_channel(0, humidity_voltag_mv);
+            gpio::adc::read_channel(1, battery_voltage_mv);
+
+
+            // get the current time
+            struct tm current_time = iic::time::get_current_time();
+
+            // create a new data point
+            data_point_t data_point{
+                .device_id = "gateway",
+                .timestamp = current_time,
+                .battery_voltage_mv = battery_voltage_mv,
+                .humidity_voltage_mv = humidity_voltag_mv};
+            
+            // add the data point to the storage
+            data::storage_instance.add_data_point(data_point);
         }
     }
 

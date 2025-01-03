@@ -73,8 +73,8 @@ namespace iic::time
             0x00,
             dec_to_bcd(time.tm_sec),
             dec_to_bcd(time.tm_min),
-            dec_to_bcd(time.tm_hour) | 0b01000000, // Set the 24-hour mode
-            time.tm_wday + 1,                      // Convert to 1-7 (1 = Sunday)
+            (uint8_t)(dec_to_bcd((uint8_t)time.tm_hour) | 0b01000000), // Set the 24-hour mode
+            (uint8_t)(time.tm_wday + 1),                               // Convert to 1-7 (1 = Sunday)
             dec_to_bcd(time.tm_mday),
             dec_to_bcd(time.tm_mon + 1),
             dec_to_bcd(time.tm_year - 100)};

@@ -307,6 +307,8 @@ namespace at::commands::sim7000e::https
             LOG_ERR("SIM7000E SSL session stop failed");
             return ERROR;
         }
+
+        return OK;
     }
 
 } // namespace at::commands::sim7000e::https

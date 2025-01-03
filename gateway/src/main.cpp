@@ -2,6 +2,7 @@
 #include <zephyr/logging/log.h>
 
 #include "gpio/gpio.hpp"
+#include "gpio/adc.hpp"
 
 #include "iic/bus.hpp"
 #include "iic/time.hpp"
@@ -66,6 +67,12 @@ int initialize()
     if (gpio::init() != 0)
     {
         LOG_ERR("GPIO initialization failed");
+        return -1;
+    }
+
+    if(gpio::adc::setup() != 0)
+    {
+        LOG_ERR("ADC initialization failed");
         return -1;
     }
 

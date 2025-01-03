@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include <ctime>
+#include <time.h>
 
 namespace data
 {
@@ -13,8 +13,8 @@ namespace data
     {
         std::string device_id;
         struct tm timestamp;
-        uint32_t battery_voltage_mv;
-        uint32_t humidity_voltage_mv;
+        int32_t battery_voltage_mv;
+        int32_t humidity_voltage_mv;
     };
 
     typedef struct data_point data_point_t;

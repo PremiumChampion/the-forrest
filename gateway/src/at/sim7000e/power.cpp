@@ -334,7 +334,7 @@ namespace at::commands::sim7000e::power
             LOG_ERR("Failed to reboot the module");
         }
         uart::uart_driver *driver = at::commands::sim7000e::get_uart_driver();
-        uart::read_result uart_res = driver->uart_read(response);
+        (void)driver->uart_read(response);
 
         k_sleep(K_MSEC(2000));
 

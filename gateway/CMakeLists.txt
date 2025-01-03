@@ -44,6 +44,9 @@ target_sources(app PRIVATE
 # gpio sources
 
 target_sources(app PRIVATE 
+    "include/gpio/adc.hpp"
+    "src/gpio/adc.cpp"
+
     "include/gpio/gpio.hpp"
     "src/gpio/gpio.cpp")
 

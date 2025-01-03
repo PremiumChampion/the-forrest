@@ -5,9 +5,6 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
 
-
-
-
 namespace gpio
 {
     enum gpio_result
@@ -25,7 +22,8 @@ namespace gpio
     enum gpio_pin
     {
         SIM7000_PWR,
-        SIM7000_DTR
+        SIM7000_DTR,
+        ADC_CONVERTER_TRANSISTOR
     };
 
     gpio_result init();

@@ -38,7 +38,7 @@ namespace at::commands::sim7000e
     {
         uart::uart_driver *driver = get_uart_driver();
 
-        std::string response;
+        std::string response = "";
         result res;
 
         // available baud rates from highest to lowest
@@ -129,9 +129,9 @@ namespace at::commands::sim7000e
             return ERROR;
         }
 
+        response = "";
 
         // wait for the network to be ready
-        std::string response = "";
         bool network_ready = false;
         int64_t start = k_uptime_get();
         while (k_uptime_get() - start < 20000 && !network_ready)
@@ -190,8 +190,4 @@ namespace at::commands::sim7000e
 
         return result::OK;
     }
-
-
-
-
 } // namespace at::sim7000e
