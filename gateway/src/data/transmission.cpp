@@ -5,6 +5,7 @@
 #include "at/sim7000e/common.hpp"
 #include "at/sim7000e/https.hpp"
 #include "at/sim7000e/power.hpp"
+#include "at/sim7000e/time.hpp"
 
 namespace data::transmission
 {
@@ -114,6 +115,44 @@ namespace data::transmission
                 {
                     LOG_INF("Data transmission successful");
                     data::storage_instance.clear();
+
+                    if (request.http_status_code == 200)
+                    {
+                        transmission_successful = true;
+
+                        // synchronise local time with server response
+                        // the body contains the current time in the format YYYY-MM-DDTHH:MM:SSZ
+                        // e.g. 2025-01-03T23:21:29Z
+                        // we need to convert this to a struct tm
+                        struct tm time;
+                        time.tm_year = std::stoi(request.response.substr(0, 4)) - 1900;
+                        time.tm_mon = std::stoi(request.response.substr(5, 2)) - 1;
+                        time.tm_mday = std::stoi(request.response.substr(8, 2));
+                        time.tm_hour = std::stoi(request.response.substr(11, 2));
+                        time.tm_min = std::stoi(request.response.substr(14, 2));
+                        time.tm_sec = std::stoi(request.response.substr(17, 2));
+
+                        // set the time
+                        if (iic::time::set_time(time) != 0)
+                        {
+                            LOG_ERR("Failed to set time");
+                        }
+
+                        LOG_INF("Time set to %s", request.response.c_str());
+
+                        // synchronise the time with sim7000e
+                        if (at::commands::sim7000e::time::set_time() != at::commands::OK)
+                        {
+                            LOG_ERR("Failed to set time on SIM7000E");
+                        }
+
+                    }
+                    else
+                    {
+                        LOG_ERR("Server responded with status code %d", request.http_status_code);
+                        LOG_ERR("Retying in 5 minutes");
+                        k_sleep(K_SECONDS(300));
+                    }
                 }
 
                 if (at::commands::sim7000e::power::set_baudrate(uart::baudrate::Baud9600) != at::commands::OK)
