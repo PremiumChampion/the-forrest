@@ -1,0 +1,44 @@
+&uart0 {
+    status = "okay";
+};
+
+&uart1 {
+    status = "okay";
+};
+
+&gpio0 {
+    status = "okay";
+};
+
+&gpio1 {
+    status = "okay";
+};
+
+&i2c0 {
+    compatible = "nordic,nrf-twim";
+    clock-frequency = <100000>;
+    status = "okay";
+};
+
+/{
+    custom_gpios {
+
+        compatible = "gpio-keys";
+
+        uart0_rx: uart0_rx {
+            gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
+            label = "UART0 RX";
+        };
+
+        uart1_rx: uart1_rx {
+            gpios = <&gpio1 1 GPIO_ACTIVE_HIGH>;
+            label = "UART1 RX";
+        };
+    };
+
+    aliases {
+        uart0rx = &uart0_rx;
+        uart1rx = &uart1_rx;
+    };
+};
+
