@@ -268,29 +268,43 @@ void configure_ds3231_alarm(const struct device *rtc)
 
 static int set_date_time(const struct device *rtc)
 {
-    int ret = 0;
-    struct rtc_time tm = {
-        .tm_sec = 0,
-        .tm_min = 20,
-        .tm_hour = 4,
-        .tm_mday = 11,
-        .tm_mon = 9 - 1,
-        .tm_year = 2001 - 1900,
-    };
+    uint32_t syncclock_Hz = maxim_ds3231_syncclock_frequency(rtc);
+	uint32_t syncclock = maxim_ds3231_read_syncclock(rtc);
+    struct sys_notify notify;
+    struct k_poll_signal ss;
+    struct k_poll_event sevt = K_POLL_EVENT_INITIALIZER(K_POLL_TYPE_SIGNAL,
+							    K_POLL_MODE_NOTIFY_ONLY,
+							    &ss);
+    int rc = 0;
+    
+    struct maxim_ds3231_syncpoint sp = {
+		.rtc = {
+			.tv_sec = 1736442143,
+			.tv_nsec = (uint64_t)NSEC_PER_SEC * syncclock / syncclock_Hz,
+		},
+		.syncclock = syncclock,
+	};
+    
+    uint32_t t0 = k_uptime_get_32();
+    rc = maxim_ds3231_set(rtc, &sp, &notify);
 
-    // if (!device_is_ready(rtc))
-    // {
-    //     printk("RTC device is not ready\n");
-    //     return -ENODEV;
-    // }
+	printk("\nSet %s at %u ms past: %d\n", format_time(sp.rtc.tv_sec, sp.rtc.tv_nsec),
+	       syncclock, rc);
 
-    ret = rtc_set_time(rtc, &tm);
-    if (ret < 0)
-    {
-        printk("Cannot write date time: %d\n", ret);
-        return ret;
-    }
-    return ret;
+	/* Wait for the set to complete */
+	rc = k_poll(&sevt, 1, K_FOREVER);
+
+	uint32_t t1 = k_uptime_get_32();
+
+	/* Delay so log messages from sync can complete */
+	k_sleep(K_MSEC(100));
+	printk("Synchronize final: %d %d in %u ms\n", rc, ss.result, t1 - t0);
+
+	rc = maxim_ds3231_get_syncpoint(rtc, &sp);
+	printk("wrote sync %d: %u %u at %u\n", rc,
+	       (uint32_t)sp.rtc.tv_sec, (uint32_t)sp.rtc.tv_nsec,
+	       sp.syncclock);
+    return 0;
 }
 
 static int get_date_time(const struct device *rtc)
@@ -328,7 +342,8 @@ static void show_counter(const struct device *ds3231)
 
     (void)counter_get_value(ds3231, &now);
 
-    printk("Now %u: %s\n", now, format_time(now, -1));
+    LOG_INF("True counter value %d", now);
+    LOG_INF("Now %u: %s\n", now, format_time(now, -1));
 }
 
 // RTC Test End
@@ -388,7 +403,10 @@ int main(void)
     gpio_init_callback(&wakeup_cb_data, wakeup_callback, BIT(wakeup_pin.pin));
     gpio_add_callback(wakeup_pin.port, &wakeup_cb_data);
 
-    // RTC Test
+    // RTC
+
+    set_date_time(rtc);
+    show_counter(rtc);
 
     // Enable interrupt output on SQW pin
     enable_alarm_interrupt(rtc);
@@ -398,8 +416,6 @@ int main(void)
 
     /* Continuously read the current date and time from the RTC */
 
-
-    show_counter(rtc);
     k_sleep(K_MSEC(1000));
 
 
