@@ -1,0 +1,22 @@
+# Copyright (c) 2021 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "UART Configuration"
+
+config UART_1_ENABLE
+    bool "Enable UART 1 driver"
+    depends on UART_INTERRUPT_DRIVEN && UART_USE_RUNTIME_CONFIGURE && GPIO && PM_DEVICE && POLL
+    help
+      Enable the UART 1 driver for communication. This option is only
+      available if both interrupt-driven UART and runtime configuration
+      for UART are enabled.
+
+config UART_0_ENABLE
+    bool "Enable UART 0 driver"
+    depends on UART_INTERRUPT_DRIVEN && UART_USE_RUNTIME_CONFIGURE && GPIO && PM_DEVICE && POLL
+    help
+      Enable the UART 0 driver for communication. This option is only
+      available if both interrupt-driven UART and runtime configuration
+      for UART are enabled.
+
+source "Kconfig.zephyr"

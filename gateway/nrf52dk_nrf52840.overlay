@@ -64,12 +64,18 @@
             gpios = <&gpio0 30 GPIO_ACTIVE_HIGH>;
             label = "ADC Converter Transistor";
         };
+
+        lora_reset: lora_reset {
+            gpios = <&gpio0 21 GPIO_ACTIVE_HIGH>;
+            label = "Lora reset";
+        };
     };
 
     aliases {
         uart0rx = &uart0_rx;
         uart1rx = &uart1_rx;
         adcconvertertransistor = &adc_converter_transistor;
+        lorareset = &lora_reset;
     };
 
     zephyr,user {

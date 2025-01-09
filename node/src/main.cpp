@@ -6,7 +6,7 @@
 #include <zephyr/device.h>
 #include <algorithm>
 #include <stdio.h>
-#include "uart/uart.hpp"
+#include "uart/uart0.hpp"
 #include "at/prv.hpp"
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/i2c.h>
@@ -23,6 +23,11 @@ LOG_MODULE_REGISTER(main);
 static const struct gpio_dt_spec sw0 = GPIO_DT_SPEC_GET(DT_ALIAS(sw0), gpios);
 const struct device *const cons = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
 
+static const struct gpio_dt_spec wakeup_pin = GPIO_DT_SPEC_GET(DT_ALIAS(sw0), gpios);
+static struct gpio_callback wakeup_cb_data;
+
+static volatile bool wakeup_flag = false;
+
 // I2C Clock test
 const struct device *const rtc = DEVICE_DT_GET(DT_NODELABEL(rtc_ds3231));
 // #define I2C0_NODE DT_NODELABEL(rtc_ds1307_i2c)
@@ -31,6 +36,11 @@ const struct device *const rtc = DEVICE_DT_GET(DT_NODELABEL(rtc_ds3231));
 // Lora startup init pin do not touch
 static const struct gpio_dt_spec reset_pin = GPIO_DT_SPEC_GET_OR(DT_ALIAS(mycusgpio), gpios, {0});
 
+static void wakeup_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
+{
+    wakeup_flag = true;
+    LOG_INF("Wake-up signal received");
+}
 std::string response;
 
 void join_network(int network_id, int dev_address)
@@ -268,11 +278,11 @@ static int set_date_time(const struct device *rtc)
         .tm_year = 2001 - 1900,
     };
 
-    if (!device_is_ready(rtc))
-    {
-        printk("RTC device is not ready\n");
-        return -ENODEV;
-    }
+    // if (!device_is_ready(rtc))
+    // {
+    //     printk("RTC device is not ready\n");
+    //     return -ENODEV;
+    // }
 
     ret = rtc_set_time(rtc, &tm);
     if (ret < 0)
@@ -323,7 +333,7 @@ static void show_counter(const struct device *ds3231)
 
 // RTC Test End
 
-bool GATEWAY = false;
+bool GATEWAY = true;
 int GATEWAY_ADDRESS = 420;
 int NODE_ADDRESS = 1;
 
@@ -335,7 +345,7 @@ const struct device *i2c_dev = DEVICE_DT_GET(DT_NODELABEL(i2c0));
 int main(void)
 {
 
-    if (uart::uart_init() != 0)
+    if (uart::uart0::uart_init() != 0)
     {
         printk("UART initialization failed\n");
         return -1;
@@ -353,13 +363,14 @@ int main(void)
         return -1;
     }
 
+    int rc;
     // Power off test
     if (!device_is_ready(cons))
     {
         printf("%s: device not ready.\n", cons->name);
         return 0;
     }
-    int rc = 0;
+
     /* Configure sw0 as input and set up interrupt */
     rc = gpio_pin_configure_dt(&sw0, GPIO_INPUT);
     if (rc < 0)
@@ -368,21 +379,16 @@ int main(void)
         return 0;
     }
 
-    rc = gpio_pin_interrupt_configure_dt(&sw0, GPIO_INT_EDGE_FALLING);
-    if (rc < 0)
-    {
+    rc = gpio_pin_interrupt_configure_dt(&sw0, GPIO_INT_EDGE_TO_ACTIVE);
+    if (rc < 0) {
         printf("Could not configure sw0 GPIO interrupt (%d)\n", rc);
         return 0;
     }
 
-    // RTC Test
+    gpio_init_callback(&wakeup_cb_data, wakeup_callback, BIT(wakeup_pin.pin));
+    gpio_add_callback(wakeup_pin.port, &wakeup_cb_data);
 
-    /* Check if the RTC is ready */
-    if (!device_is_ready(rtc))
-    {
-        LOG_INF("Device is not ready\n");
-        return 0;
-    }
+    // RTC Test
 
     // Enable interrupt output on SQW pin
     enable_alarm_interrupt(rtc);
@@ -417,16 +423,18 @@ int main(void)
         if (GATEWAY)
         {
             // receive data
-            if (uart::uart_read(response) == uart::UART_READ_OK)
+            if (uart::uart0::uart_read(response, K_FOREVER) == uart::UART_READ_OK)
             {
                 LOG_INF("%s", uart::escape_response(response).c_str());
-                if (response.find("RCV") != std::string::npos)
-                {
-                    lora_module_sleep();
-                    k_sleep(K_MSEC(8000));
-                    lora_module_wake();
-                }
+                // if (response.find("RCV") != std::string::npos)
+                // {
+                //     lora_module_sleep();
+                //     k_sleep(K_MSEC(8000));
+                //     lora_module_wake();
+                // }
                 response = "";
+            }else {
+                LOG_INF("Error reading uart");
             }
         }
         else
@@ -439,7 +447,7 @@ int main(void)
             gpio::adc::read_channel(1, voltage1);
             LOG_INF("ADC reading [%u]: %u", 5, voltage1);
 
-            send_message(GATEWAY_ADDRESS, "Sensor 1: " + std::to_string(voltage0) + " Sensor 2: " + std::to_string(voltage1));
+            send_message(GATEWAY_ADDRESS, std::to_string(NODE_ADDRESS) + "," + std::to_string(voltage0) + "," + std::to_string(voltage1));
             k_sleep(K_MSEC(1000));
 
             rc = pm_device_action_run(cons, PM_DEVICE_ACTION_SUSPEND);
@@ -448,8 +456,14 @@ int main(void)
                 printf("Could not resume console (%d)\n", rc);
                 return 0;
             }
-            
-            sys_poweroff();
+
+            while (!wakeup_flag) {
+                sys_poweroff();
+            }
+
+            wakeup_flag = false;
+
+            pm_device_action_run(cons, PM_DEVICE_ACTION_RESUME);
         }
     }
 }

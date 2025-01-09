@@ -19,22 +19,30 @@ namespace uart
         UART_WRITE_TIMEOUT,
         UART_WRITE_ERROR
     };
-
-    enum uart_config
+    enum baudrate
     {
-        CONFIG_DEFAULT,
-        CONFIG_SIM7000E
+        Baud9600 = uint32_t{9600},
+        Baud19200 = uint32_t{19200},
+        Baud38400 = uint32_t{38400},
+        Baud57600 = uint32_t{57600},
+        Baud115200 = uint32_t{115200},
     };
-
-    extern struct k_msgq uart_msgq_rx;
-    void uart_cb(const struct device *dev, void *user_data);
-    read_result uart_read(std::string &result); // read from the UART
-    write_result uart_write(std::string data);  // write to the UART
-    int uart_init();                            // initialize the UART
-    void flush();
-    int uart_switch(uart_config config);
     std::string escape_response(std::string response);
     std::string escape_response(char *response);
+
+    class uart_driver
+    {
+    public:
+        struct k_msgq *uart_msgq_rx;
+        virtual uart::read_result uart_read(std::string &result, k_timeout_t timeout = K_MSEC(100)) = 0; // read from the UART
+        virtual uart::write_result uart_write(std::string data) = 0;
+        virtual int change_baudrate(uart::baudrate baudrate) = 0;
+        virtual int get_baudrate(uart::baudrate &baudrate) = 0;
+        virtual int uart_init() = 0;
+        virtual int sleep() = 0;
+        virtual int wakeup() = 0;
+        virtual void flush() = 0;
+    };
 
 } // namespace uart
 
