@@ -11,28 +11,28 @@ namespace at::commands::sim7000e::network_configuration
     result setup_apn(std::string apn, int timeout_ms)
     {
         std::string response = "";
-        result r = at::commands::sim7000e::_at("AT+CNACT=2,\"" + apn + "\"\r\n", response);
+        result r = at::commands::sim7000e::_at("AT+CNACT=1,\"" + apn + "\"\r\n", response, timeout_ms);
 
         if (r != OK)
         {
             return r;
         }
-        uart::uart_driver *driver = at::commands::sim7000e::get_uart_driver();
-        // wait for the network to be ready
-        int64_t start = k_uptime_get();
-        while (k_uptime_get() - start < timeout_ms)
-        {
-            uart::read_result uart_res = driver->uart_read(response);
-            if (uart_res == uart::read_result::UART_READ_OK)
-            {
-                if (response.find("+APP PDP: ACTIVE") != std::string::npos)
-                {
-                    return OK;
-                }
-            }
-        }
+        // uart::uart_driver *driver = at::commands::sim7000e::get_uart_driver();
+        // // wait for the network to be ready
+        // int64_t start = k_uptime_get();
+        // while (k_uptime_get() - start < timeout_ms)
+        // {
+        //     uart::read_result uart_res = driver->uart_read(response);
+        //     if (uart_res == uart::read_result::UART_READ_OK)
+        //     {
+        //         if (response.find("+APP PDP: ACTIVE") != std::string::npos)
+        //         {
+        //             return OK;
+        //         }
+        //     }
+        // }
 
-        return TIMEOUT;
+        return OK;
     }
     result get_ip(std::string &ip)
     {

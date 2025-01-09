@@ -7,6 +7,8 @@
 #include "at/sim7000e/power.hpp"
 #include "at/sim7000e/time.hpp"
 
+#define WAIT_FOR_TRANSMISSION_TIME 0
+
 namespace data::transmission
 {
     LOG_MODULE_REGISTER(data_transmission);
@@ -62,15 +64,18 @@ namespace data::transmission
 
         while (1)
         {
+#if WAIT_FOR_TRANSMISSION_TIME
             // wait until 13:00 UTC
             wait_for_hour_in_PSM(13);
-
+#else
+            k_sleep(K_SECONDS(20));
+#endif
             bool transmission_successful = false;
             while (!transmission_successful)
             {
+                driver->wakeup();
                 if (is_in_psm)
                 {
-                    driver->wakeup();
 
                     // wake up the module
                     if (at::commands::sim7000e::power::wake_up() != at::commands::OK)
@@ -145,7 +150,6 @@ namespace data::transmission
                         {
                             LOG_ERR("Failed to set time on SIM7000E");
                         }
-
                     }
                     else
                     {
@@ -163,16 +167,24 @@ namespace data::transmission
                 driver->sleep();
             }
 
-            // wait at least until 14:00 UTC otherwise we send data indefinetely
+// wait at least until 14:00 UTC otherwise we send data indefinetely
+#if WAIT_FOR_TRANSMISSION_TIME
             wait_for_hour_in_PSM(14);
+#endif
         }
     }
 
-    K_THREAD_DEFINE(data_transmission_thread, 2048, data_transmission, NULL, NULL, NULL, 5, 0, 0); // Define the data_transmission_thread
+    K_THREAD_STACK_DEFINE(data_transmission_thread_stack, 2048);
+    struct k_thread data_transmission_thread_data;
 
     void start_thread()
     {
-        k_thread_start(data_transmission_thread); // Start the data_transmission_thread
-        LOG_INF("Data transmission thread started");
+        k_tid_t my_tid = k_thread_create(&data_transmission_thread_data, data_transmission_thread_stack,
+                                         K_THREAD_STACK_SIZEOF(data_transmission_thread_stack),
+                                         data_transmission,
+                                         NULL, NULL, NULL,
+                                         5, 0, K_NO_WAIT);
+
+        LOG_INF("Data ^transmission thread started");
     }
 } // namespace data::transmission

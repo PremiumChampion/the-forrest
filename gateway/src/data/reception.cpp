@@ -21,9 +21,40 @@ namespace data::reception
             // receive data
             driver->sleep();
             if (driver->uart_read(response, K_FOREVER) == uart::UART_READ_OK)
-            {
-                LOG_INF("%s", uart::escape_response(response).c_str());
-                auto temp = at::commands::prv::split(response, ',');
+            {   
+                // +RCV=1,11,"<nodeid>,<value_sensor0>,<value_sensor1>",-42,11\r\n
+
+                // <nodeid>,<value_sensor0>,<value_sensor1>\r\n
+
+                // check if we got a good response
+                auto start = response.find("+RCV=1");
+
+                if(start == std::string::npos)
+                {
+                    continue;
+                }
+
+                start = response.find("\"", start);
+
+                auto end = response.find("\r\n", start);
+                if (end == std::string::npos)
+                {
+                    continue;
+                }
+
+                end = response.find("\"", start + 1);
+
+                // extract the data
+                std::string data = response.substr(start + 1, end - start -1);
+                LOG_INF("Data: %s", data.c_str());
+                auto temp = at::commands::prv::split(data, ',');
+                
+                if (temp.size() != 3)
+                {
+                    LOG_ERR("Invalid data received");
+                    continue;
+                }
+
                 data::data_point_t datapoint{};
                 datapoint.device_id = temp[0];
                 datapoint.humidity_voltage_mv = std::stoi(temp[1]);
@@ -34,17 +65,20 @@ namespace data::reception
                 response = "";
             }
             // then we parse the data and store it in the storage
-
-            LOG_INF("Data reception thread running");
-            k_sleep(K_SECONDS(1)); // Sleep for 1 second
         }
     }
 
-    K_THREAD_DEFINE(data_reception_thread, 2048, data_reception, NULL, NULL, NULL, 5, 0, 0); // Define the data_reception_thread
+    K_THREAD_STACK_DEFINE(data_reception_thread_stack, 2048);
+    struct k_thread data_reception_thread_data;
 
     void start_thread()
     {
-        k_thread_start(data_reception_thread); // Start the data_reception_thread
+        k_tid_t my_tid = k_thread_create(&data_reception_thread_data, data_reception_thread_stack,
+                                         K_THREAD_STACK_SIZEOF(data_reception_thread_stack),
+                                         data_reception,
+                                         NULL, NULL, NULL,
+                                         5, 0, K_NO_WAIT);
+
         LOG_INF("Data reception thread started");
     }
 
