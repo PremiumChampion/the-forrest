@@ -8,12 +8,26 @@ target_include_directories(app PRIVATE "include")
 target_sources(app PRIVATE 
     "include/at/prv.hpp"
     "include/gpio/adc.hpp"
-    "include/at/https.hpp"
     "include/at/common.hpp"
-    "include/uart/uart.hpp"
 
     "src/main.cpp"
     "src/at/prv.cpp"
-    "src/at/https.cpp"
-    "src/gpio/adc.cpp"
-    "src/uart/uart.cpp")
+    "src/gpio/adc.cpp")
+
+if (CONFIG_UART_0_ENABLE OR CONFIG_UART_1_ENABLE)
+    target_sources(app PRIVATE 
+        "include/uart/uart.hpp"
+        "src/uart/uart.cpp")
+endif()
+
+if(CONFIG_UART_0_ENABLE)
+    target_sources(app PRIVATE 
+        "src/uart/uart0.cpp" 
+        "include/uart/uart0.hpp")
+endif()
+
+if(CONFIG_UART_1_ENABLE)
+    target_sources(app PRIVATE 
+        "src/uart/uart1.cpp" 
+        "include/uart/uart1.hpp")
+endif()

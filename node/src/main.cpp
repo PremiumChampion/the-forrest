@@ -6,7 +6,7 @@
 #include <zephyr/device.h>
 #include <algorithm>
 #include <stdio.h>
-#include "uart/uart.hpp"
+#include "uart/uart0.hpp"
 #include "at/prv.hpp"
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/i2c.h>
@@ -278,11 +278,11 @@ static int set_date_time(const struct device *rtc)
         .tm_year = 2001 - 1900,
     };
 
-    if (!device_is_ready(rtc))
-    {
-        printk("RTC device is not ready\n");
-        return -ENODEV;
-    }
+    // if (!device_is_ready(rtc))
+    // {
+    //     printk("RTC device is not ready\n");
+    //     return -ENODEV;
+    // }
 
     ret = rtc_set_time(rtc, &tm);
     if (ret < 0)
@@ -333,7 +333,7 @@ static void show_counter(const struct device *ds3231)
 
 // RTC Test End
 
-bool GATEWAY = false;
+bool GATEWAY = true;
 int GATEWAY_ADDRESS = 420;
 int NODE_ADDRESS = 1;
 
@@ -345,7 +345,7 @@ const struct device *i2c_dev = DEVICE_DT_GET(DT_NODELABEL(i2c0));
 int main(void)
 {
 
-    if (uart::uart_init() != 0)
+    if (uart::uart0::uart_init() != 0)
     {
         printk("UART initialization failed\n");
         return -1;
@@ -390,13 +390,6 @@ int main(void)
 
     // RTC Test
 
-    /* Check if the RTC is ready */
-    if (!device_is_ready(rtc))
-    {
-        LOG_INF("Device is not ready\n");
-        return 0;
-    }
-
     // Enable interrupt output on SQW pin
     enable_alarm_interrupt(rtc);
 
@@ -430,16 +423,18 @@ int main(void)
         if (GATEWAY)
         {
             // receive data
-            if (uart::uart_read(response) == uart::UART_READ_OK)
+            if (uart::uart0::uart_read(response, K_FOREVER) == uart::UART_READ_OK)
             {
                 LOG_INF("%s", uart::escape_response(response).c_str());
-                if (response.find("RCV") != std::string::npos)
-                {
-                    lora_module_sleep();
-                    k_sleep(K_MSEC(8000));
-                    lora_module_wake();
-                }
+                // if (response.find("RCV") != std::string::npos)
+                // {
+                //     lora_module_sleep();
+                //     k_sleep(K_MSEC(8000));
+                //     lora_module_wake();
+                // }
                 response = "";
+            }else {
+                LOG_INF("Error reading uart");
             }
         }
         else
