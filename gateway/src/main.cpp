@@ -11,6 +11,7 @@
 #include "uart/uart1.hpp"
 
 #include "at/sim7000e/common.hpp"
+#include "at/rylr433/rylr433.hpp"
 
 #include "data/collection.hpp"
 #include "data/transmission.hpp"
@@ -101,6 +102,7 @@ int initialize()
     // check if the lora module is present
     // todo: implement this
 
+    at::commands::rylr433::init_lora_module();
     // initialisation done
 
     return 0;

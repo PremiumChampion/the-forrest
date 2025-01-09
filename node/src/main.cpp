@@ -447,7 +447,7 @@ int main(void)
             gpio::adc::read_channel(1, voltage1);
             LOG_INF("ADC reading [%u]: %u", 5, voltage1);
 
-            send_message(GATEWAY_ADDRESS, "Sensor 1: " + std::to_string(voltage0) + " Sensor 2: " + std::to_string(voltage1));
+            send_message(GATEWAY_ADDRESS, std::to_string(NODE_ADDRESS) + "," + std::to_string(voltage0) + "," + std::to_string(voltage1));
             k_sleep(K_MSEC(1000));
 
             rc = pm_device_action_run(cons, PM_DEVICE_ACTION_SUSPEND);

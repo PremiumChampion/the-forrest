@@ -8,7 +8,8 @@ namespace gpio
     static const struct gpio_dt_spec power_pin = GPIO_DT_SPEC_GET_OR(DT_ALIAS(sim7000epower), gpios, {0});
     static const struct gpio_dt_spec dtr_pin = GPIO_DT_SPEC_GET_OR(DT_ALIAS(sim7000edtr), gpios, {0});
     static const struct gpio_dt_spec adc_converter_transistor_pin = GPIO_DT_SPEC_GET_OR(DT_ALIAS(adcconvertertransistor), gpios, {0});
-
+    //reset pin lora P0.21
+    static const struct gpio_dt_spec lora_reset = GPIO_DT_SPEC_GET_OR(DT_ALIAS(lorareset), gpios, {0});
     gpio_result init()
     {
         if (!gpio_is_ready_dt(&power_pin))
@@ -29,10 +30,17 @@ namespace gpio
             return ERROR;
         }
 
+        if (!gpio_is_ready_dt(&lora_reset))
+        {
+            LOG_ERR("Lora Reset pin is not ready\n");
+            return ERROR;
+        }
+
         // Configure the GPIO pins
         gpio_pin_configure_dt(&power_pin, GPIO_OUTPUT);
         gpio_pin_configure_dt(&dtr_pin, GPIO_OUTPUT);
         gpio_pin_configure_dt(&adc_converter_transistor_pin, GPIO_OUTPUT);
+        gpio_pin_configure_dt(&lora_reset, GPIO_OUTPUT);
 
         return OK;
     }
@@ -52,6 +60,10 @@ namespace gpio
         if (pin == ADC_CONVERTER_TRANSISTOR)
         {
             return gpio_pin_set_dt(&adc_converter_transistor_pin, value == HIGH ? 1 : 0) == 0 ? OK : ERROR;
+        }
+
+        if (pin == LORA_RESET) {
+            return gpio_pin_set_dt(&lora_reset, value == HIGH ? 1 : 0) == 0 ? OK : ERROR;
         }
 
         return ERROR;
@@ -74,6 +86,12 @@ namespace gpio
         if (pin == ADC_CONVERTER_TRANSISTOR)
         {
             value = gpio_pin_get_dt(&adc_converter_transistor_pin) == 0 ? LOW : HIGH;
+            return OK;
+        }
+
+        if (pin == LORA_RESET)
+        {
+            value = gpio_pin_get_dt(&lora_reset) == 0 ? LOW : HIGH;
             return OK;
         }
 
