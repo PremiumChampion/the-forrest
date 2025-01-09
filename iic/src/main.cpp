@@ -21,11 +21,11 @@ int main(void)
 
     struct tm timeinfo;
     // Set the time components
-    timeinfo.tm_year = 2024 - 1900; // Year since 1900
-    timeinfo.tm_mon = 12 - 1;       // Month (0-11)
-    timeinfo.tm_mday = 16;          // Day of the month (1-31)
-    timeinfo.tm_hour = 13;          // Hour (0-23)
-    timeinfo.tm_min = 16;           // Minutes (0-59)
+    timeinfo.tm_year = 2025 - 1900; // Year since 1900
+    timeinfo.tm_mon = 1 - 1;       // Month (0-11)
+    timeinfo.tm_mday = 9;          // Day of the month (1-31)
+    timeinfo.tm_hour = 16;          // Hour (0-23)
+    timeinfo.tm_min = 17;           // Minutes (0-59)
     timeinfo.tm_sec = 0;           // Seconds (0-60, 60 for leap seconds)
     timeinfo.tm_isdst = 0;          // Daylight saving time flag (0 if not in effect)
     

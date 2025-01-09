@@ -1,0 +1,32 @@
+sequenceDiagram
+    participant application
+    participant abstraction
+    participant driver
+    participant gpio
+    participant connected_device
+    
+    application->>+abstraction: change_baud_rate(9600)
+    abstraction->>+driver: configure(baudrate: 9600)
+    driver-->>-abstraction: done
+    abstraction-->>-application: done
+
+    application->>+abstraction: sleep()
+    abstraction-xdriver: pm_device_action_run(uart, PM_DEVICE_ACTION_SUSPEND)
+    note over driver: now ignoring everything
+    
+    abstraction->>+gpio: gpio_add_callback(uart0_rx_gpio, &uart_gpio_cb)
+    gpio-->>-abstraction: done
+    abstraction-->>-application: done
+    note over application: dooing other stuff
+    application->>+abstraction: read()
+    connected_device->>gpio: pulling data line low for sending data
+    gpio->>abstraction: uart_gpio_cb(event)
+    abstraction-)driver: pm_device_action_run(uart, PM_DEVICE_ACTION_RESUME)
+    note over driver: resuming normal operation
+    
+    abstraction-xgpio: gpio_remove_callback(uart0_rx_gpio, &uart_gpio_cb);
+    connected_device->>driver: sending data
+    driver->>driver: reading data
+    driver->>abstraction: data
+    abstraction-->>-application: data
+
