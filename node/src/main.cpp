@@ -23,6 +23,11 @@ LOG_MODULE_REGISTER(main);
 static const struct gpio_dt_spec sw0 = GPIO_DT_SPEC_GET(DT_ALIAS(sw0), gpios);
 const struct device *const cons = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
 
+static const struct gpio_dt_spec wakeup_pin = GPIO_DT_SPEC_GET(DT_ALIAS(sw0), gpios);
+static struct gpio_callback wakeup_cb_data;
+
+static volatile bool wakeup_flag = false;
+
 // I2C Clock test
 const struct device *const rtc = DEVICE_DT_GET(DT_NODELABEL(rtc_ds3231));
 // #define I2C0_NODE DT_NODELABEL(rtc_ds1307_i2c)
@@ -31,6 +36,11 @@ const struct device *const rtc = DEVICE_DT_GET(DT_NODELABEL(rtc_ds3231));
 // Lora startup init pin do not touch
 static const struct gpio_dt_spec reset_pin = GPIO_DT_SPEC_GET_OR(DT_ALIAS(mycusgpio), gpios, {0});
 
+static void wakeup_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
+{
+    wakeup_flag = true;
+    LOG_INF("Wake-up signal received");
+}
 std::string response;
 
 void join_network(int network_id, int dev_address)
@@ -353,13 +363,14 @@ int main(void)
         return -1;
     }
 
+    int rc;
     // Power off test
     if (!device_is_ready(cons))
     {
         printf("%s: device not ready.\n", cons->name);
         return 0;
     }
-    int rc = 0;
+
     /* Configure sw0 as input and set up interrupt */
     rc = gpio_pin_configure_dt(&sw0, GPIO_INPUT);
     if (rc < 0)
@@ -368,12 +379,14 @@ int main(void)
         return 0;
     }
 
-    rc = gpio_pin_interrupt_configure_dt(&sw0, GPIO_INT_EDGE_FALLING);
-    if (rc < 0)
-    {
+    rc = gpio_pin_interrupt_configure_dt(&sw0, GPIO_INT_EDGE_TO_ACTIVE);
+    if (rc < 0) {
         printf("Could not configure sw0 GPIO interrupt (%d)\n", rc);
         return 0;
     }
+
+    gpio_init_callback(&wakeup_cb_data, wakeup_callback, BIT(wakeup_pin.pin));
+    gpio_add_callback(wakeup_pin.port, &wakeup_cb_data);
 
     // RTC Test
 
@@ -448,8 +461,14 @@ int main(void)
                 printf("Could not resume console (%d)\n", rc);
                 return 0;
             }
-            
-            sys_poweroff();
+
+            while (!wakeup_flag) {
+                sys_poweroff();
+            }
+
+            wakeup_flag = false;
+
+            pm_device_action_run(cons, PM_DEVICE_ACTION_RESUME);
         }
     }
 }
