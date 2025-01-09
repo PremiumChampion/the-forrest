@@ -1,0 +1,747 @@
+*** Booting nRF Connect SDK v2.7.0-5cb85570ca43 ***
+*** Using Zephyr OS v3.6.99-100befc70c74 ***
+[00:00:00.251,434] <inf> iic_bus: I2C device found
+[00:00:00.251,464] <inf> iic_bus: I2C configured
+[00:00:00.252,593] <inf> main: DS1307 found
+[00:00:00.252,624] <inf> main: Current time: 125-0-9 17:34:10
+[00:00:00.252,655] <inf> uart1: UART configured at 115200 baud
+[00:00:00.254,028] <inf> uart1: RX: AT\r\r\n
+[00:00:00.254,333] <inf> uart1: RX: OK\r\n
+[00:00:00.257,293] <inf> uart1: RX: AT+CFUN=1,1\r\r\n
+[00:00:00.257,537] <inf> uart1: RX: OK\r\n
+[00:00:03.358,642] <err> at_commands_power: SIM7000E not responding
+[00:00:04.359,619] <err> at_commands_power: SIM7000E not responding
+[00:00:05.360,595] <err> at_commands_power: SIM7000E not responding
+[00:00:06.361,572] <err> at_commands_power: SIM7000E not responding
+[00:00:07.362,548] <err> at_commands_power: SIM7000E not responding
+[00:00:07.364,593] <inf> uart1: RX: AT\r\r\n
+[00:00:07.364,898] <inf> uart1: RX: OK\r\n
+[00:00:09.301,086] <inf> uart1: RX: \r\n
+[00:00:09.301,483] <inf> uart1: RX: RDY\r\n
+[00:00:09.764,099] <inf> uart1: RX: \r\n
+[00:00:09.764,923] <inf> uart1: RX: +CFUN: 1\r\n
+[00:00:10.224,182] <inf> uart1: RX: \r\n
+[00:00:10.225,372] <inf> uart1: RX: +CPIN: READY\r\n
+[00:00:10.972,198] <inf> uart1: RX: \r\n
+[00:00:10.973,114] <inf> uart1: RX: SMS Ready\r\n
+[00:00:10.997,467] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:10.997,650] <inf> uart1: RX: OK\r\n
+[00:00:11.004,577] <inf> uart1: RX: \r\n
+[00:00:11.006,317] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.025,085] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.025,299] <inf> uart1: RX: OK\r\n
+[00:00:11.030,059] <inf> uart1: RX: \r\n
+[00:00:11.031,799] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.050,476] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.050,659] <inf> uart1: RX: OK\r\n
+[00:00:11.055,450] <inf> uart1: RX: \r\n
+[00:00:11.057,189] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.076,812] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.076,995] <inf> uart1: RX: OK\r\n
+[00:00:11.081,817] <inf> uart1: RX: \r\n
+[00:00:11.083,557] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.102,386] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.102,600] <inf> uart1: RX: OK\r\n
+[00:00:11.107,330] <inf> uart1: RX: \r\n
+[00:00:11.109,100] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.128,112] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.128,295] <inf> uart1: RX: OK\r\n
+[00:00:11.132,995] <inf> uart1: RX: \r\n
+[00:00:11.134,735] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.154,541] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.154,754] <inf> uart1: RX: OK\r\n
+[00:00:11.159,515] <inf> uart1: RX: \r\n
+[00:00:11.161,285] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.180,206] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.180,419] <inf> uart1: RX: OK\r\n
+[00:00:11.185,119] <inf> uart1: RX: \r\n
+[00:00:11.186,889] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.205,932] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.206,115] <inf> uart1: RX: OK\r\n
+[00:00:11.210,906] <inf> uart1: RX: \r\n
+[00:00:11.212,677] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.231,719] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.231,903] <inf> uart1: RX: OK\r\n
+[00:00:11.236,724] <inf> uart1: RX: \r\n
+[00:00:11.238,494] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.257,537] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.257,720] <inf> uart1: RX: OK\r\n
+[00:00:11.262,451] <inf> uart1: RX: \r\n
+[00:00:11.264,190] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.283,172] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.283,355] <inf> uart1: RX: OK\r\n
+[00:00:11.288,146] <inf> uart1: RX: \r\n
+[00:00:11.289,916] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.309,051] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.309,234] <inf> uart1: RX: OK\r\n
+[00:00:11.313,995] <inf> uart1: RX: \r\n
+[00:00:11.315,734] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.334,808] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.335,021] <inf> uart1: RX: OK\r\n
+[00:00:11.339,752] <inf> uart1: RX: \r\n
+[00:00:11.341,522] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.360,504] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.360,687] <inf> uart1: RX: OK\r\n
+[00:00:11.365,570] <inf> uart1: RX: \r\n
+[00:00:11.367,309] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.386,108] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.386,291] <inf> uart1: RX: OK\r\n
+[00:00:11.390,991] <inf> uart1: RX: \r\n
+[00:00:11.392,730] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.411,315] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.411,499] <inf> uart1: RX: OK\r\n
+[00:00:11.416,473] <inf> uart1: RX: \r\n
+[00:00:11.418,212] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.437,316] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.437,500] <inf> uart1: RX: OK\r\n
+[00:00:11.442,138] <inf> uart1: RX: \r\n
+[00:00:11.443,878] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.462,554] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.462,738] <inf> uart1: RX: OK\r\n
+[00:00:11.467,620] <inf> uart1: RX: \r\n
+[00:00:11.469,390] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.488,250] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.488,433] <inf> uart1: RX: OK\r\n
+[00:00:11.492,797] <inf> uart1: RX: \r\n
+[00:00:11.494,537] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.512,939] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.513,122] <inf> uart1: RX: OK\r\n
+[00:00:11.517,974] <inf> uart1: RX: \r\n
+[00:00:11.519,714] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.538,604] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.538,787] <inf> uart1: RX: OK\r\n
+[00:00:11.543,518] <inf> uart1: RX: \r\n
+[00:00:11.545,288] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.564,178] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.564,392] <inf> uart1: RX: OK\r\n
+[00:00:11.569,183] <inf> uart1: RX: \r\n
+[00:00:11.570,922] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.590,789] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.590,972] <inf> uart1: RX: OK\r\n
+[00:00:11.595,489] <inf> uart1: RX: \r\n
+[00:00:11.597,229] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.617,919] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.618,133] <inf> uart1: RX: OK\r\n
+[00:00:11.622,100] <inf> uart1: RX: \r\n
+[00:00:11.623,840] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.641,601] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.641,784] <inf> uart1: RX: OK\r\n
+[00:00:11.645,690] <inf> uart1: RX: \r\n
+[00:00:11.647,430] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.667,236] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.667,419] <inf> uart1: RX: OK\r\n
+[00:00:11.671,478] <inf> uart1: RX: \r\n
+[00:00:11.673,248] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.694,915] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.695,129] <inf> uart1: RX: OK\r\n
+[00:00:11.700,500] <inf> uart1: RX: \r\n
+[00:00:11.702,239] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.727,203] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.727,416] <inf> uart1: RX: OK\r\n
+[00:00:11.733,886] <inf> uart1: RX: \r\n
+[00:00:11.735,626] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.761,657] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.761,871] <inf> uart1: RX: OK\r\n
+[00:00:11.768,951] <inf> uart1: RX: \r\n
+[00:00:11.770,690] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.794,738] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.794,921] <inf> uart1: RX: OK\r\n
+[00:00:11.802,185] <inf> uart1: RX: \r\n
+[00:00:11.803,924] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.829,528] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.829,742] <inf> uart1: RX: OK\r\n
+[00:00:11.836,944] <inf> uart1: RX: \r\n
+[00:00:11.838,684] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.863,433] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.863,616] <inf> uart1: RX: OK\r\n
+[00:00:11.869,567] <inf> uart1: RX: \r\n
+[00:00:11.871,337] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.894,470] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.894,683] <inf> uart1: RX: OK\r\n
+[00:00:11.901,245] <inf> uart1: RX: \r\n
+[00:00:11.903,015] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.928,466] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.928,649] <inf> uart1: RX: OK\r\n
+[00:00:11.935,150] <inf> uart1: RX: \r\n
+[00:00:11.936,920] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.961,547] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.961,761] <inf> uart1: RX: OK\r\n
+[00:00:11.968,048] <inf> uart1: RX: \r\n
+[00:00:11.969,818] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:11.993,316] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:11.993,530] <inf> uart1: RX: OK\r\n
+[00:00:11.998,809] <inf> uart1: RX: \r\n
+[00:00:12.000,579] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.025,451] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.025,634] <inf> uart1: RX: OK\r\n
+[00:00:12.032,958] <inf> uart1: RX: \r\n
+[00:00:12.034,729] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.059,356] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.059,570] <inf> uart1: RX: OK\r\n
+[00:00:12.066,131] <inf> uart1: RX: \r\n
+[00:00:12.067,901] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.091,247] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.091,430] <inf> uart1: RX: OK\r\n
+[00:00:12.097,625] <inf> uart1: RX: \r\n
+[00:00:12.099,395] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.122,253] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.122,436] <inf> uart1: RX: OK\r\n
+[00:00:12.128,570] <inf> uart1: RX: \r\n
+[00:00:12.130,310] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.154,937] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.155,120] <inf> uart1: RX: OK\r\n
+[00:00:12.162,231] <inf> uart1: RX: \r\n
+[00:00:12.164,001] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.186,645] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.186,859] <inf> uart1: RX: OK\r\n
+[00:00:12.193,542] <inf> uart1: RX: \r\n
+[00:00:12.195,312] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.219,360] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.219,543] <inf> uart1: RX: OK\r\n
+[00:00:12.225,830] <inf> uart1: RX: \r\n
+[00:00:12.227,569] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.251,922] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.252,105] <inf> uart1: RX: OK\r\n
+[00:00:12.258,666] <inf> uart1: RX: \r\n
+[00:00:12.260,437] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.285,339] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.285,552] <inf> uart1: RX: OK\r\n
+[00:00:12.292,480] <inf> uart1: RX: \r\n
+[00:00:12.294,250] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.317,443] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.317,626] <inf> uart1: RX: OK\r\n
+[00:00:12.323,974] <inf> uart1: RX: \r\n
+[00:00:12.325,744] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.351,776] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.351,989] <inf> uart1: RX: OK\r\n
+[00:00:12.358,093] <inf> uart1: RX: \r\n
+[00:00:12.359,832] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.384,521] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.384,735] <inf> uart1: RX: OK\r\n
+[00:00:12.391,662] <inf> uart1: RX: \r\n
+[00:00:12.393,402] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.419,189] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.419,403] <inf> uart1: RX: OK\r\n
+[00:00:12.425,384] <inf> uart1: RX: \r\n
+[00:00:12.427,124] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.451,049] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.451,232] <inf> uart1: RX: OK\r\n
+[00:00:12.457,641] <inf> uart1: RX: \r\n
+[00:00:12.459,381] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.483,093] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.483,276] <inf> uart1: RX: OK\r\n
+[00:00:12.489,044] <inf> uart1: RX: \r\n
+[00:00:12.490,814] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.516,510] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.516,693] <inf> uart1: RX: OK\r\n
+[00:00:12.523,406] <inf> uart1: RX: \r\n
+[00:00:12.525,146] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.549,316] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.549,530] <inf> uart1: RX: OK\r\n
+[00:00:12.556,091] <inf> uart1: RX: \r\n
+[00:00:12.557,861] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.581,939] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.582,122] <inf> uart1: RX: OK\r\n
+[00:00:12.588,134] <inf> uart1: RX: \r\n
+[00:00:12.589,904] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.613,311] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.613,525] <inf> uart1: RX: OK\r\n
+[00:00:12.619,842] <inf> uart1: RX: \r\n
+[00:00:12.621,582] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.646,057] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.646,270] <inf> uart1: RX: OK\r\n
+[00:00:12.653,045] <inf> uart1: RX: \r\n
+[00:00:12.654,815] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.679,687] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.679,870] <inf> uart1: RX: OK\r\n
+[00:00:12.684,844] <inf> uart1: RX: \r\n
+[00:00:12.686,614] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.712,280] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.712,463] <inf> uart1: RX: OK\r\n
+[00:00:12.718,811] <inf> uart1: RX: \r\n
+[00:00:12.720,581] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.742,340] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.742,523] <inf> uart1: RX: OK\r\n
+[00:00:12.748,779] <inf> uart1: RX: \r\n
+[00:00:12.750,518] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.776,275] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.776,489] <inf> uart1: RX: OK\r\n
+[00:00:12.783,355] <inf> uart1: RX: \r\n
+[00:00:12.785,095] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.810,272] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.810,485] <inf> uart1: RX: OK\r\n
+[00:00:12.818,145] <inf> uart1: RX: \r\n
+[00:00:12.819,915] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.846,038] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.846,221] <inf> uart1: RX: OK\r\n
+[00:00:12.853,271] <inf> uart1: RX: \r\n
+[00:00:12.855,041] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.890,167] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.890,350] <inf> uart1: RX: OK\r\n
+[00:00:12.903,930] <inf> uart1: RX: \r\n
+[00:00:12.905,700] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.927,581] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.927,764] <inf> uart1: RX: OK\r\n
+[00:00:12.932,098] <inf> uart1: RX: \r\n
+[00:00:12.933,837] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.953,155] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.953,338] <inf> uart1: RX: OK\r\n
+[00:00:12.956,878] <inf> uart1: RX: \r\n
+[00:00:12.958,618] <inf> uart1: RX: +APP PDP: DEACTIVE\r\n
+[00:00:12.981,506] <inf> uart1: RX: AT+CNACT=1,"internet"\r\r\n
+[00:00:12.981,719] <inf> uart1: RX: OK\r\n
+[00:00:13.385,742] <inf> uart1: RX: \r\n
+[00:00:13.387,329] <inf> uart1: RX: +APP PDP: ACTIVE\r\n
+[00:00:13.493,499] <inf> uart1: RX: AT+CPSMSTATUS=1\r\r\n
+[00:00:13.493,713] <inf> uart1: RX: OK\r\n
+[00:00:13.500,183] <inf> uart1: RX: AT+CSSLCFG="ignorertctime",0,1\r\r\n
+[00:00:13.500,335] <inf> uart1: RX: OK\r\n
+[00:00:13.506,378] <inf> uart1: RX: AT+CSSLCFG="sslversion",1,3\r\r\n
+[00:00:13.506,530] <inf> uart1: RX: OK\r\n
+[00:00:13.511,016] <inf> uart1: RX: AT+SHSSL=1,""\r\r\n
+[00:00:13.511,199] <inf> uart1: RX: OK\r\n
+[00:00:13.518,859] <inf> uart1: RX: AT+CCLK="25/01/09,17:34:24+00"\r\r\n
+[00:00:13.519,012] <inf> uart1: RX: OK\r\n
+[00:00:13.519,104] <inf> main: SIM7000E found
+[00:00:18.523,193] <inf> uart0: RX: +RCV=1,11,"1,239,266",-45,11\r\n
+[00:00:18.523,376] <inf> uart0: RX: +RCV=1,11,"1,257,245",-52,11\r\n
+[00:00:18.535,766] <inf> uart0: RX: +OK\r\n
+[00:00:18.535,827] <inf> at_rylr433: Waiting for module to respond
+[00:00:18.535,827] <inf> at_rylr433: SUCCESS
+[00:00:19.535,888] <inf> at_rylr433: Setting parameters
+[00:00:19.598,754] <inf> uart0: RX: +OK\r\n
+[00:00:19.598,754] <inf> at_rylr433: SUCCESS
+[00:00:19.598,815] <inf> at_rylr433: +OK\r\n
+[00:00:19.598,815] <inf> at_rylr433: Setting RF power
+[00:00:19.648,590] <inf> uart0: RX: +OK\r\n
+[00:00:19.648,651] <inf> at_rylr433: +OK\r\n
+[00:00:19.648,651] <inf> at_rylr433: Setting frequency band
+[00:00:19.684,570] <inf> uart0: RX: +OK\r\n
+[00:00:19.684,631] <inf> at_rylr433: +OK\r\n
+[00:00:19.684,661] <inf> at_rylr433: Setting address
+[00:00:19.737,884] <inf> uart0: RX: +OK\r\n
+[00:00:19.737,945] <inf> at_rylr433: +OK\r\n
+[00:00:19.737,945] <inf> at_rylr433: Setting network id
+[00:00:19.792,877] <inf> uart0: RX: +OK\r\n
+[00:00:19.792,938] <inf> at_rylr433: +OK\r\n
+[00:00:19.792,968] <inf> data_collection: Data collection thread started
+[00:00:19.792,968] <inf> data_transmission: Data ^transmission thread started
+[00:00:19.792,999] <inf> data_reception: Data reception thread started
+[00:00:19.800,262] <inf> uart1: RX: AT+IPR=9600\r\r\n
+[00:00:19.800,323] <inf> uart1: RX: OK\r\n
+[00:00:19.800,384] <inf> uart1: UART configured at 9600 baud
+[00:00:25.692,504] <inf> uart0: RX: +RCV=1,11,"1,256,276",-59,12\r\n
+[00:00:25.692,596] <inf> data_reception: Data: 1,256,276
+[00:00:35.886,383] <inf> uart0: RX: +RCV=1,11,"1,224,252",-44,12\r\n
+[00:00:35.886,474] <inf> data_reception: Data: 1,224,252
+[00:00:39.800,445] <err> uart1: Could not remove callback on uart1_rx_gpio GPIO (-22)
+
+[00:00:39.840,026] <inf> uart1: RX: AT+IPR=115200\r\r\n
+[00:00:39.844,116] <inf> uart1: RX: OK\r\n
+[00:00:39.844,146] <inf> uart1: UART configured at 115200 baud
+[00:00:39.844,177] <inf> data_transmission: Sending data
+[00:00:39.853,302] <inf> uart1: RX: AT+CSSLCFG="sni",1,"static.woyte.dev"\r\r\n
+[00:00:39.853,454] <inf> uart1: RX: OK\r\n
+[00:00:39.858,703] <inf> uart1: RX: AT+SHCONF="BODYLEN",491\r\r\n
+[00:00:39.858,886] <inf> uart1: RX: OK\r\n
+[00:00:39.864,562] <inf> uart1: RX: AT+SHCONF="HEADERLEN",108\r\r\n
+[00:00:39.864,715] <inf> uart1: RX: OK\r\n
+[00:00:39.873,413] <inf> uart1: RX: AT+SHCONF="URL","https://static.woyte.dev"\r\r\n
+[00:00:39.873,565] <inf> uart1: RX: OK\r\n
+[00:00:41.035,675] <inf> uart1: RX: AT+SHCONN\r\r\n
+[00:00:41.035,980] <inf> uart1: RX: OK\r\n
+[00:00:41.039,428] <inf> uart1: RX: AT+SHCHEAD\r\r\n
+[00:00:41.039,703] <inf> uart1: RX: OK\r\n
+[00:00:41.048,736] <inf> uart1: RX: AT+SHAHEAD="Content-Type","application/json"\r\r\n
+[00:00:41.048,889] <inf> uart1: RX: OK\r\n
+[00:00:41.056,762] <inf> uart1: RX: AT+SHAHEAD="User-Agent","curl/7.47.0"\r\r\n
+[00:00:41.056,884] <inf> uart1: RX: OK\r\n
+[00:00:41.064,727] <inf> uart1: RX: AT+SHAHEAD="Cache-control","no-cache"\r\r\n
+[00:00:41.064,880] <inf> uart1: RX: OK\r\n
+[00:00:41.070,709] <inf> uart1: RX: AT+SHAHEAD="Accept","*/*"\r\r\n
+[00:00:41.070,892] <inf> uart1: RX: OK\r\n
+[00:00:41.129,119] <inf> uart1: RX: AT+SHBOD="{\"1\":[{\"device_id\":\"1\",\"timestamp\":\"2025-01-09T17:34:36Z\",\"battery_voltage_mv\":276,\"humidity_voltage_mv\":
+[00:00:41.140,258] <inf> uart1: RX: 256},{\"device_id\":\"1\",\"timestamp\":\"2025-01-09T17:34:46Z\",\"battery_voltage_mv\":252,\"humidity_voltage_mv\":224}],\"gatew
+[00:00:41.151,458] <inf> uart1: RX: ay\":[{\"device_id\":\"gateway\",\"timestamp\":\"2025-01-09T17:34:40Z\",\"battery_voltage_mv\":442,\"humidity_voltage_mv\":158},{
+[00:00:41.162,658] <inf> uart1: RX: \"device_id\":\"gateway\",\"timestamp\":\"2025-01-09T17:34:50Z\",\"battery_voltage_mv\":436,\"humidity_voltage_mv\":156}]}",447\r\r
+[00:00:41.162,750] <inf> uart1: RX: \n
+[00:00:41.162,933] <inf> uart1: RX: OK\r\n
+[00:00:41.169,189] <inf> uart1: RX: AT+SHREQ="/api/save_to_db",3\r\r\n
+[00:00:41.169,342] <inf> uart1: RX: OK\r\n
+[00:00:42.530,670] <inf> uart1: RX: \r\n
+[00:00:42.532,684] <inf> uart1: RX: +SHREQ: "POST",200,20\r\n
+[00:00:42.536,834] <inf> uart1: RX: AT+SHREAD=0,20\r\r\n
+[00:00:42.537,048] <inf> uart1: RX: OK\r\n
+[00:00:43.536,956] <inf> uart1: RX: \r\n
+[00:00:43.538,085] <inf> uart1: RX: +SHREAD: 20\r\n
+[00:00:43.540,008] <inf> uart1: RX: 2025-01-09T17:34:54Z\r\n
+[00:00:43.540,039] <inf> at_commands_https: Specified length: 20, Recieved length: 20
+[00:00:43.543,640] <inf> uart1: RX: AT+SHDISC\r\r\n
+[00:00:43.543,945] <inf> uart1: RX: OK\r\n
+[00:00:43.543,975] <inf> data_transmission: Data transmission successful
+[00:00:43.545,074] <inf> data_transmission: Time set to 2025-01-09T17:34:54Z
+[00:00:43.552,703] <inf> uart1: RX: AT+CCLK="25/01/09,17:34:54+00"\r\r\n
+[00:00:43.552,856] <inf> uart1: RX: OK\r\n
+[00:00:43.558,807] <inf> uart1: RX: AT+IPR=9600\r\r\n
+[00:00:43.559,051] <inf> uart1: RX: OK\r\n
+[00:00:43.559,082] <inf> uart1: UART configured at 9600 baud
+[00:00:46.080,261] <inf> uart0: RX: +RCV=1,11,"1,287,270",-43,11\r\n
+[00:00:46.080,322] <inf> data_reception: Data: 1,287,270
+[00:00:56.274,139] <inf> uart0: RX: +RCV=1,11,"1,283,293",-44,12\r\n
+[00:00:56.274,230] <inf> data_reception: Data: 1,283,293
+[00:01:03.604,919] <inf> uart1: RX: AT+IPR=115200\r\r\n
+[00:01:03.609,039] <inf> uart1: RX: OK\r\n
+[00:01:03.609,039] <inf> uart1: UART configured at 115200 baud
+[00:01:03.609,069] <inf> data_transmission: Sending data
+[00:01:03.618,194] <inf> uart1: RX: AT+CSSLCFG="sni",1,"static.woyte.dev"\r\r\n
+[00:01:03.618,347] <inf> uart1: RX: OK\r\n
+[00:01:03.623,626] <inf> uart1: RX: AT+SHCONF="BODYLEN",491\r\r\n
+[00:01:03.623,809] <inf> uart1: RX: OK\r\n
+[00:01:03.629,638] <inf> uart1: RX: AT+SHCONF="HEADERLEN",108\r\r\n
+[00:01:03.629,791] <inf> uart1: RX: OK\r\n
+[00:01:03.638,793] <inf> uart1: RX: AT+SHCONF="URL","https://static.woyte.dev"\r\r\n
+[00:01:03.638,916] <inf> uart1: RX: OK\r\n
+[00:01:04.632,995] <inf> uart1: RX: AT+SHCONN\r\r\n
+[00:01:04.633,300] <inf> uart1: RX: OK\r\n
+[00:01:04.636,566] <inf> uart1: RX: AT+SHCHEAD\r\r\n
+[00:01:04.636,840] <inf> uart1: RX: OK\r\n
+[00:01:04.646,026] <inf> uart1: RX: AT+SHAHEAD="Content-Type","application/json"\r\r\n
+[00:01:04.646,148] <inf> uart1: RX: OK\r\n
+[00:01:04.653,991] <inf> uart1: RX: AT+SHAHEAD="User-Agent","curl/7.47.0"\r\r\n
+[00:01:04.654,113] <inf> uart1: RX: OK\r\n
+[00:01:04.661,926] <inf> uart1: RX: AT+SHAHEAD="Cache-control","no-cache"\r\r\n
+[00:01:04.662,078] <inf> uart1: RX: OK\r\n
+[00:01:04.667,724] <inf> uart1: RX: AT+SHAHEAD="Accept","*/*"\r\r\n
+[00:01:04.667,907] <inf> uart1: RX: OK\r\n
+[00:01:04.725,891] <inf> uart1: RX: AT+SHBOD="{\"1\":[{\"device_id\":\"1\",\"timestamp\":\"2025-01-09T17:34:56Z\",\"battery_voltage_mv\":270,\"humidity_voltage_mv\":
+[00:01:04.737,030] <inf> uart1: RX: 287},{\"device_id\":\"1\",\"timestamp\":\"2025-01-09T17:35:06Z\",\"battery_voltage_mv\":293,\"humidity_voltage_mv\":283}],\"gatew
+[00:01:04.748,229] <inf> uart1: RX: ay\":[{\"device_id\":\"gateway\",\"timestamp\":\"2025-01-09T17:35:00Z\",\"battery_voltage_mv\":435,\"humidity_voltage_mv\":147},{
+[00:01:04.759,429] <inf> uart1: RX: \"device_id\":\"gateway\",\"timestamp\":\"2025-01-09T17:35:10Z\",\"battery_voltage_mv\":468,\"humidity_voltage_mv\":178}]}",447\r\r
+[00:01:04.759,521] <inf> uart1: RX: \n
+[00:01:04.759,704] <inf> uart1: RX: OK\r\n
+[00:01:04.766,357] <inf> uart1: RX: AT+SHREQ="/api/save_to_db",3\r\r\n
+[00:01:04.766,510] <inf> uart1: RX: OK\r\n
+[00:01:06.048,889] <inf> uart1: RX: \r\n
+[00:01:06.050,903] <inf> uart1: RX: +SHREQ: "POST",200,20\r\n
+[00:01:06.054,962] <inf> uart1: RX: AT+SHREAD=0,20\r\r\n
+[00:01:06.055,175] <inf> uart1: RX: OK\r\n
+[00:01:06.468,048] <inf> uart0: RX: +RCV=1,11,"1,257,242",-49,11\r\n
+[00:01:06.468,109] <inf> data_reception: Data: 1,257,242
+[00:01:07.055,023] <inf> uart1: RX: \r\n
+[00:01:07.056,152] <inf> uart1: RX: +SHREAD: 20\r\n
+[00:01:07.058,105] <inf> uart1: RX: 2025-01-09T17:35:18Z\r\n
+[00:01:07.058,105] <inf> at_commands_https: Specified length: 20, Recieved length: 20
+[00:01:07.061,828] <inf> uart1: RX: AT+SHDISC\r\r\n
+[00:01:07.062,103] <inf> uart1: RX: OK\r\n
+[00:01:07.062,164] <inf> data_transmission: Data transmission successful
+[00:01:07.063,232] <inf> data_transmission: Time set to 2025-01-09T17:35:18Z
+[00:01:07.070,861] <inf> uart1: RX: AT+CCLK="25/01/09,17:35:18+00"\r\r\n
+[00:01:07.071,014] <inf> uart1: RX: OK\r\n
+[00:01:07.077,239] <inf> uart1: RX: AT+IPR=9600\r\r\n
+[00:01:07.077,514] <inf> uart1: RX: OK\r\n
+[00:01:07.077,545] <inf> uart1: UART configured at 9600 baud
+[00:01:16.661,956] <inf> uart0: RX: +RCV=1,11,"1,222,237",-50,11\r\n
+[00:01:16.662,048] <inf> data_reception: Data: 1,222,237
+[00:01:26.855,865] <inf> uart0: RX: +RCV=1,11,"1,280,289",-47,11\r\n
+[00:01:26.855,957] <inf> data_reception: Data: 1,280,289
+[00:01:27.123,413] <inf> uart1: RX: AT+IPR=115200\r\r\n
+[00:01:27.127,502] <inf> uart1: RX: OK\r\n
+[00:01:27.127,532] <inf> uart1: UART configured at 115200 baud
+[00:01:27.127,532] <inf> data_transmission: Sending data
+[00:01:27.136,627] <inf> uart1: RX: AT+CSSLCFG="sni",1,"static.woyte.dev"\r\r\n
+[00:01:27.136,779] <inf> uart1: RX: OK\r\n
+[00:01:27.142,059] <inf> uart1: RX: AT+SHCONF="BODYLEN",491\r\r\n
+[00:01:27.142,242] <inf> uart1: RX: OK\r\n
+[00:01:27.148,101] <inf> uart1: RX: AT+SHCONF="HEADERLEN",108\r\r\n
+[00:01:27.148,284] <inf> uart1: RX: OK\r\n
+[00:01:27.156,951] <inf> uart1: RX: AT+SHCONF="URL","https://static.woyte.dev"\r\r\n
+[00:01:27.157,104] <inf> uart1: RX: OK\r\n
+[00:01:28.242,340] <inf> uart1: RX: AT+SHCONN\r\r\n
+[00:01:28.242,645] <inf> uart1: RX: OK\r\n
+[00:01:28.246,063] <inf> uart1: RX: AT+SHCHEAD\r\r\n
+[00:01:28.246,307] <inf> uart1: RX: OK\r\n
+[00:01:28.255,706] <inf> uart1: RX: AT+SHAHEAD="Content-Type","application/json"\r\r\n
+[00:01:28.255,828] <inf> uart1: RX: OK\r\n
+[00:01:28.263,946] <inf> uart1: RX: AT+SHAHEAD="User-Agent","curl/7.47.0"\r\r\n
+[00:01:28.264,099] <inf> uart1: RX: OK\r\n
+[00:01:28.271,972] <inf> uart1: RX: AT+SHAHEAD="Cache-control","no-cache"\r\r\n
+[00:01:28.272,094] <inf> uart1: RX: OK\r\n
+[00:01:28.278,137] <inf> uart1: RX: AT+SHAHEAD="Accept","*/*"\r\r\n
+[00:01:28.278,259] <inf> uart1: RX: OK\r\n
+[00:01:28.336,273] <inf> uart1: RX: AT+SHBOD="{\"1\":[{\"device_id\":\"1\",\"timestamp\":\"2025-01-09T17:35:27Z\",\"battery_voltage_mv\":237,\"humidity_voltage_mv\":
+[00:01:28.347,473] <inf> uart1: RX: 222},{\"device_id\":\"1\",\"timestamp\":\"2025-01-09T17:35:37Z\",\"battery_voltage_mv\":289,\"humidity_voltage_mv\":280}],\"gatew
+[00:01:28.358,703] <inf> uart1: RX: ay\":[{\"device_id\":\"gateway\",\"timestamp\":\"2025-01-09T17:35:20Z\",\"battery_voltage_mv\":541,\"humidity_voltage_mv\":239},{
+[00:01:28.369,873] <inf> uart1: RX: \"device_id\":\"gateway\",\"timestamp\":\"2025-01-09T17:35:30Z\",\"battery_voltage_mv\":573,\"humidity_voltage_mv\":263}]}",447\r\r
+[00:01:28.369,995] <inf> uart1: RX: \n
+[00:01:28.370,147] <inf> uart1: RX: OK\r\n
+[00:01:28.376,403] <inf> uart1: RX: AT+SHREQ="/api/save_to_db",3\r\r\n
+[00:01:28.376,556] <inf> uart1: RX: OK\r\n
+[00:01:29.728,485] <inf> uart1: RX: \r\n
+[00:01:29.730,499] <inf> uart1: RX: +SHREQ: "POST",200,20\r\n
+[00:01:29.734,832] <inf> uart1: RX: AT+SHREAD=0,20\r\r\n
+[00:01:29.735,046] <inf> uart1: RX: OK\r\n
+[00:01:30.734,619] <inf> uart1: RX: \r\n
+[00:01:30.735,748] <inf> uart1: RX: +SHREAD: 20\r\n
+[00:01:30.737,670] <inf> uart1: RX: 2025-01-09T17:35:41Z\r\n
+[00:01:30.737,701] <inf> at_commands_https: Specified length: 20, Recieved length: 20
+[00:01:30.741,210] <inf> uart1: RX: AT+SHDISC\r\r\n
+[00:01:30.741,485] <inf> uart1: RX: OK\r\n
+[00:01:30.741,546] <inf> data_transmission: Data transmission successful
+[00:01:30.742,614] <inf> data_transmission: Time set to 2025-01-09T17:35:41Z
+[00:01:30.750,457] <inf> uart1: RX: AT+CCLK="25/01/09,17:35:41+00"\r\r\n
+[00:01:30.750,610] <inf> uart1: RX: OK\r\n
+[00:01:30.755,828] <inf> uart1: RX: AT+IPR=9600\r\r\n
+[00:01:30.756,103] <inf> uart1: RX: OK\r\n
+[00:01:30.756,134] <inf> uart1: UART configured at 9600 baud
+[00:01:37.049,774] <inf> uart0: RX: +RCV=1,11,"1,217,250",-44,11\r\n
+[00:01:37.049,835] <inf> data_reception: Data: 1,217,250
+[00:01:47.243,652] <inf> uart0: RX: +RCV=1,11,"1,232,239",-46,11\r\n
+[00:01:47.243,713] <inf> data_reception: Data: 1,232,239
+[00:01:50.802,001] <inf> uart1: RX: AT+IPR=115200\r\r\n
+[00:01:50.806,091] <inf> uart1: RX: OK\r\n
+[00:01:50.806,121] <inf> uart1: UART configured at 115200 baud
+[00:01:50.806,121] <inf> data_transmission: Sending data
+[00:01:50.815,277] <inf> uart1: RX: AT+CSSLCFG="sni",1,"static.woyte.dev"\r\r\n
+[00:01:50.815,399] <inf> uart1: RX: OK\r\n
+[00:01:50.820,648] <inf> uart1: RX: AT+SHCONF="BODYLEN",491\r\r\n
+[00:01:50.820,831] <inf> uart1: RX: OK\r\n
+[00:01:50.826,690] <inf> uart1: RX: AT+SHCONF="HEADERLEN",108\r\r\n
+[00:01:50.826,843] <inf> uart1: RX: OK\r\n
+[00:01:50.835,571] <inf> uart1: RX: AT+SHCONF="URL","https://static.woyte.dev"\r\r\n
+[00:01:50.835,693] <inf> uart1: RX: OK\r\n
+[00:01:51.868,469] <inf> uart1: RX: AT+SHCONN\r\r\n
+[00:01:51.868,774] <inf> uart1: RX: OK\r\n
+[00:01:51.872,131] <inf> uart1: RX: AT+SHCHEAD\r\r\n
+[00:01:51.872,406] <inf> uart1: RX: OK\r\n
+[00:01:51.881,469] <inf> uart1: RX: AT+SHAHEAD="Content-Type","application/json"\r\r\n
+[00:01:51.881,622] <inf> uart1: RX: OK\r\n
+[00:01:51.889,770] <inf> uart1: RX: AT+SHAHEAD="User-Agent","curl/7.47.0"\r\r\n
+[00:01:51.889,923] <inf> uart1: RX: OK\r\n
+[00:01:51.897,827] <inf> uart1: RX: AT+SHAHEAD="Cache-control","no-cache"\r\r\n
+[00:01:51.897,979] <inf> uart1: RX: OK\r\n
+[00:01:51.903,686] <inf> uart1: RX: AT+SHAHEAD="Accept","*/*"\r\r\n
+[00:01:51.903,839] <inf> uart1: RX: OK\r\n
+[00:01:51.961,853] <inf> uart1: RX: AT+SHBOD="{\"1\":[{\"device_id\":\"1\",\"timestamp\":\"2025-01-09T17:35:47Z\",\"battery_voltage_mv\":250,\"humidity_voltage_mv\":
+[00:01:51.973,052] <inf> uart1: RX: 217},{\"device_id\":\"1\",\"timestamp\":\"2025-01-09T17:35:57Z\",\"battery_voltage_mv\":239,\"humidity_voltage_mv\":232}],\"gatew
+[00:01:51.984,283] <inf> uart1: RX: ay\":[{\"device_id\":\"gateway\",\"timestamp\":\"2025-01-09T17:35:50Z\",\"battery_voltage_mv\":569,\"humidity_voltage_mv\":254},{
+[00:01:51.995,452] <inf> uart1: RX: \"device_id\":\"gateway\",\"timestamp\":\"2025-01-09T17:36:00Z\",\"battery_voltage_mv\":570,\"humidity_voltage_mv\":269}]}",447\r\r
+[00:01:51.995,574] <inf> uart1: RX: \n
+[00:01:51.995,727] <inf> uart1: RX: OK\r\n
+[00:01:52.002,044] <inf> uart1: RX: AT+SHREQ="/api/save_to_db",3\r\r\n
+[00:01:52.002,197] <inf> uart1: RX: OK\r\n
+[00:01:53.394,348] <inf> uart1: RX: \r\n
+[00:01:53.396,392] <inf> uart1: RX: +SHREQ: "POST",200,20\r\n
+[00:01:53.400,665] <inf> uart1: RX: AT+SHREAD=0,20\r\r\n
+[00:01:53.400,878] <inf> uart1: RX: OK\r\n
+[00:01:54.400,970] <inf> uart1: RX: \r\n
+[00:01:54.402,099] <inf> uart1: RX: +SHREAD: 20\r\n
+[00:01:54.404,022] <inf> uart1: RX: 2025-01-09T17:36:05Z\r\n
+[00:01:54.404,052] <inf> at_commands_https: Specified length: 20, Recieved length: 20
+[00:01:54.407,348] <inf> uart1: RX: AT+SHDISC\r\r\n
+[00:01:54.407,653] <inf> uart1: RX: OK\r\n
+[00:01:54.407,714] <inf> data_transmission: Data transmission successful
+[00:01:54.408,782] <inf> data_transmission: Time set to 2025-01-09T17:36:05Z
+[00:01:54.416,351] <inf> uart1: RX: AT+CCLK="25/01/09,17:36:05+00"\r\r\n
+[00:01:54.416,503] <inf> uart1: RX: OK\r\n
+[00:01:54.421,447] <inf> uart1: RX: AT+IPR=9600\r\r\n
+[00:01:54.421,691] <inf> uart1: RX: OK\r\n
+[00:01:54.421,722] <inf> uart1: UART configured at 9600 baud
+[00:01:57.437,561] <inf> uart0: RX: +RCV=1,11,"1,250,272",-37,11\r\n
+[00:01:57.437,622] <inf> data_reception: Data: 1,250,272
+[00:02:07.631,469] <inf> uart0: RX: +RCV=1,11,"1,234,268",-48,11\r\n
+[00:02:07.631,561] <inf> data_reception: Data: 1,234,268
+[00:02:14.467,590] <inf> uart1: RX: AT+IPR=115200\r\r\n
+[00:02:14.471,679] <inf> uart1: RX: OK\r\n
+[00:02:14.471,710] <inf> uart1: UART configured at 115200 baud
+[00:02:14.471,710] <inf> data_transmission: Sending data
+[00:02:14.480,865] <inf> uart1: RX: AT+CSSLCFG="sni",1,"static.woyte.dev"\r\r\n
+[00:02:14.481,018] <inf> uart1: RX: OK\r\n
+[00:02:14.486,297] <inf> uart1: RX: AT+SHCONF="BODYLEN",491\r\r\n
+[00:02:14.486,480] <inf> uart1: RX: OK\r\n
+[00:02:14.492,126] <inf> uart1: RX: AT+SHCONF="HEADERLEN",108\r\r\n
+[00:02:14.492,279] <inf> uart1: RX: OK\r\n
+[00:02:14.500,946] <inf> uart1: RX: AT+SHCONF="URL","https://static.woyte.dev"\r\r\n
+[00:02:14.501,068] <inf> uart1: RX: OK\r\n
+[00:02:15.600,006] <inf> uart1: RX: AT+SHCONN\r\r\n
+[00:02:15.600,311] <inf> uart1: RX: OK\r\n
+[00:02:15.603,790] <inf> uart1: RX: AT+SHCHEAD\r\r\n
+[00:02:15.604,064] <inf> uart1: RX: OK\r\n
+[00:02:15.613,128] <inf> uart1: RX: AT+SHAHEAD="Content-Type","application/json"\r\r\n
+[00:02:15.613,220] <inf> uart1: RX: OK\r\n
+[00:02:15.621,093] <inf> uart1: RX: AT+SHAHEAD="User-Agent","curl/7.47.0"\r\r\n
+[00:02:15.621,246] <inf> uart1: RX: OK\r\n
+[00:02:15.629,425] <inf> uart1: RX: AT+SHAHEAD="Cache-control","no-cache"\r\r\n
+[00:02:15.629,577] <inf> uart1: RX: OK\r\n
+[00:02:15.635,284] <inf> uart1: RX: AT+SHAHEAD="Accept","*/*"\r\r\n
+[00:02:15.635,467] <inf> uart1: RX: OK\r\n
+[00:02:15.693,450] <inf> uart1: RX: AT+SHBOD="{\"1\":[{\"device_id\":\"1\",\"timestamp\":\"2025-01-09T17:36:08Z\",\"battery_voltage_mv\":272,\"humidity_voltage_mv\":
+[00:02:15.704,620] <inf> uart1: RX: 250},{\"device_id\":\"1\",\"timestamp\":\"2025-01-09T17:36:18Z\",\"battery_voltage_mv\":268,\"humidity_voltage_mv\":234}],\"gatew
+[00:02:15.715,850] <inf> uart1: RX: ay\":[{\"device_id\":\"gateway\",\"timestamp\":\"2025-01-09T17:36:10Z\",\"battery_voltage_mv\":495,\"humidity_voltage_mv\":193},{
+[00:02:15.727,050] <inf> uart1: RX: \"device_id\":\"gateway\",\"timestamp\":\"2025-01-09T17:36:20Z\",\"battery_voltage_mv\":480,\"humidity_voltage_mv\":185}]}",447\r\r
+[00:02:15.727,142] <inf> uart1: RX: \n
+[00:02:15.727,325] <inf> uart1: RX: OK\r\n
+[00:02:15.733,489] <inf> uart1: RX: AT+SHREQ="/api/save_to_db",3\r\r\n
+[00:02:15.733,673] <inf> uart1: RX: OK\r\n
+[00:02:16.127,929] <inf> uart1: RX: \r\n
+[00:02:16.129,974] <inf> uart1: RX: +SHREQ: "POST",200,20\r\n
+[00:02:16.134,399] <inf> uart1: RX: AT+SHREAD=0,20\r\r\n
+[00:02:16.134,613] <inf> uart1: RX: OK\r\n
+[00:02:17.134,399] <inf> uart1: RX: \r\n
+[00:02:17.135,528] <inf> uart1: RX: +SHREAD: 20\r\n
+[00:02:17.137,451] <inf> uart1: RX: 2025-01-09T17:36:28Z\r\n
+[00:02:17.137,481] <inf> at_commands_https: Specified length: 20, Recieved length: 20
+[00:02:17.141,082] <inf> uart1: RX: AT+SHDISC\r\r\n
+[00:02:17.141,357] <inf> uart1: RX: OK\r\n
+[00:02:17.141,418] <inf> data_transmission: Data transmission successful
+[00:02:17.142,486] <inf> data_transmission: Time set to 2025-01-09T17:36:28Z
+[00:02:17.150,146] <inf> uart1: RX: AT+CCLK="25/01/09,17:36:28+00"\r\r\n
+[00:02:17.150,268] <inf> uart1: RX: OK\r\n
+[00:02:17.155,303] <inf> uart1: RX: AT+IPR=9600\r\r\n
+[00:02:17.155,548] <inf> uart1: RX: OK\r\n
+[00:02:17.155,609] <inf> uart1: UART configured at 9600 baud
+[00:02:17.825,378] <inf> uart0: RX: +RCV=1,11,"1,256,241",-46,12\r\n
+[00:02:17.825,439] <inf> data_reception: Data: 1,256,241
+[00:02:28.019,287] <inf> uart0: RX: +RCV=1,11,"1,252,281",-46,11\r\n
+[00:02:28.019,378] <inf> data_reception: Data: 1,252,281
+[00:02:37.201,446] <inf> uart1: RX: AT+IPR=115200\r\r\n
+[00:02:37.205,566] <inf> uart1: RX: OK\r\n
+[00:02:37.205,566] <inf> uart1: UART configured at 115200 baud
+[00:02:37.205,596] <inf> data_transmission: Sending data
+[00:02:37.214,721] <inf> uart1: RX: AT+CSSLCFG="sni",1,"static.woyte.dev"\r\r\n
+[00:02:37.214,874] <inf> uart1: RX: OK\r\n
+[00:02:37.220,123] <inf> uart1: RX: AT+SHCONF="BODYLEN",491\r\r\n
+[00:02:37.220,336] <inf> uart1: RX: OK\r\n
+[00:02:37.226,013] <inf> uart1: RX: AT+SHCONF="HEADERLEN",108\r\r\n
+[00:02:37.226,165] <inf> uart1: RX: OK\r\n
+[00:02:37.234,893] <inf> uart1: RX: AT+SHCONF="URL","https://static.woyte.dev"\r\r\n
+[00:02:37.235,015] <inf> uart1: RX: OK\r\n
+[00:02:38.213,165] <inf> uart0: RX: +RCV=1,11,"1,294,284",-40,11\r\n
+[00:02:38.213,226] <inf> data_reception: Data: 1,294,284
+[00:02:38.266,662] <inf> uart1: RX: AT+SHCONN\r\r\n
+[00:02:38.266,937] <inf> uart1: RX: OK\r\n
+[00:02:38.270,843] <inf> uart1: RX: AT+SHCHEAD\r\r\n
+[00:02:38.271,087] <inf> uart1: RX: OK\r\n
+[00:02:38.280,364] <inf> uart1: RX: AT+SHAHEAD="Content-Type","application/json"\r\r\n
+[00:02:38.280,487] <inf> uart1: RX: OK\r\n
+[00:02:38.288,391] <inf> uart1: RX: AT+SHAHEAD="User-Agent","curl/7.47.0"\r\r\n
+[00:02:38.288,513] <inf> uart1: RX: OK\r\n
+[00:02:38.296,356] <inf> uart1: RX: AT+SHAHEAD="Cache-control","no-cache"\r\r\n
+[00:02:38.296,478] <inf> uart1: RX: OK\r\n
+[00:02:38.302,154] <inf> uart1: RX: AT+SHAHEAD="Accept","*/*"\r\r\n
+[00:02:38.302,337] <inf> uart1: RX: OK\r\n
+[00:02:38.360,290] <inf> uart1: RX: AT+SHBOD="{\"1\":[{\"device_id\":\"1\",\"timestamp\":\"2025-01-09T17:36:28Z\",\"battery_voltage_mv\":241,\"humidity_voltage_mv\":
+[00:02:38.371,490] <inf> uart1: RX: 256},{\"device_id\":\"1\",\"timestamp\":\"2025-01-09T17:36:38Z\",\"battery_voltage_mv\":281,\"humidity_voltage_mv\":252}],\"gatew
+[00:02:38.382,690] <inf> uart1: RX: ay\":[{\"device_id\":\"gateway\",\"timestamp\":\"2025-01-09T17:36:30Z\",\"battery_voltage_mv\":498,\"humidity_voltage_mv\":193},{
+[00:02:38.393,890] <inf> uart1: RX: \"device_id\":\"gateway\",\"timestamp\":\"2025-01-09T17:36:40Z\",\"battery_voltage_mv\":448,\"humidity_voltage_mv\":148}]}",447\r\r
+[00:02:38.393,981] <inf> uart1: RX: \n
+[00:02:38.394,165] <inf> uart1: RX: OK\r\n
+[00:02:38.400,939] <inf> uart1: RX: AT+SHREQ="/api/save_to_db",3\r\r\n
+[00:02:38.401,092] <inf> uart1: RX: OK\r\n
+[00:02:39.912,475] <inf> uart1: RX: \r\n
+[00:02:39.914,489] <inf> uart1: RX: +SHREQ: "POST",200,20\r\n
+[00:02:39.918,914] <inf> uart1: RX: AT+SHREAD=0,20\r\r\n
+[00:02:39.919,128] <inf> uart1: RX: OK\r\n
+[00:02:40.918,884] <inf> uart1: RX: \r\n
+[00:02:40.920,013] <inf> uart1: RX: +SHREAD: 20\r\n
+[00:02:40.921,936] <inf> uart1: RX: 2025-01-09T17:36:52Z\r\n
+[00:02:40.921,966] <inf> at_commands_https: Specified length: 20, Recieved length: 20
+[00:02:40.925,323] <inf> uart1: RX: AT+SHDISC\r\r\n
+[00:02:40.925,628] <inf> uart1: RX: OK\r\n
+[00:02:40.925,659] <inf> data_transmission: Data transmission successful
+[00:02:40.926,757] <inf> data_transmission: Time set to 2025-01-09T17:36:52Z
+[00:02:40.934,326] <inf> uart1: RX: AT+CCLK="25/01/09,17:36:52+00"\r\r\n
+[00:02:40.934,478] <inf> uart1: RX: OK\r\n
+[00:02:40.939,117] <inf> uart1: RX: AT+IPR=9600\r\r\n
+[00:02:40.939,361] <inf> uart1: RX: OK\r\n
+[00:02:40.939,392] <inf> uart1: UART configured at 9600 baud
+[00:03:00.985,260] <inf> uart1: RX: AT+IPR=115200\r\r\n
+[00:03:00.989,349] <inf> uart1: RX: OK\r\n
+[00:03:00.989,379] <inf> uart1: UART configured at 115200 baud
+[00:03:00.989,379] <inf> data_transmission: Sending data
+[00:03:00.997,894] <inf> uart1: RX: AT+CSSLCFG="sni",1,"static.woyte.dev"\r\r\n
+[00:03:00.998,046] <inf> uart1: RX: OK\r\n
+[00:03:01.003,326] <inf> uart1: RX: AT+SHCONF="BODYLEN",256\r\r\n
+[00:03:01.003,509] <inf> uart1: RX: OK\r\n
+[00:03:01.009,246] <inf> uart1: RX: AT+SHCONF="HEADERLEN",108\r\r\n
+[00:03:01.009,368] <inf> uart1: RX: OK\r\n
+[00:03:01.018,005] <inf> uart1: RX: AT+SHCONF="URL","https://static.woyte.dev"\r\r\n
+[00:03:01.018,127] <inf> uart1: RX: OK\r\n
+[00:03:02.196,350] <inf> uart1: RX: AT+SHCONN\r\r\n
+[00:03:02.196,655] <inf> uart1: RX: OK\r\n
+[00:03:02.200,164] <inf> uart1: RX: AT+SHCHEAD\r\r\n
+[00:03:02.200,439] <inf> uart1: RX: OK\r\n
+[00:03:02.209,442] <inf> uart1: RX: AT+SHAHEAD="Content-Type","application/json"\r\r\n
+[00:03:02.209,594] <inf> uart1: RX: OK\r\n
+[00:03:02.217,590] <inf> uart1: RX: AT+SHAHEAD="User-Agent","curl/7.47.0"\r\r\n
+[00:03:02.217,712] <inf> uart1: RX: OK\r\n
+[00:03:02.225,646] <inf> uart1: RX: AT+SHAHEAD="Cache-control","no-cache"\r\r\n
+[00:03:02.225,799] <inf> uart1: RX: OK\r\n
+[00:03:02.231,567] <inf> uart1: RX: AT+SHAHEAD="Accept","*/*"\r\r\n
+[00:03:02.231,750] <inf> uart1: RX: OK\r\n
+[00:03:02.268,585] <inf> uart1: RX: AT+SHBOD="{\"gateway\":[{\"device_id\":\"gateway\",\"timestamp\":\"2025-01-09T17:37:00Z\",\"battery_voltage_mv\":427,\"humidity_v
+[00:03:02.279,785] <inf> uart1: RX: oltage_mv\":133},{\"device_id\":\"gateway\",\"timestamp\":\"2025-01-09T17:37:10Z\",\"battery_voltage_mv\":441,\"humidity_voltage_
+[00:03:02.281,188] <inf> uart1: RX: mv\":137}]}",233\r\r\n
+[00:03:02.281,372] <inf> uart1: RX: OK\r\n
+[00:03:02.287,811] <inf> uart1: RX: AT+SHREQ="/api/save_to_db",3\r\r\n
+[00:03:02.287,963] <inf> uart1: RX: OK\r\n
+[00:03:03.607,452] <inf> uart1: RX: \r\n
+[00:03:03.609,466] <inf> uart1: RX: +SHREQ: "POST",200,20\r\n
+[00:03:03.613,433] <inf> uart1: RX: AT+SHREAD=0,20\r\r\n
+[00:03:03.613,647] <inf> uart1: RX: OK\r\n
+[00:03:04.613,616] <inf> uart1: RX: \r\n
+[00:03:04.614,776] <inf> uart1: RX: +SHREAD: 20\r\n
+[00:03:04.616,699] <inf> uart1: RX: 2025-01-09T17:37:15Z\r\n
+[00:03:04.616,699] <inf> at_commands_https: Specified length: 20, Recieved length: 20
+[00:03:04.620,361] <inf> uart1: RX: AT+SHDISC\r\r\n
+[00:03:04.620,666] <inf> uart1: RX: OK\r\n
+[00:03:04.620,697] <inf> data_transmission: Data transmission successful
+[00:03:04.621,765] <inf> data_transmission: Time set to 2025-01-09T17:37:15Z
+[00:03:04.629,394] <inf> uart1: RX: AT+CCLK="25/01/09,17:37:15+00"\r\r\n
+[00:03:04.629,547] <inf> uart1: RX: OK\r\n
+[00:03:04.634,887] <inf> uart1: RX: AT+IPR=9600\r\r\n
+[00:03:04.635,131] <inf> uart1: RX: OK\r\n
+[00:03:04.635,162] <inf> uart1: UART configured at 9600 baud
+[00:03:24.681,274] <inf> uart1: RX: AT+IPR=115200\r\r\n
+[00:03:24.685,394] <inf> uart1: RX: OK\r\n
+[00:03:24.685,394] <inf> uart1: UART configured at 115200 baud
+[00:03:24.685,424] <inf> data_transmission: Sending data
+[00:03:24.693,939] <inf> uart1: RX: AT+CSSLCFG="sni",1,"static.woyte.dev"\r\r\n
+[00:03:24.694,091] <inf> uart1: RX: OK\r\n
+[00:03:24.699,340] <inf> uart1: RX: AT+SHCONF="BODYLEN",256\r\r\n
+[00:03:24.699,523] <inf> uart1: RX: OK\r\n
+[00:03:24.705,200] <inf> uart1: RX: AT+SHCONF="HEADERLEN",108\r\r\n
+[00:03:24.705,352] <inf> uart1: RX: OK\r\n
+[00:03:24.714,050] <inf> uart1: RX: AT+SHCONF="URL","https://static.woyte.dev"\r\r\n
+[00:03:24.714,172] <inf> uart1: RX: OK\r\n
+[00:03:25.775,695] <inf> uart1: RX: AT+SHCONN\r\r\n
+[00:03:25.776,000] <inf> uart1: RX: OK\r\n
+[00:03:25.779,968] <inf> uart1: RX: AT+SHCHEAD\r\r\n
+[00:03:25.780,242] <inf> uart1: RX: OK\r\n
+[00:03:25.789,611] <inf> uart1: RX: AT+SHAHEAD="Content-Type","application/json"\r\r\n
+[00:03:25.789,764] <inf> uart1: RX: OK\r\n
+[00:03:25.797,668] <inf> uart1: RX: AT+SHAHEAD="User-Agent","curl/7.47.0"\r\r\n
+[00:03:25.797,790] <inf> uart1: RX: OK\r\n
+[00:03:25.805,633] <inf> uart1: RX: AT+SHAHEAD="Cache-control","no-cache"\r\r\n
+[00:03:25.805,755] <inf> uart1: RX: OK\r\n
+[00:03:25.811,462] <inf> uart1: RX: AT+SHAHEAD="Accept","*/*"\r\r\n
+[00:03:25.811,614] <inf> uart1: RX: OK\r\n
+[00:03:25.848,419] <inf> uart1: RX: AT+SHBOD="{\"gateway\":[{\"device_id\":\"gateway\",\"timestamp\":\"2025-01-09T17:37:20Z\",\"battery_voltage_mv\":507,\"humidity_v
+[00:03:25.859,619] <inf> uart1: RX: oltage_mv\":218},{\"device_id\":\"gateway\",\"timestamp\":\"2025-01-09T17:37:30Z\",\"battery_voltage_mv\":555,\"humidity_voltage_
+[00:03:25.861,022] <inf> uart1: RX: mv\":253}]}",233\r\r\n
+[00:03:25.861,206] <inf> uart1: RX: OK\r\n
+[00:03:25.867,431] <inf> uart1: RX: AT+SHREQ="/api/save_to_db",3\r\r\n
+[00:03:25.867,584] <inf> uart1: RX: OK\r\n
+[00:03:27.247,772] <inf> uart1: RX: \r\n
+[00:03:27.249,786] <inf> uart1: RX: +SHREQ: "POST",200,20\r\n
+[00:03:27.254,119] <inf> uart1: RX: AT+SHREAD=0,20\r\r\n
+[00:03:27.254,333] <inf> uart1: RX: OK\r\n
+[00:03:28.254,211] <inf> uart1: RX: \r\n
+[00:03:28.255,340] <inf> uart1: RX: +SHREAD: 20\r\n
+[00:03:28.257,263] <inf> uart1: RX: 2025-01-09T17:37:39Z\r\n
+[00:03:28.257,293] <inf> at_commands_https: Specified length: 20, Recieved length: 20
+[00:03:28.260,833] <inf> uart1: RX: AT+SHDISC\r\r\n
+[00:03:28.261,138] <inf> uart1: RX: OK\r\n
+[00:03:28.261,169] <inf> data_transmission: Data transmission successful
+[00:03:28.262,237] <inf> data_transmission: Time set to 2025-01-09T17:37:39Z
+[00:03:28.269,866] <inf> uart1: RX: AT+CCLK="25/01/09,17:37:39+00"\r\r\n
+[00:03:28.270,019] <inf> uart1: RX: OK\r\n

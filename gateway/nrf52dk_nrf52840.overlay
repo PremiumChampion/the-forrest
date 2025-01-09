@@ -1,5 +1,6 @@
 &uart0 {
     status = "okay";
+    current-speed = <9600>;
 };
 
 &uart1 {
@@ -68,6 +69,16 @@
             gpios = <&gpio0 21 GPIO_ACTIVE_HIGH>;
             label = "Lora reset";
         };
+
+        sim7000e_power: sim7000e_0 {
+            gpios = <&gpio1 4 GPIO_ACTIVE_HIGH>;
+            label = "SIM7000E Power Pin";
+        };
+
+        sim7000e_dtr: sim7000e_1 {
+            gpios = <&gpio1 3 GPIO_ACTIVE_HIGH>;
+            label = "SIM7000E DTR Pin";
+        };
     };
 
     aliases {
@@ -75,6 +86,8 @@
         uart1rx = &uart1_rx;
         adcconvertertransistor = &adc_converter_transistor;
         lorareset = &lora_reset;
+        sim7000epower = &sim7000e_power;
+        sim7000edtr = &sim7000e_dtr;
     };
 
     zephyr,user {

@@ -1,0 +1,19 @@
+sequenceDiagram
+    participant uart_cb
+    participant uart_fifo_read
+    participant uart_buffer_ops
+    participant msg_queue
+
+    loop Until FIFO empty
+        uart_cb->>uart_fifo_read: Read character from FIFO
+        uart_fifo_read-->>uart_cb: Return character
+
+        uart_cb->>uart_buffer_ops: Handle buffer operations (add character to buffer)
+
+        alt message complete (max length or \n reached)
+            uart_cb->>msg_queue: Finalize message and add to queue
+            alt Queue full
+                msg_queue-->>uart_cb: Drop message
+            end
+        end
+    end

@@ -13,9 +13,10 @@ LOG_MODULE_REGISTER(at_commands_https);
 
 namespace at::commands::sim7000e::https
 {
-    using namespace at::commands::prv;
+    // doumentation of the multiple comands can be found here:
+    // https://gist.github.com/baconcheese113/1f0264727fce3fa51a5bb06fa031aed2
 
-    
+    using namespace at::commands::prv;
 
     std::string escape_body(std::string body)
     {
@@ -33,7 +34,6 @@ namespace at::commands::sim7000e::https
         }
         return escaped;
     }
-
 
     result ignore_ssl_timestamp()
     {
@@ -217,8 +217,8 @@ namespace at::commands::sim7000e::https
         return at::commands::sim7000e::_at("AT+SHDISC\r\n", response);
     }
 
-
-    result execute_web_request(web_request &request){
+    result execute_web_request(web_request &request)
+    {
         // set server name indication
         if (set_server_name_indication(request.server_name) != OK)
         {
@@ -226,13 +226,15 @@ namespace at::commands::sim7000e::https
             return ERROR;
         }
 
-        // set body length
-        if (set_body_length(request.body.length() * 1.1) != OK) // add 10% for safety
+        if (!request.body.empty())
         {
-            LOG_ERR("SIM7000E body length set failed");
-            return ERROR;
+            // set body length
+            if (set_body_length(request.body.length() * 1.1) != OK) // add 10% for safety
+            {
+                LOG_ERR("SIM7000E body length set failed");
+                return ERROR;
+            }
         }
-
         // calculate header length
         int header_length = 0;
         for (auto [header, value] : request.headers)
@@ -266,7 +268,6 @@ namespace at::commands::sim7000e::https
         if (clear_header() != OK)
         {
             LOG_ERR("SIM7000E header clear failed");
-            return ERROR;
         }
 
         // set headers
@@ -278,14 +279,16 @@ namespace at::commands::sim7000e::https
                 return ERROR;
             }
         }
-
-        // set body
-        if (set_body(request.body) != OK)
+        if (!request.body.empty())
         {
-            LOG_ERR("SIM7000E body set failed");
-            return ERROR;
+            // set body
+            if (set_body(request.body) != OK)
+            {
+                LOG_ERR("SIM7000E body set failed");
+                return ERROR;
+            }
         }
-
+        
         // execute request
         int length;
         if (exec(request.url, request.method, request.http_status_code, length) != OK)
@@ -295,7 +298,7 @@ namespace at::commands::sim7000e::https
         }
 
         // read response
-        if(read(request.response, length) != OK)
+        if (read(request.response, length) != OK)
         {
             LOG_ERR("SIM7000E response read failed");
             return ERROR;

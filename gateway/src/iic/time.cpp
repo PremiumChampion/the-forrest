@@ -48,7 +48,6 @@ namespace iic::time
     // Function to get the current time from the DS1307
     struct tm get_current_time()
     {
-
         uint8_t write_data[1] = {0x00};
 
         uint8_t time_data[7];

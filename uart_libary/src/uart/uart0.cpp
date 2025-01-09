@@ -192,11 +192,7 @@ namespace uart::uart0
 
 			return read_result::UART_READ_OK;
 		}
-
-		if (K_TIMEOUT_EQ(timeout, K_FOREVER))
-		{
-		}
-
+		
 		return read_result::UART_READ_TIMEOUT;
 	}
 

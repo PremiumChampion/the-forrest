@@ -67,7 +67,7 @@ namespace at::commands::sim7000e
                     continue;
                 }
 
-                res = _at("AT\r\n", response, 200);
+                res = _at("AT\r\n", response, 500);
 
                 // check if wwe got a good respone from the module
                 if (res == result::OK)
@@ -83,9 +83,15 @@ namespace at::commands::sim7000e
                     break;
                 }
             }
-
-            LOG_ERR("Failed to reach SIM7000E module! Retrying in one second...");
-            k_sleep(K_MSEC(1000));
+            if (!connection_established)
+            {
+                LOG_ERR("Failed to reach SIM7000E module! Retrying in one second...");
+                k_sleep(K_MSEC(1000));
+            }
+            else
+            {
+                break;
+            }
         }
 
         if (!connection_established)
@@ -112,7 +118,7 @@ namespace at::commands::sim7000e
             }
         }
 
-#ifdef CONFIG_REBOOT_SIM7000E_ON_RESET
+#if 1
         // reboot the module to make sure it is in a known state
         if (sim7000e::power::reboot() != result::OK)
         {
@@ -134,16 +140,22 @@ namespace at::commands::sim7000e
         // wait for the network to be ready
         bool network_ready = false;
         int64_t start = k_uptime_get();
-        while (k_uptime_get() - start < 20000 && !network_ready)
+        while (k_uptime_get() - start < 40000 && !network_ready)
         {
-            uart::read_result uart_res = driver->uart_read(response);
-            if (uart_res == uart::read_result::UART_READ_OK)
+            uart::read_result uart_res = driver->uart_read(response, K_MSEC(1000));
+            if (response.find("+APP PDP: ACTIVE") != std::string::npos)
             {
-                if (response.find("+APP PDP: ACTIVE") != std::string::npos)
+                network_ready = true;
+            }
+            if (response.find("+APP PDP: DEACTIVE") != std::string::npos)
+            {
+                if (sim7000e::network_configuration::setup_apn("internet") != result::OK)
                 {
-                    network_ready = true;
+                    LOG_ERR("Failed to setup APN");
+                    return ERROR;
                 }
             }
+            response = "";
         }
 
         response = "";
@@ -154,18 +166,18 @@ namespace at::commands::sim7000e
             return ERROR;
         }
 
-        // configure PSM 
+        // configure PSM
         if (sim7000e::power::set_psm_event_report(sim7000e::power::psm_event_report_mode::PSM_EVENT_REPORT_ENABLE) != result::OK)
         {
             LOG_ERR("Failed to enable PSM event report");
         }
-
+#if 0
         // enable PSM
         if (sim7000e::power::enable_PSM() != result::OK)
         {
             LOG_ERR("Failed to enable PSM");
         }
-
+#endif
         // configuring ssl
         if (at::commands::sim7000e::https::ignore_ssl_timestamp() != at::commands::OK)
         {
