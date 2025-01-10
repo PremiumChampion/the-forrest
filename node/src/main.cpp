@@ -207,7 +207,7 @@ void enable_alarm_interrupt(const struct device *rtc)
     }
 
     /* Show the DS3231 ctrl and ctrl_stat register values */
-    LOG_INF("\nDS3231 ctrl %02x ; ctrl_stat %02x\n",
+    LOG_INF("DS3231 ctrl %02x ; ctrl_stat %02x\n",
             maxim_ds3231_ctrl_update(rtc, 0, 0),
             maxim_ds3231_stat_update(rtc, 0, 0));
 }
@@ -289,7 +289,7 @@ static int set_date_time(const struct device *rtc)
     uint32_t t0 = k_uptime_get_32();
     rc = maxim_ds3231_set(rtc, &sp, &notify);
 
-    printk("\nSet %s at %u ms past: %d\n", format_time(sp.rtc.tv_sec, sp.rtc.tv_nsec),
+    LOG_INF("\nSet %s at %u ms past: %d\n", format_time(sp.rtc.tv_sec, sp.rtc.tv_nsec),
            syncclock, rc);
 
     /* Wait for the set to complete */
@@ -299,10 +299,10 @@ static int set_date_time(const struct device *rtc)
 
     /* Delay so log messages from sync can complete */
     k_sleep(K_MSEC(100));
-    printk("Synchronize final: %d %d in %u ms\n", rc, ss.result, t1 - t0);
+    LOG_INF("Synchronize final: %d %d in %u ms\n", rc, ss.result, t1 - t0);
 
     rc = maxim_ds3231_get_syncpoint(rtc, &sp);
-    printk("wrote sync %d: %u %u at %u\n", rc,
+    LOG_INF("wrote sync %d: %u %u at %u\n", rc,
            (uint32_t)sp.rtc.tv_sec, (uint32_t)sp.rtc.tv_nsec,
            sp.syncclock);
     return 0;
@@ -312,14 +312,14 @@ static void show_counter(const struct device *ds3231)
 {
     uint32_t now = 0;
 
-    printk("\nCounter at %p\n", ds3231);
-    printk("\tMax top value: %u (%08x)\n",
+    LOG_INF("Counter at %p\n", ds3231);
+    LOG_INF("\tMax top value: %u (%08x)\n",
            counter_get_max_top_value(ds3231),
            counter_get_max_top_value(ds3231));
-    printk("\t%u channels\n", counter_get_num_of_channels(ds3231));
-    printk("\t%u Hz\n", counter_get_frequency(ds3231));
+    LOG_INF("\t%u channels\n", counter_get_num_of_channels(ds3231));
+    LOG_INF("\t%u Hz\n", counter_get_frequency(ds3231));
 
-    printk("Top counter value: %u (%08x)\n",
+    LOG_INF("Top counter value: %u (%08x)\n",
            counter_get_top_value(ds3231),
            counter_get_top_value(ds3231));
 
@@ -345,19 +345,19 @@ int main(void)
 
     if (uart::uart0::uart_init() != 0)
     {
-        printk("UART initialization failed\n");
+        LOG_INF("UART initialization failed\n");
         return -1;
     }
 
     if (gpio::adc::setup() != 0)
     {
-        printk("ADC initialization failed\n");
+        LOG_INF("ADC initialization failed\n");
         return -1;
     }
 
     if (init_lora_module() != 0)
     {
-        printk("Failed to initialize LoRa module\n");
+        LOG_INF("Failed to initialize LoRa module\n");
         return -1;
     }
 
