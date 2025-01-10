@@ -207,7 +207,7 @@ void enable_alarm_interrupt(const struct device *rtc)
             maxim_ds3231_stat_update(rtc, 0, 0));
 }
 
-void configure_ds3231_alarm(const struct device *rtc)
+void configure_ds3231_alarm(const struct device *rtc, int NODE_ADDRESS)
 {   
     struct maxim_ds3231_alarm min_alarm;
     struct maxim_ds3231_alarm reset_alarm;
@@ -225,8 +225,26 @@ void configure_ds3231_alarm(const struct device *rtc)
         return;
     }
 
+    int offset = 0;
 
-    min_alarm.time = raw_time + (15  + 60 - (raw_time % 60));
+    switch(NODE_ADDRESS) {
+        case 1:
+            offset = 15;
+            break;
+        case 2:
+            offset = 30;
+            break;
+        case 3:
+            offset = 45;
+            break;
+        case 4:
+            offset = 0;
+            break;
+        default:
+            LOG_ERR("Invalid node address for alarm offset");
+    }
+
+    min_alarm.time = raw_time + (offset  + 60 - (raw_time % 60));
     min_alarm.flags = 0
 			  | MAXIM_DS3231_ALARM_FLAGS_IGNDA
 			  | MAXIM_DS3231_ALARM_FLAGS_IGNHR
@@ -308,7 +326,7 @@ static void show_counter(const struct device *ds3231)
 
 bool GATEWAY = false;
 int GATEWAY_ADDRESS = 420;
-int NODE_ADDRESS = 1;
+int NODE_ADDRESS = 2;
 
 #define DEVICE_ADDR 0x68
 #define REG_ADDR 0x00
@@ -389,7 +407,7 @@ int main(void)
     // Enable interrupt output on SQW pin
     enable_alarm_interrupt(rtc);
 
-    configure_ds3231_alarm(rtc);
+    configure_ds3231_alarm(rtc, NODE_ADDRESS);
 
     while (1)
     {
