@@ -58,11 +58,6 @@ void join_network(int network_id, int dev_address)
     at::commands::prv::_at("AT+NETWORKID=" + std::to_string(network_id) + "\r\n", response);
     LOG_INF("%s", uart::escape_response(response).c_str());
     response = "";
-
-    LOG_INF("Joining network, sending HELLO");
-    at::commands::prv::_at("AT+SEND=2,5,HELLO\r\n", response);
-    LOG_INF("%s", uart::escape_response(response).c_str());
-    response = "";
 }
 
 void send_message(int dev_address, std::string message)
@@ -87,7 +82,7 @@ int init_lora_module()
     // Turn on reset pin for module startup
     gpio_pin_set_dt(&reset_pin, 1);
     k_sleep(K_MSEC(1000));
-
+    uart::uart0::change_baudrate(uart::Baud115200);
     at::commands::result result;
     result = at::commands::prv::at();
     while (result != at::commands::result::OK)
@@ -331,7 +326,7 @@ static void show_counter(const struct device *ds3231)
 
 // RTC Test End
 
-bool GATEWAY = true;
+bool GATEWAY = false;
 int GATEWAY_ADDRESS = 420;
 int NODE_ADDRESS = 1;
 
@@ -449,8 +444,8 @@ int main(void)
             gpio::adc::read_channel(1, voltage1);
             LOG_INF("ADC reading [%u]: %u", 5, voltage1);
 
-            send_message(GATEWAY_ADDRESS, std::to_string(NODE_ADDRESS) + "," + std::to_string(voltage0) + "," + std::to_string(voltage1));
-            k_sleep(K_MSEC(1000));
+            send_message(GATEWAY_ADDRESS, "\"" + std::to_string(NODE_ADDRESS) + "," + std::to_string(voltage0) + "," + std::to_string(voltage1) + "\"");
+            k_sleep(K_MSEC(10000));
 
             rc = pm_device_action_run(cons, PM_DEVICE_ACTION_SUSPEND);
             if (rc < 0)
@@ -459,8 +454,7 @@ int main(void)
                 return 0;
             }
 
-            while (!wakeup_flag)
-            {
+            while (!wakeup_flag) {
                 sys_poweroff();
             }
 
