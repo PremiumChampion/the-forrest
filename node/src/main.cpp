@@ -32,7 +32,7 @@ static volatile bool wakeup_flag = false;
 const struct device *const rtc = DEVICE_DT_GET(DT_NODELABEL(rtc_ds3231));
 
 // Lora startup init pin do not touch
-static const struct gpio_dt_spec reset_pin = GPIO_DT_SPEC_GET_OR(DT_ALIAS(mycusgpio), gpios, {0});
+static const struct gpio_dt_spec reset_pin = GPIO_DT_SPEC_GET_OR(DT_ALIAS(lorareset), gpios, {0});
 
 std::string response;
 
@@ -208,23 +208,15 @@ void enable_alarm_interrupt(const struct device *rtc)
 }
 
 void configure_ds3231_alarm(const struct device *rtc)
-{
+{   
     struct maxim_ds3231_alarm min_alarm;
+    struct maxim_ds3231_alarm reset_alarm;
     int rc = 0;
     uint32_t now = 0;
 
-    struct rtc_time current_time;
     rc = counter_get_value(rtc, &now);
 
     time_t raw_time = now;
-    struct tm *time_info = gmtime(&raw_time);
-
-    current_time.tm_sec = time_info->tm_sec;
-    current_time.tm_min = time_info->tm_min;
-    current_time.tm_hour = time_info->tm_hour;
-    current_time.tm_mday = time_info->tm_mday;
-    current_time.tm_mon = time_info->tm_mon;
-    current_time.tm_year = time_info->tm_year;
 
     if (rc < 0)
     {
@@ -233,33 +225,22 @@ void configure_ds3231_alarm(const struct device *rtc)
         return;
     }
 
-    // Set the alarm time to 1 minute in the future
-    current_time.tm_min += 1;
-    if (current_time.tm_min >= 60)
-    {
-        current_time.tm_min -= 60;
-        current_time.tm_hour += 1;
-        if (current_time.tm_hour >= 24)
-        {
-            current_time.tm_hour -= 24;
-        }
-    }
 
-    struct tm tm_time;
-    tm_time.tm_sec = current_time.tm_sec;
-    tm_time.tm_min = current_time.tm_min;
-    tm_time.tm_hour = current_time.tm_hour;
-    tm_time.tm_mday = current_time.tm_mday;
-    tm_time.tm_mon = current_time.tm_mon;
-    tm_time.tm_year = current_time.tm_year;
+    min_alarm.time = raw_time + (15  + 60 - (raw_time % 60));
+    min_alarm.flags = 0
+			  | MAXIM_DS3231_ALARM_FLAGS_IGNDA
+			  | MAXIM_DS3231_ALARM_FLAGS_IGNHR
+			  | MAXIM_DS3231_ALARM_FLAGS_IGNMN;
 
-    min_alarm.time = mktime(&tm_time);
-    min_alarm.flags = 0 | MAXIM_DS3231_ALARM_FLAGS_IGNDA | MAXIM_DS3231_ALARM_FLAGS_IGNHR | MAXIM_DS3231_ALARM_FLAGS_IGNMN | MAXIM_DS3231_ALARM_FLAGS_IGNSE;
+    reset_alarm.time = raw_time - 120;
+    reset_alarm.flags = 0;
 
-    // Configure ALARM2 for trigger at min_alarm
-    rc = maxim_ds3231_set_alarm(rtc, 1, &min_alarm);
-    LOG_INF("Set min alarm flags %x at %u ~ %s: %d\n", min_alarm.flags,
+    // Configure ALARM1 for trigger at min_alarm
+    rc = maxim_ds3231_set_alarm(rtc, 0, &min_alarm);
+    LOG_INF("Set sec based alarm 1 min in the future flags %x at %u ~ %s: %d\n", min_alarm.flags,
             (uint32_t)min_alarm.time, format_time(min_alarm.time, -1), rc);
+    // Turn off ALARM 2 to prevent bugs
+    rc = maxim_ds3231_set_alarm(rtc, 1, &reset_alarm);
 }
 
 static int set_date_time(const struct device *rtc)
@@ -282,24 +263,23 @@ static int set_date_time(const struct device *rtc)
     };
 
     uint32_t t0 = k_uptime_get_32();
-    rc = maxim_ds3231_set(rtc, &sp, &notify);
 
-    LOG_INF("\nSet %s at %u ms past: %d\n", format_time(sp.rtc.tv_sec, sp.rtc.tv_nsec),
+    int rc_set = 0;
+    rc_set = maxim_ds3231_set(rtc, &sp, &notify);
+
+    LOG_INF("Set %s at %u ms past: %d\n", format_time(sp.rtc.tv_sec, sp.rtc.tv_nsec),
            syncclock, rc);
 
     /* Wait for the set to complete */
     rc = k_poll(&sevt, 1, K_FOREVER);
 
+    if (rc_set < 0)
+    {
+        LOG_ERR("Failed to set time: %d\n", rc_set);
+        return rc_set;
+    }
+
     uint32_t t1 = k_uptime_get_32();
-
-    /* Delay so log messages from sync can complete */
-    k_sleep(K_MSEC(100));
-    LOG_INF("Synchronize final: %d %d in %u ms\n", rc, ss.result, t1 - t0);
-
-    rc = maxim_ds3231_get_syncpoint(rtc, &sp);
-    LOG_INF("wrote sync %d: %u %u at %u\n", rc,
-           (uint32_t)sp.rtc.tv_sec, (uint32_t)sp.rtc.tv_nsec,
-           sp.syncclock);
     return 0;
 }
 
@@ -385,20 +365,15 @@ int main(void)
 // RTC
 #ifdef CONFIG_FLASH_CURRENT_TIMESTAMP
     set_date_time(rtc);
-#endif
     show_counter(rtc);
-
-    // Enable interrupt output on SQW pin
-    enable_alarm_interrupt(rtc);
-
-    configure_ds3231_alarm(rtc);
-    // set_date_time(rtc);
-
-    /* Continuously read the current date and time from the RTC */
+    k_sleep(K_FOREVER);
+#endif
 
     k_sleep(K_MSEC(1000));
 
-    // Join the network
+    show_counter(rtc);
+
+    // Join the network depending on the device type
 
     if (GATEWAY)
     {
@@ -411,9 +386,13 @@ int main(void)
         join_network(69, NODE_ADDRESS);
     }
 
+    // Enable interrupt output on SQW pin
+    enable_alarm_interrupt(rtc);
+
+    configure_ds3231_alarm(rtc);
+
     while (1)
     {
-        // power off test working sys_poweroff();
 
         if (GATEWAY)
         {
