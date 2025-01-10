@@ -17,6 +17,10 @@
 #include <zephyr/pm/device.h>
 #include <zephyr/drivers/rtc/maxim_ds3231.h>
 #include <zephyr/drivers/counter.h>
+//set time to current unit timestamp during flash if kconfig is set
+#ifndef CURRENT_UNIX_TIMESTAMP
+#define CURRENT_UNIX_TIMESTAMP 0
+#endif
 
 LOG_MODULE_REGISTER(main);
 // syspoweroff test
@@ -279,7 +283,7 @@ static int set_date_time(const struct device *rtc)
     
     struct maxim_ds3231_syncpoint sp = {
 		.rtc = {
-			.tv_sec = 1736442143,
+			.tv_sec = CURRENT_UNIX_TIMESTAMP,
 			.tv_nsec = (uint64_t)NSEC_PER_SEC * syncclock / syncclock_Hz,
 		},
 		.syncclock = syncclock,
@@ -404,8 +408,9 @@ int main(void)
     gpio_add_callback(wakeup_pin.port, &wakeup_cb_data);
 
     // RTC
-
+    #ifdef CONFIG_FLASH_CURRENT_TIMESTAMP
     set_date_time(rtc);
+    #endif
     show_counter(rtc);
 
     // Enable interrupt output on SQW pin

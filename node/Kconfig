@@ -19,4 +19,10 @@ config UART_0_ENABLE
       available if both interrupt-driven UART and runtime configuration
       for UART are enabled.
 
+  config FLASH_CURRENT_TIMESTAMP
+    bool "Current Unix timestamp"
+    default n
+    help
+      If y flashes the current timestamp in unix format to the device using cmake.
+
 source "Kconfig.zephyr"

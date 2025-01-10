@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.20.0)
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
+# Get the current Unix timestamp
+string(TIMESTAMP CURRENT_UNIX_TIMESTAMP %s)
+
+# Pass the timestamp as a definition
+add_compile_definitions(CURRENT_UNIX_TIMESTAMP=${CURRENT_UNIX_TIMESTAMP})
+
 project(nb-iot)
 
 target_include_directories(app PRIVATE "include")
