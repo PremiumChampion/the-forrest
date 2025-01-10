@@ -17,10 +17,6 @@
 #include <zephyr/pm/device.h>
 #include <zephyr/drivers/rtc/maxim_ds3231.h>
 #include <zephyr/drivers/counter.h>
-//set time to current unit timestamp during flash if kconfig is set
-#ifndef CURRENT_UNIX_TIMESTAMP
-#define CURRENT_UNIX_TIMESTAMP 0
-#endif
 
 LOG_MODULE_REGISTER(main);
 // syspoweroff test
@@ -34,18 +30,17 @@ static volatile bool wakeup_flag = false;
 
 // I2C Clock test
 const struct device *const rtc = DEVICE_DT_GET(DT_NODELABEL(rtc_ds3231));
-// #define I2C0_NODE DT_NODELABEL(rtc_ds1307_i2c)
-// static const struct i2c_dt_spec dev_i2c = I2C_DT_SPEC_GET(I2C0_NODE);
 
 // Lora startup init pin do not touch
 static const struct gpio_dt_spec reset_pin = GPIO_DT_SPEC_GET_OR(DT_ALIAS(mycusgpio), gpios, {0});
+
+std::string response;
 
 static void wakeup_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
 {
     wakeup_flag = true;
     LOG_INF("Wake-up signal received");
 }
-std::string response;
 
 void join_network(int network_id, int dev_address)
 {
@@ -86,8 +81,10 @@ int init_lora_module()
 
     gpio_pin_configure_dt(&reset_pin, GPIO_OUTPUT);
 
+    //Keep pin low for 4 seconds to start module correctly according to datasheet
     k_sleep(K_MSEC(4000));
 
+    // Turn on reset pin for module startup
     gpio_pin_set_dt(&reset_pin, 1);
     k_sleep(K_MSEC(1000));
 
@@ -264,7 +261,7 @@ void configure_ds3231_alarm(const struct device *rtc)
     min_alarm.time = mktime(&tm_time);
     min_alarm.flags = 0 | MAXIM_DS3231_ALARM_FLAGS_IGNDA | MAXIM_DS3231_ALARM_FLAGS_IGNHR | MAXIM_DS3231_ALARM_FLAGS_IGNMN | MAXIM_DS3231_ALARM_FLAGS_IGNSE;
 
-    // Configure ALARM2 for daily trigger at 00:00:00
+    // Configure ALARM2 for trigger at min_alarm
     rc = maxim_ds3231_set_alarm(rtc, 1, &min_alarm);
     LOG_INF("Set min alarm flags %x at %u ~ %s: %d\n", min_alarm.flags,
             (uint32_t)min_alarm.time, format_time(min_alarm.time, -1), rc);
@@ -273,60 +270,42 @@ void configure_ds3231_alarm(const struct device *rtc)
 static int set_date_time(const struct device *rtc)
 {
     uint32_t syncclock_Hz = maxim_ds3231_syncclock_frequency(rtc);
-	uint32_t syncclock = maxim_ds3231_read_syncclock(rtc);
+    uint32_t syncclock = maxim_ds3231_read_syncclock(rtc);
     struct sys_notify notify;
     struct k_poll_signal ss;
     struct k_poll_event sevt = K_POLL_EVENT_INITIALIZER(K_POLL_TYPE_SIGNAL,
-							    K_POLL_MODE_NOTIFY_ONLY,
-							    &ss);
+                                                        K_POLL_MODE_NOTIFY_ONLY,
+                                                        &ss);
     int rc = 0;
-    
+
     struct maxim_ds3231_syncpoint sp = {
-		.rtc = {
-			.tv_sec = CURRENT_UNIX_TIMESTAMP,
-			.tv_nsec = (uint64_t)NSEC_PER_SEC * syncclock / syncclock_Hz,
-		},
-		.syncclock = syncclock,
-	};
-    
+        .rtc = {
+            .tv_sec = CURRENT_UNIX_TIMESTAMP,
+            .tv_nsec = (uint64_t)NSEC_PER_SEC * syncclock / syncclock_Hz,
+        },
+        .syncclock = syncclock,
+    };
+
     uint32_t t0 = k_uptime_get_32();
     rc = maxim_ds3231_set(rtc, &sp, &notify);
 
-	printk("\nSet %s at %u ms past: %d\n", format_time(sp.rtc.tv_sec, sp.rtc.tv_nsec),
-	       syncclock, rc);
+    printk("\nSet %s at %u ms past: %d\n", format_time(sp.rtc.tv_sec, sp.rtc.tv_nsec),
+           syncclock, rc);
 
-	/* Wait for the set to complete */
-	rc = k_poll(&sevt, 1, K_FOREVER);
+    /* Wait for the set to complete */
+    rc = k_poll(&sevt, 1, K_FOREVER);
 
-	uint32_t t1 = k_uptime_get_32();
+    uint32_t t1 = k_uptime_get_32();
 
-	/* Delay so log messages from sync can complete */
-	k_sleep(K_MSEC(100));
-	printk("Synchronize final: %d %d in %u ms\n", rc, ss.result, t1 - t0);
+    /* Delay so log messages from sync can complete */
+    k_sleep(K_MSEC(100));
+    printk("Synchronize final: %d %d in %u ms\n", rc, ss.result, t1 - t0);
 
-	rc = maxim_ds3231_get_syncpoint(rtc, &sp);
-	printk("wrote sync %d: %u %u at %u\n", rc,
-	       (uint32_t)sp.rtc.tv_sec, (uint32_t)sp.rtc.tv_nsec,
-	       sp.syncclock);
+    rc = maxim_ds3231_get_syncpoint(rtc, &sp);
+    printk("wrote sync %d: %u %u at %u\n", rc,
+           (uint32_t)sp.rtc.tv_sec, (uint32_t)sp.rtc.tv_nsec,
+           sp.syncclock);
     return 0;
-}
-
-static int get_date_time(const struct device *rtc)
-{
-    int ret = 0;
-    struct rtc_time tm;
-
-    ret = rtc_get_time(rtc, &tm);
-    if (ret < 0)
-    {
-        LOG_INF("Cannot read date time: %d\n", ret);
-        return ret;
-    }
-
-    LOG_INF("RTC date and time: %04d-%02d-%02d %02d:%02d:%02d\n", tm.tm_year + 1900,
-            tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-
-    return ret;
 }
 
 static void show_counter(const struct device *ds3231)
@@ -399,7 +378,8 @@ int main(void)
     }
 
     rc = gpio_pin_interrupt_configure_dt(&sw0, GPIO_INT_EDGE_TO_ACTIVE);
-    if (rc < 0) {
+    if (rc < 0)
+    {
         printf("Could not configure sw0 GPIO interrupt (%d)\n", rc);
         return 0;
     }
@@ -407,10 +387,10 @@ int main(void)
     gpio_init_callback(&wakeup_cb_data, wakeup_callback, BIT(wakeup_pin.pin));
     gpio_add_callback(wakeup_pin.port, &wakeup_cb_data);
 
-    // RTC
-    #ifdef CONFIG_FLASH_CURRENT_TIMESTAMP
+// RTC
+#ifdef CONFIG_FLASH_CURRENT_TIMESTAMP
     set_date_time(rtc);
-    #endif
+#endif
     show_counter(rtc);
 
     // Enable interrupt output on SQW pin
@@ -422,7 +402,6 @@ int main(void)
     /* Continuously read the current date and time from the RTC */
 
     k_sleep(K_MSEC(1000));
-
 
     // Join the network
 
@@ -454,7 +433,9 @@ int main(void)
                 //     lora_module_wake();
                 // }
                 response = "";
-            }else {
+            }
+            else
+            {
                 LOG_INF("Error reading uart");
             }
         }
@@ -478,7 +459,8 @@ int main(void)
                 return 0;
             }
 
-            while (!wakeup_flag) {
+            while (!wakeup_flag)
+            {
                 sys_poweroff();
             }
 
