@@ -37,7 +37,7 @@ namespace data::collection
 
             // create a new data point
             data_point_t data_point{
-                .device_id = "gateway",
+                .device_id = "5",
                 .timestamp = current_time,
                 .battery_voltage_mv = battery_voltage_mv,
                 .humidity_voltage_mv = humidity_voltag_mv};

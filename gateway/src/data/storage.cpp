@@ -39,10 +39,10 @@ namespace data
         {
             std::string data_point_string;
             data_point_string += "{";
-            data_point_string += "\"device_id\":\"" + data_point.device_id + "\",";
-            data_point_string += "\"timestamp\":\"" + std::to_string(std::mktime(&data_point.timestamp)) + "\",";
-            data_point_string += "\"battery_voltage_mv\":\"" + std::to_string(data_point.battery_voltage_mv) + "\",";
-            data_point_string += "\"humidity_voltage_mv\":\"" + std::to_string(data_point.humidity_voltage_mv) + "\"";
+            data_point_string += "\"id\":\"" + data_point.device_id + "\",";
+            data_point_string += "\"t\":" + std::to_string(std::mktime(&data_point.timestamp)) + ",";
+            data_point_string += "\"mV_2\":" + std::to_string(data_point.battery_voltage_mv) + ",";
+            data_point_string += "\"mV_1\":" + std::to_string(data_point.humidity_voltage_mv) + "";
             data_point_string += "}";
 
             if(data_point_string.size() + json.size() + 3 > 1024){
