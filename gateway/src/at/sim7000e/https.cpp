@@ -229,7 +229,7 @@ namespace at::commands::sim7000e::https
         if (!request.body.empty())
         {
             // set body length
-            if (set_body_length(request.body.length() * 1.1) != OK) // add 10% for safety
+            if (set_body_length(1024) != OK) // add 10% for safety
             {
                 LOG_ERR("SIM7000E body length set failed");
                 return ERROR;
@@ -241,7 +241,6 @@ namespace at::commands::sim7000e::https
         {
             header_length += header.length() + value.length() + 5; // 5 is for the quotes and comma
         }
-        header_length = header_length * 1.1; // add 10% for safety
 
         // set header length
         if (set_header_length(header_length) != OK)

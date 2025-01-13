@@ -24,5 +24,10 @@ config REBOOT_SIM7000E_ON_RESET
   bool "Select this to reset the SIM7000E module on reboot"
   help
     Select this option to reset the SIM7000E module on reboot. This option should be turned of in production.
-  
+
+config SEMCON_DEMO_MODE
+  bool "Select this to enable the SEMCON demo mode"
+  help
+    Select this option to enable the SEMCON demo mode. This option should be turned of in production.
+
 source "Kconfig.zephyr"

@@ -24,12 +24,14 @@ namespace data
     private:
         struct k_mutex lock;
         // device_id -> data_point
-        std::map<std::string, std::vector<data_point_t>> data;
+        std::vector<data_point_t> data;
     public:
         storage();
         ~storage();
         void add_data_point(data_point_t data_point);
-        std::string to_json();
+        std::string to_json(int &included_data_point_count);
+        void remove_first(int count);
+        int size();
         void clear();
     };
 

@@ -73,7 +73,7 @@ namespace data::reception
 
     void start_thread()
     {
-        k_tid_t my_tid = k_thread_create(&data_reception_thread_data, data_reception_thread_stack,
+        (void)k_thread_create(&data_reception_thread_data, data_reception_thread_stack,
                                          K_THREAD_STACK_SIZEOF(data_reception_thread_stack),
                                          data_reception,
                                          NULL, NULL, NULL,
