@@ -76,7 +76,7 @@ int init_lora_module()
 
     gpio_pin_configure_dt(&reset_pin, GPIO_OUTPUT);
 
-    //Keep pin low for 4 seconds to start module correctly according to datasheet
+    // Keep pin low for 4 seconds to start module correctly according to datasheet
     k_sleep(K_MSEC(4000));
 
     // Turn on reset pin for module startup
@@ -84,10 +84,11 @@ int init_lora_module()
     k_sleep(K_MSEC(1000));
     uart::uart0::change_baudrate(uart::Baud115200);
     at::commands::result result;
-    result = at::commands::prv::at();
-    while (result != at::commands::result::OK)
+
+    do
     {
-        LOG_INF("Waiting for module to respond");
+        result = at::commands::prv::at();
+        LOG_INF("Waiting for module to respond...");
 
         switch (result)
         {
@@ -101,10 +102,10 @@ int init_lora_module()
             LOG_INF("UNKNOWN");
             break;
         }
-
-        result = at::commands::prv::at();
+        
         k_sleep(K_MSEC(1000));
-    }
+
+    } while (result != at::commands::result::OK);
 
     LOG_INF("Setting parameters");
 
@@ -208,7 +209,7 @@ void enable_alarm_interrupt(const struct device *rtc)
 }
 
 void configure_ds3231_alarm(const struct device *rtc, int NODE_ADDRESS)
-{   
+{
     struct maxim_ds3231_alarm min_alarm;
     struct maxim_ds3231_alarm reset_alarm;
     int rc = 0;
@@ -227,28 +228,26 @@ void configure_ds3231_alarm(const struct device *rtc, int NODE_ADDRESS)
 
     int offset = 0;
 
-    switch(NODE_ADDRESS) {
-        case 1:
-            offset = 15;
-            break;
-        case 2:
-            offset = 30;
-            break;
-        case 3:
-            offset = 45;
-            break;
-        case 4:
-            offset = 0;
-            break;
-        default:
-            LOG_ERR("Invalid node address for alarm offset");
+    switch (NODE_ADDRESS)
+    {
+    case 1:
+        offset = 15;
+        break;
+    case 2:
+        offset = 30;
+        break;
+    case 3:
+        offset = 45;
+        break;
+    case 4:
+        offset = 0;
+        break;
+    default:
+        LOG_ERR("Invalid node address for alarm offset");
     }
 
-    min_alarm.time = raw_time + (offset  + 60 - (raw_time % 60));
-    min_alarm.flags = 0
-			  | MAXIM_DS3231_ALARM_FLAGS_IGNDA
-			  | MAXIM_DS3231_ALARM_FLAGS_IGNHR
-			  | MAXIM_DS3231_ALARM_FLAGS_IGNMN;
+    min_alarm.time = raw_time + (offset + 60 - (raw_time % 60));
+    min_alarm.flags = 0 | MAXIM_DS3231_ALARM_FLAGS_IGNDA | MAXIM_DS3231_ALARM_FLAGS_IGNHR | MAXIM_DS3231_ALARM_FLAGS_IGNMN;
 
     reset_alarm.time = raw_time - 120;
     reset_alarm.flags = 0;
@@ -286,7 +285,7 @@ static int set_date_time(const struct device *rtc)
     rc_set = maxim_ds3231_set(rtc, &sp, &notify);
 
     LOG_INF("Set %s at %u ms past: %d\n", format_time(sp.rtc.tv_sec, sp.rtc.tv_nsec),
-           syncclock, rc);
+            syncclock, rc);
 
     /* Wait for the set to complete */
     rc = k_poll(&sevt, 1, K_FOREVER);
@@ -307,14 +306,14 @@ static void show_counter(const struct device *ds3231)
 
     LOG_INF("Counter at %p\n", ds3231);
     LOG_INF("\tMax top value: %u (%08x)\n",
-           counter_get_max_top_value(ds3231),
-           counter_get_max_top_value(ds3231));
+            counter_get_max_top_value(ds3231),
+            counter_get_max_top_value(ds3231));
     LOG_INF("\t%u channels\n", counter_get_num_of_channels(ds3231));
     LOG_INF("\t%u Hz\n", counter_get_frequency(ds3231));
 
     LOG_INF("Top counter value: %u (%08x)\n",
-           counter_get_top_value(ds3231),
-           counter_get_top_value(ds3231));
+            counter_get_top_value(ds3231),
+            counter_get_top_value(ds3231));
 
     (void)counter_get_value(ds3231, &now);
 
@@ -451,7 +450,8 @@ int main(void)
                 return 0;
             }
 
-            while (!wakeup_flag) {
+            while (!wakeup_flag)
+            {
                 sys_poweroff();
             }
 
