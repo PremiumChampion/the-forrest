@@ -1,12 +1,15 @@
 #include <zephyr/logging/log.h>
 #include <vector>
 #include "at/prv.hpp"
-#include "uart/uart.hpp"
+#include "uart/uart0.hpp"
 
 LOG_MODULE_REGISTER(at_commands_prv);
 
 namespace at::commands::prv
 {
+uart::uart0::uart0_implementation uaart0driver = uart::uart0::uart0_implementation{};
+uart::uart_driver *driver = &uaart0driver;
+
     std::vector<std::string> split(std::string str, char delimiter)
     {
         std::vector<std::string> v;
@@ -39,7 +42,7 @@ namespace at::commands::prv
         uart::write_result result;
         uart::read_result read_result;
 
-        result = uart::uart_write(command);
+        result = driver->uart_write(command);
 
         if (result != uart::UART_WRITE_OK)
         {
@@ -50,7 +53,7 @@ namespace at::commands::prv
         while (k_uptime_get() - time_ms < timeout_ms)
         {
 
-            read_result = uart::uart_read(response);
+            read_result = driver->uart_read(response);
 
             if (read_result == uart::UART_READ_TIMEOUT)
             {

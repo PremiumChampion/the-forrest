@@ -11,6 +11,11 @@ target_include_directories(app PRIVATE "include")
 target_sources(app PRIVATE 
     "src/main.cpp")
 
+# lora sources
+target_sources(app PRIVATE
+    "src/at/rylr433/rylr433.cpp"
+    "include/at/rylr433/rylr433.hpp")
+
 # uart sources
 
 if (CONFIG_UART_0_ENABLE OR CONFIG_UART_1_ENABLE)

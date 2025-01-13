@@ -8,7 +8,7 @@
 
     compatible = "gpio-keys";
 
-    cusgpio0: cusgpio_0 {
+    lorareset: lorareset {
 
       gpios = <&gpio0 21 GPIO_ACTIVE_HIGH>;
 
@@ -16,11 +16,17 @@
 
     };
 
+    uart0_rx: uart0_rx {
+      gpios = <&gpio0 4 GPIO_ACTIVE_HIGH>;
+      label = "UART0 RX";
+    };
+  
   };
 
   aliases {
+    uart0rx = &uart0_rx;
 
-    mycusgpio = &cusgpio0;
+    lorareset = &lorareset;
     rtc = &rtc_ds3231;
 
   };
@@ -41,6 +47,7 @@
   rtc_ds3231: ds3231@68 {
     compatible = "maxim,ds3231";
     reg = <0x68>;
+    isw-gpios = < &gpio0 13 0 >;
     status = "okay";
   };
 

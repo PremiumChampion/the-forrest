@@ -23,7 +23,8 @@ namespace gpio
     {
         SIM7000_PWR,
         SIM7000_DTR,
-        ADC_CONVERTER_TRANSISTOR
+        ADC_CONVERTER_TRANSISTOR,
+        LORA_RESET
     };
 
     gpio_result init();

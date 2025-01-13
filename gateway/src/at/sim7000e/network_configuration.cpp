@@ -11,7 +11,7 @@ namespace at::commands::sim7000e::network_configuration
     result setup_apn(std::string apn, int timeout_ms)
     {
         std::string response = "";
-        result r = at::commands::sim7000e::_at("AT+CNACT=2,\"" + apn + "\"\r\n", response);
+        result r = at::commands::sim7000e::_at("AT+CNACT=1,\"" + apn + "\"\r\n", response, timeout_ms);
 
         if (r != OK)
         {
@@ -36,7 +36,7 @@ namespace at::commands::sim7000e::network_configuration
             }
         }
 
-        return TIMEOUT;
+        return OK;
     }
     result get_ip(std::string &ip)
     {

@@ -192,7 +192,8 @@ namespace uart::uart0
 
 			return read_result::UART_READ_OK;
 		}
-		
+
+
 		return read_result::UART_READ_TIMEOUT;
 	}
 

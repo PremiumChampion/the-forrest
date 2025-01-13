@@ -8,6 +8,8 @@
 #include "at/sim7000e/network_configuration.hpp"
 #include "at/sim7000e/time.hpp"
 
+#define WAIT_FOR_TRANSMISSION_TIME 0
+
 namespace data::transmission
 {
     LOG_MODULE_REGISTER(data_transmission);

@@ -67,7 +67,7 @@ namespace at::commands::sim7000e
                     continue;
                 }
 
-                res = _at("AT\r\n", response, 200);
+                res = _at("AT\r\n", response, 500);
 
                 // check if wwe got a good respone from the module
                 if (res == result::OK)
@@ -83,9 +83,15 @@ namespace at::commands::sim7000e
                     break;
                 }
             }
-
-            LOG_ERR("Failed to reach SIM7000E module! Retrying in one second...");
-            k_sleep(K_MSEC(1000));
+            if (!connection_established)
+            {
+                LOG_ERR("Failed to reach SIM7000E module! Retrying in one second...");
+                k_sleep(K_MSEC(1000));
+            }
+            else
+            {
+                break;
+            }
         }
 
         if (!connection_established)
@@ -112,7 +118,7 @@ namespace at::commands::sim7000e
             }
         }
 
-#ifdef CONFIG_REBOOT_SIM7000E_ON_RESET
+#if 1
         // reboot the module to make sure it is in a known state
         if (sim7000e::power::reboot() != result::OK)
         {
@@ -135,13 +141,13 @@ namespace at::commands::sim7000e
         {
             LOG_ERR("Failed to enable PSM event report");
         }
-
+#if 0
         // enable PSM
-        // if (sim7000e::power::enable_PSM() != result::OK)
-        // {
-        //     LOG_ERR("Failed to enable PSM");
-        // }
-
+        if (sim7000e::power::enable_PSM() != result::OK)
+        {
+            LOG_ERR("Failed to enable PSM");
+        }
+#endif
         // configuring ssl
         if (at::commands::sim7000e::https::ignore_ssl_timestamp() != at::commands::OK)
         {
