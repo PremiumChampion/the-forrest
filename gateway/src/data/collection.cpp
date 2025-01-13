@@ -42,11 +42,16 @@ namespace data::collection
         }
     }
 
-    K_THREAD_DEFINE(data_collection_thread, 2048, data_collection, NULL, NULL, NULL, 5, 0, 0); // Define the data_collection_thread
-
+    K_THREAD_STACK_DEFINE(data_collection_thread_stack, 2048);
+    struct k_thread data_collection_thread_data;
     void start_thread()
     {
-        k_thread_start(data_collection_thread); // Start the data_collection_thread
+        (void)k_thread_create(&data_collection_thread_data, data_collection_thread_stack,
+                                 K_THREAD_STACK_SIZEOF(data_collection_thread_stack),
+                                 data_collection,
+                                 NULL, NULL, NULL,
+                                 5, 0, K_NO_WAIT);
+
         LOG_INF("Data collection thread started");
     }
 

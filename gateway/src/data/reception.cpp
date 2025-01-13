@@ -19,12 +19,18 @@ namespace data::reception
             k_sleep(K_SECONDS(1)); // Sleep for 1 second
         }
     }
-
-    K_THREAD_DEFINE(data_reception_thread, 2048, data_reception, NULL, NULL, NULL, 5, 0, 0); // Define the data_reception_thread
+    
+    K_THREAD_STACK_DEFINE(data_reception_thread_stack, 2048);
+    struct k_thread data_reception_thread_data;
 
     void start_thread()
     {
-        k_thread_start(data_reception_thread); // Start the data_reception_thread
+        (void)k_thread_create(&data_reception_thread_data, data_reception_thread_stack,
+                              K_THREAD_STACK_SIZEOF(data_reception_thread_stack),
+                              data_reception,
+                              NULL, NULL, NULL,
+                              5, 0, K_NO_WAIT);
+
         LOG_INF("Data reception thread started");
     }
 
