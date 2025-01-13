@@ -44,11 +44,6 @@ static void wakeup_callback(const struct device *dev, struct gpio_callback *cb, 
 
 void join_network(int network_id, int dev_address)
 {
-    LOG_INF("Setting frequency band");
-    at::commands::prv::_at("AT+BAND=433000000\r\n", response);
-    LOG_INF("%s", uart::escape_response(response).c_str());
-    response = "";
-
     LOG_INF("Setting address");
     at::commands::prv::_at("AT+ADDRESS=" + std::to_string(dev_address) + "\r\n", response);
     LOG_INF("%s", uart::escape_response(response).c_str());
@@ -102,7 +97,7 @@ int init_lora_module()
             LOG_INF("UNKNOWN");
             break;
         }
-        
+
         k_sleep(K_MSEC(1000));
 
     } while (result != at::commands::result::OK);
@@ -130,6 +125,12 @@ int init_lora_module()
     at::commands::prv::_at("AT+CRFOP=22\r\n", response);
     LOG_INF("%s", uart::escape_response(response).c_str());
     response = "";
+
+    LOG_INF("Setting frequency band");
+    at::commands::prv::_at("AT+BAND=433000000\r\n", response);
+    LOG_INF("%s", uart::escape_response(response).c_str());
+    response = "";
+
     return 0;
 }
 
@@ -321,7 +322,7 @@ static void show_counter(const struct device *ds3231)
     LOG_INF("Now %u: %s\n", now, format_time(now, -1));
 }
 
-// RTC Test End
+// RTC
 
 bool GATEWAY = false;
 int GATEWAY_ADDRESS = 420;
@@ -354,7 +355,7 @@ int main(void)
     }
 
     int rc;
-    // Power off test
+    // Power off
     if (!device_is_ready(cons))
     {
         printf("%s: device not ready.\n", cons->name);
@@ -379,7 +380,7 @@ int main(void)
     gpio_init_callback(&wakeup_cb_data, wakeup_callback, BIT(wakeup_pin.pin));
     gpio_add_callback(wakeup_pin.port, &wakeup_cb_data);
 
-// RTC
+// RTC time flashing based on kconfig
 #ifdef CONFIG_FLASH_CURRENT_TIMESTAMP
     set_date_time(rtc);
     show_counter(rtc);
@@ -446,7 +447,7 @@ int main(void)
             rc = pm_device_action_run(cons, PM_DEVICE_ACTION_SUSPEND);
             if (rc < 0)
             {
-                printf("Could not resume console (%d)\n", rc);
+                printf("Could not suspend console (%d)\n", rc);
                 return 0;
             }
 
