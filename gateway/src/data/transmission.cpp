@@ -23,13 +23,13 @@ namespace data::transmission
 
 #if not defined(CONFIG_SEMCON_DEMO_MODE)
             // wait until 13:00 UTC
-            wait_for_hour_in_PSM(13);
+            // wait_for_hour_in_PSM(13);
 #endif
-
+            int web_requests = 0;
             // send the data
-            LOG_INF("Sending data");
             while (data::storage_instance.size() > 0)
             {
+                LOG_INF("Sending request %d", ++web_requests);
                 int included_data_points = 0;
                 struct at::commands::sim7000e::https::web_request request;
 
@@ -93,7 +93,7 @@ namespace data::transmission
 // #endif
 #if not defined(CONFIG_SEMCON_DEMO_MODE)
             // wait at least until 14:00 UTC otherwise we send data indefinetely
-            wait_for_hour_in_PSM(14);
+            // wait_for_hour_in_PSM(14);
 #endif
         }
     }

@@ -1,0 +1,17 @@
+sequenceDiagram
+    loop until baud rate found
+        gateway->>gateway: select next baudrate (115200 or 9600)
+        gateway->>sim7000e: AT
+        alt response
+            sim7000e-->>gateway: OK
+            note over gateway: Baud rate is "selected baud rate"
+        else timeout
+            note over gateway: module did not repond in time
+        end
+    end
+
+    alt baud rate is 9600
+        gateway->>sim7000e: AT+IPR=115200
+        sim7000e-->>gateway: OK
+        gateway->>gateway: Set baud rate to 115200
+    end

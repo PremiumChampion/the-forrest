@@ -29,6 +29,10 @@ namespace at::commands::sim7000e::network_configuration
                 {
                     return OK;
                 }
+                if(response.find("+APP PDP: DEACTIVE") != std::string::npos)
+                {
+                    return ERROR;
+                }
             }
         }
 

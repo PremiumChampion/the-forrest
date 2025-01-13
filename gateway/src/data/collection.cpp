@@ -19,7 +19,12 @@ namespace data::collection
             // add them to the storage
 
             // wait for 1 hour
+            #if defined(CONFIG_SEMCON_DEMO_MODE)
+            k_sleep(K_SECONDS(10));
+            #endif
+            #if not defined(CONFIG_SEMCON_DEMO_MODE)
             k_sleep(K_HOURS(1));
+            #endif
 
             // collect new datapoints
             int32_t humidity_voltag_mv, battery_voltage_mv;

@@ -63,12 +63,24 @@
             gpios = <&gpio0 30 GPIO_ACTIVE_HIGH>;
             label = "ADC Converter Transistor";
         };
+
+        sim7000e_power: sim7000e_0 {
+            gpios = <&gpio1 4 GPIO_ACTIVE_HIGH>;
+            label = "SIM7000E Power Pin";
+        };
+
+        sim7000e_dtr: sim7000e_1 {
+            gpios = <&gpio1 3 GPIO_ACTIVE_HIGH>;
+            label = "SIM7000E DTR Pin";
+        };
     };
 
     aliases {
         uart0rx = &uart0_rx;
         uart1rx = &uart1_rx;
         adcconvertertransistor = &adc_converter_transistor;
+        sim7000epower = &sim7000e_power;
+        sim7000edtr = &sim7000e_dtr;
     };
 
     zephyr,user {
