@@ -19,7 +19,12 @@ namespace data::collection
             // add them to the storage
 
             // wait for 1 hour
+            #if defined(CONFIG_SEMCON_DEMO_MODE)
             k_sleep(K_SECONDS(10));
+            #endif
+            #if not defined(CONFIG_SEMCON_DEMO_MODE)
+            k_sleep(K_HOURS(1));
+            #endif
 
             // collect new datapoints
             int32_t humidity_voltag_mv, battery_voltage_mv;
@@ -32,7 +37,7 @@ namespace data::collection
 
             // create a new data point
             data_point_t data_point{
-                .device_id = "gateway",
+                .device_id = "5",
                 .timestamp = current_time,
                 .battery_voltage_mv = battery_voltage_mv,
                 .humidity_voltage_mv = humidity_voltag_mv};
@@ -41,13 +46,12 @@ namespace data::collection
             data::storage_instance.add_data_point(data_point);
         }
     }
+
     K_THREAD_STACK_DEFINE(data_collection_thread_stack, 2048);
     struct k_thread data_collection_thread_data;
-    // K_THREAD_DEFINE(data_collection_thread, 2048, data_collection, NULL, NULL, NULL, 5, 0, 0); // Define the data_collection_thread
-
     void start_thread()
     {
-        k_tid_t my_tid = k_thread_create(&data_collection_thread_data, data_collection_thread_stack,
+        (void)k_thread_create(&data_collection_thread_data, data_collection_thread_stack,
                                  K_THREAD_STACK_SIZEOF(data_collection_thread_stack),
                                  data_collection,
                                  NULL, NULL, NULL,

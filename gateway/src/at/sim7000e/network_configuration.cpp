@@ -17,20 +17,24 @@ namespace at::commands::sim7000e::network_configuration
         {
             return r;
         }
-        // uart::uart_driver *driver = at::commands::sim7000e::get_uart_driver();
-        // // wait for the network to be ready
-        // int64_t start = k_uptime_get();
-        // while (k_uptime_get() - start < timeout_ms)
-        // {
-        //     uart::read_result uart_res = driver->uart_read(response);
-        //     if (uart_res == uart::read_result::UART_READ_OK)
-        //     {
-        //         if (response.find("+APP PDP: ACTIVE") != std::string::npos)
-        //         {
-        //             return OK;
-        //         }
-        //     }
-        // }
+        uart::uart_driver *driver = at::commands::sim7000e::get_uart_driver();
+        // wait for the network to be ready
+        int64_t start = k_uptime_get();
+        while (k_uptime_get() - start < timeout_ms)
+        {
+            uart::read_result uart_res = driver->uart_read(response);
+            if (uart_res == uart::read_result::UART_READ_OK)
+            {
+                if (response.find("+APP PDP: ACTIVE") != std::string::npos)
+                {
+                    return OK;
+                }
+                if(response.find("+APP PDP: DEACTIVE") != std::string::npos)
+                {
+                    return ERROR;
+                }
+            }
+        }
 
         return OK;
     }

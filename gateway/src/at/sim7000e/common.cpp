@@ -129,45 +129,15 @@ namespace at::commands::sim7000e
 
         // after this we need to establish a lte connection
         // setup the apn
-        if (sim7000e::network_configuration::setup_apn("internet") != result::OK)
+        while (sim7000e::network_configuration::setup_apn("internet") != result::OK)
         {
-            LOG_ERR("Failed to setup APN");
-            return ERROR;
+            k_sleep(K_MSEC(1500));
         }
 
         response = "";
 
-        // wait for the network to be ready
-        bool network_ready = false;
-        int64_t start = k_uptime_get();
-        while (k_uptime_get() - start < 40000 && !network_ready)
-        {
-            uart::read_result uart_res = driver->uart_read(response, K_MSEC(1000));
-            if (response.find("+APP PDP: ACTIVE") != std::string::npos)
-            {
-                network_ready = true;
-            }
-            if (response.find("+APP PDP: DEACTIVE") != std::string::npos)
-            {
-                if (sim7000e::network_configuration::setup_apn("internet") != result::OK)
-                {
-                    LOG_ERR("Failed to setup APN");
-                    return ERROR;
-                }
-            }
-            response = "";
-        }
-
-        response = "";
-
-        if (!network_ready)
-        {
-            LOG_ERR("Failed to establish network connection");
-            return ERROR;
-        }
-
-        // configure PSM
-        if (sim7000e::power::set_psm_event_report(sim7000e::power::psm_event_report_mode::PSM_EVENT_REPORT_ENABLE) != result::OK)
+        // configure PSM 
+        if (sim7000e::power::set_psm_event_report(sim7000e::power::psm_event_report_mode::PSM_EVENT_REPORT_DISABLE) != result::OK)
         {
             LOG_ERR("Failed to enable PSM event report");
         }
