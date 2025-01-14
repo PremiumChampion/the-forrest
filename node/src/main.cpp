@@ -285,7 +285,7 @@ static int set_date_time(const struct device *rtc)
     int rc_set = 0;
     rc_set = maxim_ds3231_set(rtc, &sp, &notify);
 
-    LOG_INF("Set %s at %u ms past: %d\n", format_time(sp.rtc.tv_sec, sp.rtc.tv_nsec),
+    printk("Set %s at %u ms past: %d\n", format_time(sp.rtc.tv_sec, sp.rtc.tv_nsec),
             syncclock, rc);
 
     /* Wait for the set to complete */
@@ -298,6 +298,14 @@ static int set_date_time(const struct device *rtc)
     }
 
     uint32_t t1 = k_uptime_get_32();
+    /* Delay so log messages from sync can complete */
+	k_sleep(K_MSEC(100));
+	printk("Synchronize final: %d %d in %u ms\n", rc, ss.result, t1 - t0);
+
+	rc = maxim_ds3231_get_syncpoint(rtc, &sp);
+	printk("wrote sync %d: %u %u at %u\n", rc,
+	       (uint32_t)sp.rtc.tv_sec, (uint32_t)sp.rtc.tv_nsec,
+	       sp.syncclock);
     return 0;
 }
 
@@ -383,8 +391,7 @@ int main(void)
 // RTC time flashing based on kconfig
 #ifdef CONFIG_FLASH_CURRENT_TIMESTAMP
     set_date_time(rtc);
-    show_counter(rtc);
-    k_sleep(K_FOREVER);
+    k_sleep(K_MSEC(8000));
 #endif
 
     k_sleep(K_MSEC(1000));
@@ -450,13 +457,14 @@ int main(void)
                 printf("Could not suspend console (%d)\n", rc);
                 return 0;
             }
-
+            wakeup_flag = false;
+            
             while (!wakeup_flag)
             {
                 sys_poweroff();
             }
 
-            wakeup_flag = false;
+            
 
             pm_device_action_run(cons, PM_DEVICE_ACTION_RESUME);
         }
