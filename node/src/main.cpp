@@ -450,13 +450,14 @@ int main(void)
                 printf("Could not suspend console (%d)\n", rc);
                 return 0;
             }
-
+            wakeup_flag = false;
+            
             while (!wakeup_flag)
             {
                 sys_poweroff();
             }
 
-            wakeup_flag = false;
+            
 
             pm_device_action_run(cons, PM_DEVICE_ACTION_RESUME);
         }
