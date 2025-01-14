@@ -27,7 +27,7 @@ namespace data::reception
                 // <nodeid>,<value_sensor0>,<value_sensor1>\r\n
 
                 // check if we got a good response
-                auto start = response.find("+RCV=1");
+                auto start = response.find("+RCV=");
 
                 if(start == std::string::npos)
                 {
