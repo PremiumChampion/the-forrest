@@ -50,7 +50,7 @@ namespace at::commands::prv
         while (k_uptime_get() - time_ms < timeout_ms)
         {
 
-            read_result = driver->uart_read(response);
+            read_result = driver->uart_read(response, K_MSEC(timeout_ms - (k_uptime_get() - time_ms)));
 
             if (read_result == uart::UART_READ_TIMEOUT)
             {

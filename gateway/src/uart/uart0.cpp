@@ -149,8 +149,7 @@ namespace uart::uart0
 
 		if (is_sleeping)
 		{
-			LOG_ERR("UART device is sleeping!");
-			return write_result::UART_WRITE_ERROR;
+			wakeup();
 		}
 
 		for (std::size_t i = 0; i < data.size(); i++)
@@ -263,7 +262,6 @@ namespace uart::uart0
 	{
 		int rc;
 		rc = wakeup();
-		rc = gpio_remove_callback(uart0_rx_gpio.port, &uart_gpio_cb_data);
 	}
 
 	int sleep()
@@ -297,6 +295,9 @@ namespace uart::uart0
 			LOG_ERR("Could not resume UART (%d)\n", rc);
 			return rc;
 		}
+
+		rc = gpio_remove_callback(uart0_rx_gpio.port, &uart_gpio_cb_data);
+
 		is_sleeping = false;
 		return rc;
 	}
@@ -327,8 +328,7 @@ namespace uart::uart0
 
 		if (is_sleeping)
 		{
-			LOG_ERR("UART device is sleeping!");
-			return -1;
+			wakeup();
 		}
 
 		struct uart_config cfg;
