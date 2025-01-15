@@ -67,7 +67,7 @@ namespace at::commands::sim7000e
                     continue;
                 }
 
-                res = _at("AT\r\n", response, 500);
+                res = _at("AT\r\n", response, 1000);
 
                 // check if wwe got a good respone from the module
                 if (res == result::OK)
@@ -136,12 +136,13 @@ namespace at::commands::sim7000e
 
         response = "";
 
+#if not defined(CONFIG_SEMCON_DEMO_MODE)
         // configure PSM 
-        if (sim7000e::power::set_psm_event_report(sim7000e::power::psm_event_report_mode::PSM_EVENT_REPORT_DISABLE) != result::OK)
+        if (sim7000e::power::set_psm_event_report(sim7000e::power::psm_event_report_mode::PSM_EVENT_REPORT_ENABLE) != result::OK)
         {
             LOG_ERR("Failed to enable PSM event report");
         }
-#if 0
+
         // enable PSM
         if (sim7000e::power::enable_PSM() != result::OK)
         {

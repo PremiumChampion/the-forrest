@@ -115,7 +115,7 @@ namespace at::commands::sim7000e::power
     result enable_PSM()
     {
         std::string result = "";
-        
+
         // period in which the module sends RAU (Routing Area Update) messages
         // TrackingAreaUpdate (unit)
         // value    unit    min(s)  max(s)
@@ -129,8 +129,8 @@ namespace at::commands::sim7000e::power
 
         // binary_TAU = <unit (3bit)><value (5bit)>
 
-        uint8_t unit_TAU = 1;   // 1h
-        uint8_t value_TAU = 24; // 24 units = 24 h
+        uint8_t unit_TAU = 3;   // 1h
+        uint8_t value_TAU = 31; // 24 units = 24 h
         std::string binary_TAU = std::bitset<3>(unit_TAU).to_string() + std::bitset<5>(value_TAU).to_string();
 
         // time in which the module remains in idle mode
@@ -142,8 +142,47 @@ namespace at::commands::sim7000e::power
         // 2 ->     6min    1800    3600
         // binary_T3324 = <unit (3bit)><value (5bit)>
 
-        uint8_t unit_T3324 = 0;  // 2 sec
-        uint8_t value_T3324 = 5; // 5 units = 10 sec
+        uint8_t unit_T3324 = 0;   // 2 sec
+        uint8_t value_T3324 = 10; // 5 units = 10 sec
+        std::string binary_T3324 = std::bitset<3>(unit_T3324).to_string() + std::bitset<5>(value_T3324).to_string();
+
+        if (at::commands::sim7000e::_at("AT+CPSMS=1,,,\"" + binary_TAU + "\",\"" + binary_T3324 + "\"\r\n", result) != at::commands::OK)
+        {
+            return ERROR;
+        }
+
+        return OK;
+    }
+
+    result set_PSM_timers(uint8_t unit_TAU,    // 1h
+                          uint8_t value_TAU,  // 24 units = 24 h
+                          uint8_t unit_T3324,  // 2 sec
+                          uint8_t value_T3324 // 5 units = 10 sec
+    )
+    {
+        std::string result = "";
+
+        // period in which the module sends RAU (Routing Area Update) messages
+        // TrackingAreaUpdate (unit)
+        // value    unit    min(s)  max(s)
+        // 0 ->     10min   2400    18600
+        // 1 ->     1h      21600   111600
+        // 2 ->     10h     144000  1116000
+        // 3 ->     2sec    0       62
+        // 4 ->     30sec   90      930
+        // 5 ->     1min    960     1860
+        // 6 ->     320h    1152000 35712000
+        // binary_TAU = <unit (3bit)><value (5bit)>
+        std::string binary_TAU = std::bitset<3>(unit_TAU).to_string() + std::bitset<5>(value_TAU).to_string();
+
+        // time in which the module remains in idle mode
+        // after this time the module enters PSM
+        // ActiveTime (unit)
+        // value    unit    min(s)  max(s)
+        // 0 ->     2sec    0       120
+        // 1 ->     1min    120     1800
+        // 2 ->     6min    1800    3600
+        // binary_T3324 = <unit (3bit)><value (5bit)>
         std::string binary_T3324 = std::bitset<3>(unit_T3324).to_string() + std::bitset<5>(value_T3324).to_string();
 
         if (at::commands::sim7000e::_at("AT+CPSMS=1,,,\"" + binary_TAU + "\",\"" + binary_T3324 + "\"\r\n", result) != at::commands::OK)
@@ -213,7 +252,8 @@ namespace at::commands::sim7000e::power
         return TIMEOUT;
     }
 
-    result wait_for_enter_exit_psm(bool &entered_psm, k_timeout_t timeout){
+    result wait_for_enter_exit_psm(bool &entered_psm, k_timeout_t timeout)
+    {
         std::string result = "";
         uart::uart_driver *driver = at::commands::sim7000e::get_uart_driver();
         uart::read_result uart_res;
@@ -255,7 +295,10 @@ namespace at::commands::sim7000e::power
         return OK;
     }
 
-    result power_off(bool urgent)
+    result
+
+        result
+        power_off(bool urgent)
     {
         std::string result = "";
 

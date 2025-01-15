@@ -8,14 +8,13 @@
 #include "at/sim7000e/network_configuration.hpp"
 #include "at/sim7000e/time.hpp"
 
-#define WAIT_FOR_TRANSMISSION_TIME 0
-
 namespace data::transmission
 {
     LOG_MODULE_REGISTER(data_transmission);
 
     void data_transmission(void *arg1, void *arg2, void *arg3)
     {
+        auto driver = at::commands::sim7000e::get_uart_driver();
         while (1)
         {
 
@@ -23,10 +22,6 @@ namespace data::transmission
             k_sleep(K_SECONDS(30));
 #endif
 
-#if not defined(CONFIG_SEMCON_DEMO_MODE)
-            // wait until 13:00 UTC
-            // wait_for_hour_in_PSM(13);
-#endif
             int web_requests = 0;
             // send the data
             while (data::storage_instance.size() > 0)
@@ -90,13 +85,59 @@ namespace data::transmission
                 }
                 data::storage_instance.remove_first(included_data_points);
             }
-// #if defined(CONFIG_SEMCON_DEMO_MODE)
-//             k_sleep(K_MINUTES(1));
-// #endif
+
 #if not defined(CONFIG_SEMCON_DEMO_MODE)
-            // wait at least until 14:00 UTC otherwise we send data indefinetely
-            // wait_for_hour_in_PSM(14);
+            // network disconnect
+            if (at::commands::sim7000e::network_configuration::network_disconnect() != at::commands::OK)
+            {
+                LOG_ERR("Failed to disconnect network");
+            }
+
+            // set baud rate to 9600
+            if (at::commands::sim7000e::power::set_baudrate(uart::baudrate::Baud9600) != at::commands::OK)
+            {
+                LOG_ERR("Failed to set baud rate");
+            }
+
+            // set gpio high to enter psm
+            if (gpio::set(gpio::SIM7000_PWR, gpio::HIGH) != gpio::OK)
+            {
+                LOG_ERR("SIM7000E PWRKEY set failed");
+            }
+
+            // wait for the module to enter PSM
+            driver->sleep();
+            if (at::commands::sim7000e::power::wait_for_enter_psm(K_FOREVER) != at::commands::OK)
+            {
+                LOG_ERR("Failed to enter PSM");
+            }
+
+            driver->sleep();
+            // wait for the module to exit PSM
+            if (at::commands::sim7000e::power::wait_for_exit_psm(K_FOREVER) != at::commands::OK)
+            {
+                LOG_ERR("Failed to exit PSM");
+            }
+
+            // set gpio high to enter psm
+            if (gpio::set(gpio::SIM7000_PWR, gpio::LOW) != gpio::OK)
+            {
+                LOG_ERR("SIM7000E PWRKEY set failed");
+            }
+
+            // set baud rate to 115200
+            if (at::commands::sim7000e::power::set_baudrate(uart::baudrate::Baud115200) != at::commands::OK)
+            {
+                LOG_ERR("Failed to set baud rate");
+            }
+
+            // network reconnect
+            while (at::commands::sim7000e::network_configuration::setup_apn("internet") != at::commands::OK)
+            {
+                k_sleep(K_MSEC(1500));
+            }
 #endif
+
         }
     }
 

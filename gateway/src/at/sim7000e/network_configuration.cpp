@@ -36,7 +36,7 @@ namespace at::commands::sim7000e::network_configuration
             }
         }
 
-        return OK;
+        return TIMEOUT;
     }
     result get_ip(std::string &ip)
     {

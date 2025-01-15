@@ -33,6 +33,10 @@ namespace at::commands::sim7000e::power
     // result get_timer_configuration_by_network();
     result set_slow_clock(bool enable);
     result enable_PSM();
+    result set_PSM_timers(uint8_t unit_TAU = 3,      // 1h
+                          uint8_t value_TAU = 31,    // 24 units = 24 h
+                          uint8_t unit_T3324 = 0,    // 2 sec
+                          uint8_t value_T3324 = 10); // 5 units = 10 sec
     result enter_idle_mode();
     result wait_for_enter_psm(k_timeout_t timeout = K_FOREVER);
     result wait_for_exit_psm(k_timeout_t timeout = K_FOREVER);
