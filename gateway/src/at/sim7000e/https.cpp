@@ -6,6 +6,7 @@
 
 #include "at/sim7000e/common.hpp" // at::commands::sim7000e::_at
 #include "at/sim7000e/https.hpp"
+#include "at/sim7000e/time.hpp"
 #include "uart/uart.hpp"
 #include "iic/time.hpp"
 
@@ -219,6 +220,28 @@ namespace at::commands::sim7000e::https
 
     result execute_web_request(web_request &request)
     {
+         // configuring ssl
+        if (at::commands::sim7000e::https::ignore_ssl_timestamp() != at::commands::OK)
+        {
+            LOG_ERR("SIM7000E SSL timestamp ignore failed");
+        }
+
+        if (at::commands::sim7000e::https::set_ssl_version() != at::commands::OK)
+        {
+            LOG_ERR("SIM7000E SSL version set failed");
+        }
+
+        if (at::commands::sim7000e::https::trust_all_certificates() != at::commands::OK)
+        {
+            LOG_ERR("SIM7000E trust all certificates failed");
+        }
+
+        // set the current time
+        if (at::commands::sim7000e::time::set_time() != at::commands::OK)
+        {
+            LOG_ERR("SIM7000E time set failed");
+        }
+
         // set server name indication
         if (set_server_name_indication(request.server_name) != OK)
         {
@@ -260,6 +283,7 @@ namespace at::commands::sim7000e::https
         if (start_ssl_session() != OK)
         {
             LOG_ERR("SIM7000E SSL session start failed");
+            print_last_error();
             return ERROR;
         }
 

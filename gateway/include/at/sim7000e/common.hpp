@@ -14,6 +14,7 @@ namespace at::commands::sim7000e
     result _at(std::string command, std::string &response, int timeout_ms = 1000);
     result configure();
     result check_sim7000e_present();
+    result print_last_error();
 
 } // namespace at::sim7000e
 

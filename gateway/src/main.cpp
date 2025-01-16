@@ -88,7 +88,7 @@ int initialize()
     }
 
     LOG_INF("DS1307 found");
-    LOG_INF("Current time: %d-%d-%d %d:%d:%d", time.tm_year, time.tm_mon, time.tm_mday, time.tm_hour, time.tm_min, time.tm_sec);
+    LOG_INF("Current time: %d-%d-%d %d:%d:%d", time.tm_year + 1900, time.tm_mon, time.tm_mday, time.tm_hour, time.tm_min, time.tm_sec);
 
     // check if the SIM7000E is connected
     if (at::commands::sim7000e::configure() != at::commands::OK)

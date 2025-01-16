@@ -9,6 +9,8 @@ namespace at::commands
         ERROR,
         TIMEOUT
     };
+
+    
 }
 
 #endif // AT_COMMON_HPP

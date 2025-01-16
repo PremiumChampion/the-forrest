@@ -1,0 +1,23 @@
+db.getCollection('TestData').aggregate(
+  [
+    {
+      $match: {
+        server_time: { $exists: true },
+        data: { $exists: true },
+        "data.t": { $gte: 0 }
+      }
+    },
+    { $sort: { server_time: -1 } },
+    { $unwind: "$data" },
+    {
+      $project: {
+        id: "$data.id",
+        server_time: 1,
+        timestamp: { $toDate: { $multiply: ["$data.t", 1000] }},
+        humidity: "$data.mV_1",
+        battery: "$data.mV_2"
+      }
+    }
+  ],
+  { maxTimeMS: 60000, allowDiskUse: true }
+);

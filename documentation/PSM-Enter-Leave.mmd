@@ -1,0 +1,12 @@
+sequenceDiagram
+    module->>sim7000e: Select baud rate 9600
+    sim7000e-->>module: OK
+    module->>module: set PWR-KEY high
+    sim7000e->>sim7000e: timer T3324 expired
+    sim7000e->>module: +CPSMSTATUS: "ENTER PSM"
+    module->>module: hibernate uart
+    sim7000e->>module: +CPSMSTATUS: "EXIT PSM"
+    module->>module: set PWR-KEY low
+    module->>sim7000e: Set baud rate to 115200
+    sim7000e-->>module: OK
+    

@@ -20,10 +20,10 @@ namespace data::collection
 
             // wait for 1 hour
             #if defined(CONFIG_SEMCON_DEMO_MODE)
-            k_sleep(K_SECONDS(60));
+            k_sleep(K_HOURS(1));
             #endif
             #if not defined(CONFIG_SEMCON_DEMO_MODE)
-            k_sleep(K_HOURS(1));
+            k_sleep(K_SECONDS(60));
             #endif
 
             // collect new datapoints
