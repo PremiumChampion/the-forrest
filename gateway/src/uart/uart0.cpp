@@ -257,7 +257,7 @@ namespace uart::uart0
 		return 0;
 	}
 
-	/* Button callback function */
+	/* UART-Rx interrupt */
 	static void uart_interrupt(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
 	{
 		int rc;

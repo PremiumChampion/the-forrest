@@ -17,8 +17,6 @@ namespace at::commands::sim7000e::power
     };
     result set_psm_event_report(psm_event_report_mode mode);
 
-    result fix_baud_rate();
-
     static const int timing_unit[] = {600, 3600, 36000, 2, 30, 60, (int)1.152e6};
 
     struct timer_configuration

@@ -78,18 +78,6 @@ namespace at::commands::sim7000e::power
         return OK;
     }
 
-    result fix_baud_rate()
-    {
-        // set the baud rate to 115200
-        std::string result = "";
-        if (at::commands::sim7000e::_at("AT+IPR=115200\r\n", result) != at::commands::OK)
-        {
-            return ERROR;
-        }
-
-        return OK;
-    }
-
     result set_slow_clock(bool enable)
     {
         std::string result = "";
