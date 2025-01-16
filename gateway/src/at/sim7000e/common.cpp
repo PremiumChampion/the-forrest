@@ -136,34 +136,24 @@ namespace at::commands::sim7000e
 
         response = "";
 
-#if not defined(CONFIG_SEMCON_DEMO_MODE)
-        // configure PSM 
+        // configure PSM
         if (sim7000e::power::set_psm_event_report(sim7000e::power::psm_event_report_mode::PSM_EVENT_REPORT_ENABLE) != result::OK)
         {
             LOG_ERR("Failed to enable PSM event report");
         }
 
-        // enable PSM
-        if (sim7000e::power::enable_PSM() != result::OK)
+#if defined(CONFIG_SEMCON_DEMO_MODE)
+        if (sim7000e::power::set_PSM_timers(3,31,0,1) != result::OK)
         {
-            LOG_ERR("Failed to enable PSM");
+            LOG_ERR("Failed to set PSM timers");
         }
 #endif
-        // configuring ssl
-        if (at::commands::sim7000e::https::ignore_ssl_timestamp() != at::commands::OK)
+#if not defined(CONFIG_SEMCON_DEMO_MODE)
+        if (sim7000e::power::set_PSM_timers(1,24,0,1) != result::OK)
         {
-            LOG_ERR("SIM7000E SSL timestamp ignore failed");
+            LOG_ERR("Failed to set PSM timers");
         }
-
-        if (at::commands::sim7000e::https::set_ssl_version() != at::commands::OK)
-        {
-            LOG_ERR("SIM7000E SSL version set failed");
-        }
-
-        if (at::commands::sim7000e::https::trust_all_certificates() != at::commands::OK)
-        {
-            LOG_ERR("SIM7000E trust all certificates failed");
-        }
+#endif
 
         // set the current time
         if (at::commands::sim7000e::time::set_time() != at::commands::OK)
@@ -174,9 +164,11 @@ namespace at::commands::sim7000e
         return result::OK;
     }
 
-    result print_last_error(){
+    result print_last_error()
+    {
         std::string response = "";
-        if(_at("AT+CEER\r\n", response) != result::OK){
+        if (_at("AT+CEER\r\n", response) != result::OK)
+        {
             return result::ERROR;
         }
         LOG_ERR("Last error: %s", response.c_str());

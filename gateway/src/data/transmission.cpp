@@ -17,11 +17,6 @@ namespace data::transmission
         auto driver = at::commands::sim7000e::get_uart_driver();
         while (1)
         {
-
-#if defined(CONFIG_SEMCON_DEMO_MODE)
-            k_sleep(K_SECONDS(30));
-#endif
-
             int web_requests = 0;
             // send the data
             while (data::storage_instance.size() > 0)
@@ -86,7 +81,6 @@ namespace data::transmission
                 data::storage_instance.remove_first(included_data_points);
             }
 
-#if not defined(CONFIG_SEMCON_DEMO_MODE)
             // network disconnect
             if (at::commands::sim7000e::network_configuration::network_disconnect() != at::commands::OK)
             {
@@ -110,13 +104,14 @@ namespace data::transmission
             while (at::commands::sim7000e::power::wait_for_enter_psm(K_FOREVER) != at::commands::OK)
             {
                 k_sleep(K_SECONDS(1));
+                driver->sleep();
             }
 
-            driver->sleep();
             // wait for the module to exit PSM
             while (at::commands::sim7000e::power::wait_for_exit_psm(K_FOREVER) != at::commands::OK)
             {
                 k_sleep(K_SECONDS(1));
+                driver->sleep();
             }
 
             // set gpio high to enter psm
@@ -136,7 +131,6 @@ namespace data::transmission
             {
                 k_sleep(K_MSEC(1500));
             }
-#endif
         }
     }
 
