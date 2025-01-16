@@ -107,16 +107,16 @@ namespace data::transmission
 
             // wait for the module to enter PSM
             driver->sleep();
-            if (at::commands::sim7000e::power::wait_for_enter_psm(K_FOREVER) != at::commands::OK)
+            while (at::commands::sim7000e::power::wait_for_enter_psm(K_FOREVER) != at::commands::OK)
             {
-                LOG_ERR("Failed to enter PSM");
+                k_sleep(K_SECONDS(1));
             }
 
             driver->sleep();
             // wait for the module to exit PSM
-            if (at::commands::sim7000e::power::wait_for_exit_psm(K_FOREVER) != at::commands::OK)
+            while (at::commands::sim7000e::power::wait_for_exit_psm(K_FOREVER) != at::commands::OK)
             {
-                LOG_ERR("Failed to exit PSM");
+                k_sleep(K_SECONDS(1));
             }
 
             // set gpio high to enter psm
@@ -137,7 +137,6 @@ namespace data::transmission
                 k_sleep(K_MSEC(1500));
             }
 #endif
-
         }
     }
 

@@ -173,4 +173,13 @@ namespace at::commands::sim7000e
 
         return result::OK;
     }
+
+    result print_last_error(){
+        std::string response = "";
+        if(_at("AT+CEER\r\n", response) != result::OK){
+            return result::ERROR;
+        }
+        LOG_ERR("Last error: %s", response.c_str());
+        return result::OK;
+    }
 } // namespace at::sim7000e

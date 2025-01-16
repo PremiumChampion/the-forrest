@@ -142,9 +142,9 @@ namespace at::commands::sim7000e::power
         return OK;
     }
 
-    result set_PSM_timers(uint8_t unit_TAU,    // 1h
+    result set_PSM_timers(uint8_t unit_TAU,   // 1h
                           uint8_t value_TAU,  // 24 units = 24 h
-                          uint8_t unit_T3324,  // 2 sec
+                          uint8_t unit_T3324, // 2 sec
                           uint8_t value_T3324 // 5 units = 10 sec
     )
     {
@@ -283,10 +283,7 @@ namespace at::commands::sim7000e::power
         return OK;
     }
 
-    result
-
-        result
-        power_off(bool urgent)
+    result power_off(bool urgent)
     {
         std::string result = "";
 

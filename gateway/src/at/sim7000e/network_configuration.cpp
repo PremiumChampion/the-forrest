@@ -73,6 +73,21 @@ namespace at::commands::sim7000e::network_configuration
     result network_disconnect()
     {
         std::string response = "";
-        return at::commands::sim7000e::_at("AT+CNACT=0\r\n", response);
+        auto rc = at::commands::sim7000e::_at("AT+CNACT=0\r\n", response);
+
+        if (rc != OK)
+        {
+            return rc;
+        }
+        auto driver = at::commands::sim7000e::get_uart_driver();
+        response = "";
+        while(driver->uart_read(response) != uart::read_result::UART_READ_ERROR)
+        {
+            if(response.find("+APP PDP: DEACTIVE") != std::string::npos)
+            {
+                return OK;
+            }
+        }
+        return TIMEOUT;
     }
 } // namespace at::sim7000e::network_configuration
