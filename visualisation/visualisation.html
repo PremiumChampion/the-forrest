@@ -1,32 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Two Iframes Side by Side</title>
-    <style>
-        .container {
-            display: flex;
-            justify-content: space-between;
-            margin: 20px;
-        }
-        iframe {
-            background: #FFFFFF;
-            border: none;
-            border-radius: 2px;
-            box-shadow: 0 2px 10px 0 rgba(70, 76, 79, .2);
-            width: 640px;
-            height: 480px;
-            margin: 0 10px; /* Optional: adds space between iframes */
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Two Iframes Side by Side</title>
+  <style>
+
+
+    html, body {
+      background-color: #121212; /* Dark background */
+      color: #ffffff; /* Light text color */
+      font-family: 'Arial', sans-serif; /* Font family */
+      margin: 0; /* Remove default margin */
+      /* padding: 20px; Add padding to the body */
+      height: 100%; /* Set height to 100% of the viewport height */
+      padding: 0;
+    }
+
+    .container {
+      display: flex;
+      justify-content: space-between;
+      margin: 20px 0; /* Margin for the container */
+      flex-wrap: wrap; /* Allows iframes to wrap on smaller screens */
+      height: 90%; /* Set height to 80% of the viewport height */
+    }
+
+    iframe {
+      background: #1e1e1e; /* Dark background for iframes */
+      border: none;
+      border-radius: 2px;
+      box-shadow: 0 2px 10px 0 rgba(0, 0, 0, .5); /* Darker shadow */
+      width: 48%; /* Set width to 48% to allow for spacing */
+      height: 100%;
+      margin: 0 10px; /* Optional: adds space between iframes */
+    }
+
+    h1 {
+      text-align: center;
+      width: 100%;
+      margin: 20px 0; /* Adds space above and below the title */
+    }
+  </style>
 </head>
+
 <body>
-
-<div class="container">
-    <iframe src="https://charts.mongodb.com/charts-project-0-kgbwnwv/embed/charts?id=1dc1c0f8-cbb6-4410-a2b9-9a7781d73a8c&maxDataAge=60&theme=light&autoRefresh=true"></iframe>
-    <iframe src="https://charts.mongodb.com/charts-project-0-kgbwnwv/embed/charts?id=a5795728-6307-4fa9-a08c-ef217c421594&maxDataAge=60&theme=light&autoRefresh=true"></iframe>
-</div>
-
+  <h1>The Forrest</h1>
+  <div class="container">
+    <iframe
+      src="https://charts.mongodb.com/charts-project-0-kgbwnwv/embed/charts?id=1dc1c0f8-cbb6-4410-a2b9-9a7781d73a8c&maxDataAge=60&theme=dark&autoRefresh=true"></iframe>
+    <iframe
+      src="https://charts.mongodb.com/charts-project-0-kgbwnwv/embed/charts?id=a5795728-6307-4fa9-a08c-ef217c421594&maxDataAge=60&theme=dark&autoRefresh=true"></iframe>
+  </div>
 </body>
+
 </html>
