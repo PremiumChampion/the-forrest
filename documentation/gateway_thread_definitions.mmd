@@ -1,0 +1,22 @@
+flowchart TD
+    subgraph collection_thread["Data collection thread"]
+        start1["collection::start_thread()"]-->sleep["sleep()"]
+        --> collect_sensor_data["collect_sensor_data()"]
+        --> store_sensor_data["store_sensor_data()"]
+        --> sleep
+    end
+
+    subgraph reception_thread["Data reception thread"]
+        start2["reception::start_thread()"]-->uart0rx["rx_lora_data()"]
+        -->decode["decode()"]
+        -->store_sensor_data1["store_sensor_data()"]
+        -->uart0rx
+    end
+    subgraph transmission_thread["Data transmission thread"]
+        start3["transmission::start_thread()"]-->get_sensor_data["get_sensor_data()"]
+        --> configure["configure_SIM700e()"]
+        --> transmit_packet["transmit()"]
+        --> wait_for_PSM["wait_enter_PSM()"]
+        --> wait_exit_PSM["wait_exit_PSM()"]
+        --> get_sensor_data
+    end

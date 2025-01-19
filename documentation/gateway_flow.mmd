@@ -1,0 +1,25 @@
+flowchart LR
+    main["main()"]
+    subgraph hw_init["1: HW-Interface"]
+        direction LR
+        uart0["uart0::uart_init()"]
+        -->uart1["uart1::uart_init()"]
+        -->iic["iic::bus::setup()"]
+        -->gpio["gpio::init()"]
+        -->adc["adc::adc::setup()"]
+    end
+    subgraph device_init["2: Configure devices"]
+        direction LR
+        ds1307["rtc::ds1307::check_present()"]
+        -->sim7000e["sim7000e::configure()"]
+        -->rylr433["rylr433::init_lora_module()"]
+    end
+    subgraph thread_start["3: Start threads"]
+        direction LR
+        collection["collection::start_thread()"]
+        -->reception["reception::start_thread()"]
+        -->transmission["transmission::start_thread()"]
+    end
+    main-->hw_init
+    main-->device_init
+    main-->thread_start

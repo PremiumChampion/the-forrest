@@ -1,0 +1,40 @@
+@startuml
+
+concise "Write" as w
+concise "Read" as r
+
+
+r is Idle
+w is Idle
+
+@w
+0 is Start #white
+1 is "Slave Address" #white
+8 is "W (0)" #white
+9 is ACK
+10 is Data #white
+18 is ACK
+
+note top of w: repeat data + ack n times for reading
+
+19 is "Data+N" #white
+27 is ACK
+28 is Stop #white
+29 is Idle #white
+
+@r
+0 is Start #white
+1 is "Slave Address" #white
+8 is "R (1)" #white
+9 is ACK
+10 is Data
+18 is ACK #white
+
+note top of r: repeat data + ack n times for reading
+
+19 is "Data+N"
+27 is ACK #white
+28 is Stop #white
+29 is Idle #white
+
+@enduml

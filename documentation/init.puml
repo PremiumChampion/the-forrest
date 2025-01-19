@@ -1,0 +1,47 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Hardware intialisation
+Container(nrf52, "nRF52") {
+    Component(uart0, "UART0")
+    Component(uart1, "UART1")
+    Component(iic, "I²C")
+    Component(gpio, "GPIO")
+    Component(adc, "ADC")
+
+    Component(main, "main()")
+    Component(collection, "CollectionTread")
+    Component(rx, "ReceptionTread")
+    Component(data, "DataStorage")
+    Component(tx, "TransmissionTread")
+}
+
+Component_Ext(rtc, "DS1307")
+Component_Ext(sim, "SIM7000E")
+Component_Ext(lora, "RYLR433")
+
+Rel(main, uart0, "Initialisation")
+Rel(main, uart1, "Initialisation")
+Rel(main, iic, "Initialisation")
+Rel(main, gpio, "Initialisation")
+Rel(main, adc, "Initialisation")
+Rel(main, collection, "starts")
+Rel(main, rx, "starts")
+Rel(main, tx, "starts")
+
+BiRel(iic, rtc, "Setting and Reading time")
+BiRel(uart0, lora, "Configuration and Receiving LoRa data")
+BiRel(uart1, sim, "Configuration and Sending data to the cloud")
+
+Rel(gpio, lora, "wakeup-pin")
+
+Rel(uart0, rx, "LoRa data")
+Rel(rx, data, "store sensor data")
+Rel(tx, uart1, "")
+Rel(tx, data, "read and delete sensor data")
+
+Rel(adc, gpio, "voltage measureement")
+Rel(collection, adc, "read sensor data")
+Rel(collection, data, "set sensor data")
+
+@enduml
