@@ -23,6 +23,7 @@ namespace data::transmission
             {
                 LOG_INF("Sending request %d", ++web_requests);
                 int included_data_points = 0;
+
                 struct at::commands::sim7000e::https::web_request request;
 
                 request.domain = "https://static.woyte.dev";
@@ -38,7 +39,6 @@ namespace data::transmission
                     if (at::commands::sim7000e::https::execute_web_request(request) != at::commands::OK)
                     {
                         LOG_ERR("Data transmission failed");
-                        // LOG_ERR("Data: %s", request.body.c_str());
                     }
                     else
                     {
