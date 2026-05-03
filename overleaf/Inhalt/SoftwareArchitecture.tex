@@ -1,0 +1,327 @@
+\section{Software Architecture}
+
+In this chapter we discuss different aspects of our software architecture and explain the different decisions we made.
+
+\subsection{Shared AT-Command abstraction}
+
+As the SIM7000e and RYLR498 both operate on AT-Commands, we created a generic interface for sending data to both modules. 
+The generic implementation expects the following:
+
+\begin{enumerate}
+    \item a UART-Driver for the different modules (SIM7000e and RYLR498)
+    \item the command including \textbackslash{}r\textbackslash{}n as a string
+    \item a reference to the parsed output as a string
+    \item the timeout for the command
+\end{enumerate}
+
+The abstraction then uses the driver to write the command and check the response for the keywords "ERROR" or "OK".
+
+\subsection{Node}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.5\linewidth]{Bilder/Node/node_flow.png}
+    \caption{full node flow overview}
+    \label{fig:node_flow}
+\end{figure}
+
+\subsubsection{Start-up}
+
+The startup of our node begins with initializing the uart interface and loading all the devices from the device tree by their respective aliases or node identifiers into variables and checking if they are available. Next the node initializes the ADC interface and the LoRa module.
+
+\subsubsection{Setting the time \& joining the network}
+After all the hardware has been initialized correctly, the node configures the required wake-up pin and sets it up as an interrupt pin. After this it checks if the flag is set to flash the current time during the build. If so, the node will set the current time delivered by CMake to the rtc otherwise the node will continue by joining the network as a node with the address set in the constant \texttt{NODE\_ADDRESS}.
+
+\subsubsection{Reading \& sending the sensor data}
+As soon as the node has joined the network, it can start reading the adc values for the battery and the sensor values.
+After successfully reading the values, the data can be sent to the gateway using \texttt{send\_message(GATEWAY\_ADDRESS, message)}
+
+\subsubsection{Suspending the Zephyr console \& sys\_poweroff()}
+After sending the data to the gateway, the node suspends the Zephyr console to allow the node to be shut down using \texttt{ sys\_poweroff()}. The board will then be woken up again using the wake-up pin connected to the SQWI pin of the rtc. 
+
+A full overview of the whole sequence can also be seen in figure \ref{fig:node_flow}.
+
+\subsection{Gateway}
+
+When starting our application we first initialize and configure the different hardware modules, then configure the different devices and then start the data collection, reception and transmission thread.
+The initialization sequence can be seen in Figure \ref{fig:gateway-initialisation-sequence}. A simplified version of the thread behavior of our application are laid out in figure \ref{fig:gateway-threads}.
+Using threads allows us to take full advantage of Zephyrs multi-threading capabilities, where we can write blocking code but allow the flows of other modules/threads to continue without having to worry about manual, cooperative multitasking with non blocking code and state management.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/gateway/Gateway_Initialization_Sequence.png}
+    \caption{Gateway initialization sequence}
+    \label{fig:gateway-initialisation-sequence}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/gateway/software_flow_gateway_threads.png}
+    \caption{Overview of the threads used in the gateway application}
+    \label{fig:gateway-threads}
+\end{figure}
+
+\subsubsection{Data reception}
+
+We use a thread to wait for incoming LoRa-Packets. This is implemented in a separate thread.
+In the data reception thread we expect the LoRa-Module to be fully initialized and send new packages directly to the UART-Interface.
+We expect a message in this format:\newline{}\verb|+RCV=1,11,"<nodeid>,<value_sensor0>,<value_sensor1>",-42,11\r\n|\newline{}
+If we receive such a UART-Message we perform the following steps:
+
+\begin{enumerate}
+    \item Check if the message starts with \verb|+RCV=|.
+    \item Extract the payload between the quotations.
+    \item Split the payload in id, sensor value 1 and sensor value 2.
+    \item Check if we got 3 values.
+    \item Parse the data into the different data types and store them in a \verb|data::data_point_t|.
+    \item Store the data point in the \verb|data::storage_instance|.
+\end{enumerate}
+
+\begin{cpp}[caption={Implementation of the data reception thread}]
+void data_reception(void *arg1, void *arg2, void *arg3)
+{
+    // in here we collect data from the RYLR498 module
+    uart::uart_driver *driver = at::commands::rylr433::get_uart_driver();
+    std::string response = "";
+    while (1)
+    {
+        // we wait until we recieve data from the module
+        // receive data
+        driver->sleep();
+        if (driver->uart_read(response, K_FOREVER) == uart::UART_READ_OK)
+        {   
+            // +RCV=1,11,"<nodeid>,<value_sensor0>,<value_sensor1>",-42,11\r\n
+
+            // <nodeid>,<value_sensor0>,<value_sensor1>\r\n
+
+            // check if we got a good response
+            auto start = response.find("+RCV=");
+
+            if(start == std::string::npos)
+            {
+                continue;
+            }
+
+            start = response.find("\"", start);
+
+            auto end = response.find("\r\n", start);
+            if (end == std::string::npos)
+            {
+                continue;
+            }
+
+            end = response.find("\"", start + 1);
+
+            // extract the data
+            std::string data = response.substr(start + 1, end - start -1);
+            LOG_INF("Data: %s", data.c_str());
+            auto temp = at::commands::prv::split(data, ',');
+            
+            if (temp.size() != 3)
+            {
+                LOG_ERR("Invalid data received");
+                continue;
+            }
+            
+            // then we parse the data and store it in the storage
+
+            data::data_point_t datapoint{};
+            datapoint.device_id = temp[0];
+            datapoint.humidity_voltage_mv = std::stoi(temp[1]);
+            datapoint.battery_voltage_mv = std::stoi(temp[2]);
+            datapoint.timestamp = iic::time::get_current_time();
+
+            data::storage_instance.add_data_point(datapoint);
+            response = "";
+        }
+    }
+}
+\end{cpp}
+
+\subsubsection{Data collection}
+
+The Data collection thread is the most simple thread we have. It just waits for a defined time-span, collects and stores the data for a \verb|data::data_point_t|, stores the data point in the \verb|data::storage_instance| and repeats this indefinitely.
+
+\begin{cpp}[caption={Implementation of the data collection thread}]
+void data_collection(void *arg1, void *arg2, void *arg3)
+{
+    while (1)
+    {
+
+        #if defined(CONFIG_SEMCON_DEMO_MODE)
+        // wait for 1 hour 
+        k_sleep(K_HOURS(1));
+        #endif
+        #if not defined(CONFIG_SEMCON_DEMO_MODE)
+        // wait for 1 minute
+        k_sleep(K_SECONDS(60));
+        #endif
+
+        // collect new datapoints
+        int32_t humidity_voltag_mv, battery_voltage_mv;
+        gpio::adc::read_channel(0, humidity_voltag_mv);
+        gpio::adc::read_channel(1, battery_voltage_mv);
+
+
+        // get the current time
+        struct tm current_time = iic::time::get_current_time();
+
+        // create a new data point
+        data_point_t data_point{
+            .device_id = "5",
+            .timestamp = current_time,
+            .battery_voltage_mv = battery_voltage_mv,
+            .humidity_voltage_mv = humidity_voltag_mv};
+        
+        // add the data point to the storage
+        data::storage_instance.add_data_point(data_point);
+    }
+}
+\end{cpp}
+
+\subsubsection{Data transmission}
+
+In the implementation of the data transmission thread we can see the process of querying the available data points and transmitting those via the cellular connection. Here we execute the following steps:
+
+\begin{enumerate}
+    \item Check if we have data points available.
+    \item Create a web-request to our cloud back-end.
+    \item Add the different data points to the body.
+    \item Execute the request using our driver and wait for completion.
+    \item Parse the response into a \verb|struct tm|.
+    \item Set the time to the DS1307.
+    \item Update the current time of the SIM7000E module.
+    \item Remove the transmitted data points from the storage.
+    \item When no more items are available:
+    \item Disconnection from the network.
+    \item Set the baud rate to 9600. (Suspend the UART-Driver but continue operation on reception)
+    \item Pull the power pin high. (Necessary for the module to enter and stay in PSM)
+    \item Wait for the module to enter and then exit PSM
+    \item Set the baud rate to 115200.
+    \item Reconnect to the network and start over from 1.
+\end{enumerate}
+
+\begin{cpp}[caption={Implementation of the data transmission thread}]
+void data_transmission(void *arg1, void *arg2, void *arg3)
+{
+    auto driver = at::commands::sim7000e::get_uart_driver();
+    while (1)
+    {
+        int web_requests = 0;
+        // send the data
+        while (data::storage_instance.size() > 0)
+        {
+            LOG_INF("Sending request %d", ++web_requests);
+            int included_data_points = 0;
+
+            struct at::commands::sim7000e::https::web_request request;
+
+            request.domain = "https://static.woyte.dev";
+            request.server_name = "static.woyte.dev";
+            request.method = at::commands::sim7000e::https::http_method::POST;
+            request.url = "/api/save_to_db";
+            request.headers = {{"Content-Type", "application/json"}, {"User-Agent", "curl/7.47.0"}, {"Cache-control", "no-cache"}, {"Accept", "*/*"}};
+            request.body = data::storage_instance.to_json(included_data_points);
+            request.http_status_code = 0;
+            request.response = "";
+            
+            if (request.body.length() > 5)
+            {
+                if (at::commands::sim7000e::https::execute_web_request(request) != at::commands::OK)
+                {
+                    LOG_ERR("Data transmission failed");
+                }
+                else
+                {
+                    LOG_INF("Data transmission successful");
+
+                    if (request.http_status_code == 200)
+                    {
+                        // synchronise local time with server response
+                        // the body contains the current time in the format YYYY-MM-DDTHH:MM:SSZ
+                        // e.g. 2025-01-03T23:21:29Z
+                        // we need to convert this to a struct tm
+                        struct tm time;
+                        time.tm_year = std::stoi(request.response.substr(0, 4)) - 1900;
+                        time.tm_mon = std::stoi(request.response.substr(5, 2)) - 1;
+                        time.tm_mday = std::stoi(request.response.substr(8, 2));
+                        time.tm_hour = std::stoi(request.response.substr(11, 2));
+                        time.tm_min = std::stoi(request.response.substr(14, 2));
+                        time.tm_sec = std::stoi(request.response.substr(17, 2));
+
+                        // set the time
+                        if (iic::time::set_time(time) != 0)
+                        {
+                            LOG_ERR("Failed to set time");
+                        }
+
+                        LOG_INF("Time set to %s", request.response.c_str());
+
+                        // synchronise the time with sim7000e
+                        if (at::commands::sim7000e::time::set_time() != at::commands::OK)
+                        {
+                            LOG_ERR("Failed to set time on SIM7000E");
+                        }
+                    }
+                    else
+                    {
+                        LOG_ERR("Server responded with status code %d", request.http_status_code);
+                    }
+                }
+            }
+            data::storage_instance.remove_first(included_data_points);
+        }
+
+        // network disconnect
+        if (at::commands::sim7000e::network_configuration::network_disconnect() != at::commands::OK)
+        {
+            LOG_ERR("Failed to disconnect network");
+        }
+
+        // set baud rate to 9600
+        if (at::commands::sim7000e::power::set_baudrate(uart::baudrate::Baud9600) != at::commands::OK)
+        {
+            LOG_ERR("Failed to set baud rate");
+        }
+
+        // set gpio high to enter psm
+        if (gpio::set(gpio::SIM7000_PWR, gpio::HIGH) != gpio::OK)
+        {
+            LOG_ERR("SIM7000E PWRKEY set failed");
+        }
+
+        // wait for the module to enter PSM
+        driver->sleep();
+        while (at::commands::sim7000e::power::wait_for_enter_psm(K_FOREVER) != at::commands::OK)
+        {
+            k_sleep(K_SECONDS(1));
+            driver->sleep();
+        }
+
+        // wait for the module to exit PSM
+        while (at::commands::sim7000e::power::wait_for_exit_psm(K_FOREVER) != at::commands::OK)
+        {
+            k_sleep(K_SECONDS(1));
+            driver->sleep();
+        }
+
+        // set gpio high to enter psm
+        if (gpio::set(gpio::SIM7000_PWR, gpio::LOW) != gpio::OK)
+        {
+            LOG_ERR("SIM7000E PWRKEY set failed");
+        }
+
+        // set baud rate to 115200
+        if (at::commands::sim7000e::power::set_baudrate(uart::baudrate::Baud115200) != at::commands::OK)
+        {
+            LOG_ERR("Failed to set baud rate");
+        }
+
+        // network reconnect
+        while (at::commands::sim7000e::network_configuration::setup_apn("internet") != at::commands::OK)
+        {
+            k_sleep(K_MSEC(1500));
+        }
+    }
+}
+\end{cpp}

@@ -1,0 +1,199 @@
+\documentclass[12pt]{article}
+\usepackage[british,UKenglish,USenglish,american,ngerman]{babel}
+\usepackage[a4paper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+\usepackage{fontspec}
+\usepackage{csquotes}
+\usepackage{graphicx}
+\setmainfont{Arial}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage[backend=biber, style=ieee]{biblatex}
+\addbibresource{bibliography.bib}
+\usepackage[nottoc,notlot,notlof]{tocbibind}
+\usepackage[acronym]{glossaries}
+\usepackage{hyperref}
+\usepackage{graphicx} %package to manage images
+\graphicspath{ {./images/} }
+\usepackage[rightcaption]{sidecap}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{array} % required for text wrapping in tables
+
+\selectlanguage{american}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    citecolor=black,
+    pdftitle={Embedded Systems - The Forrest},
+    pdfpagemode=FullScreen,
+    }
+
+\makeglossaries
+\newacronym{url}{URL}{Uniform Resource Locator}
+
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+% \lstset{frame=tb,
+%   language=C++,
+%   aboveskip=3mm,
+%   belowskip=3mm,
+%   showstringspaces=false,
+%   columns=flexible,
+%   basicstyle={\small\ttfamily},
+%   numbers=none,
+%   numberstyle=\tiny\color{gray},
+%   keywordstyle=\color{blue},
+%   commentstyle=\color{dkgreen},
+%   stringstyle=\color{mauve},
+%   breaklines=true,
+%   breakatwhitespace=true,
+%   tabsize=3
+% }
+
+\newcommand\cppstyle{\lstset{frame=tb,
+  language=C++,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}}
+
+% cpp environment
+\lstnewenvironment{cpp}[1][]
+{
+\cppstyle
+\lstset{#1}
+}
+{}
+
+% cpp for external files
+\newcommand\cppexternal[2][]{{
+\cppstyle
+\lstinputlisting[#1]{#2}}}
+
+% cpp for inline
+\newcommand\cppinline[1]{{\pythonstyle\lstinline!#1!}}
+
+\newcommand\pythonstyle{\lstset{frame=tb,
+  language=Python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}}
+
+% Python environment
+\lstnewenvironment{python}[1][]
+{
+\pythonstyle
+\lstset{#1}
+}
+{}
+
+% Python for external files
+\newcommand\pythonexternal[2][]{{
+\pythonstyle
+\lstinputlisting[#1]{#2}}}
+
+% Python for inline
+\newcommand\pythoninline[1]{{\pythonstyle\lstinline!#1!}}
+
+\begin{document}
+
+\input{Inhalt/titlepage}
+
+\newpage
+
+\addcontentsline{toc}{section}{Table of contents}
+\tableofcontents
+
+\newpage
+
+\addcontentsline{toc}{section}{Figures}
+\listoffigures
+
+\newpage
+
+\input{Inhalt/Prototyping}
+
+\newpage
+
+\input{Inhalt/TechnicalConcept}
+
+\newpage
+
+\input{Inhalt/MCU}
+
+\newpage
+
+\input{Inhalt/hardwareinterfaces}
+
+\newpage
+
+% \input{Inhalt/UART}
+
+% \newpage
+
+\input{Inhalt/SIM7000e}
+
+\newpage
+
+\input{Inhalt/RYLR498}
+
+\newpage
+
+\input{Inhalt/RTC}
+
+\newpage
+
+\input{Inhalt/BatteryMonitoring}
+
+\newpage
+
+\input{Inhalt/MoistureSensor}
+
+\newpage
+
+\input{Inhalt/SoftwareArchitecture}
+
+\newpage
+
+\input{Inhalt/Beautify}
+
+\newpage
+
+\input{Inhalt/CloudService}
+
+\newpage
+
+\addcontentsline{toc}{section}{Literature}
+\printbibliography
+
+\end{document}

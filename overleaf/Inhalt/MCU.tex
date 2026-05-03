@@ -1,0 +1,81 @@
+\selectlanguage{american}
+\section{Microcontroller Unit - MCU}
+In our project we use different Microcontroller Units. Those include:
+\begin{itemize}
+    \item nRF52DK - nRF52832 x3
+    \item nRF52DK - nRF52840 x1
+\end{itemize}
+
+After a careful analysis of various microcontrollers, see table \ref{tab:comparison-microcontroller} and \ref{tab:power-consumtion-microcontroller}, we chose the nRF52832. The decision was based on several technical and functional criteria that met the specific requirements of our project:
+
+\begin{enumerate}
+    \item Low power consumption: The nRF52832 has very low power modes, such as 1.2µA in idle mode and 0.3µA in deep sleep mode. These features are critical for battery-powered applications that require long hours of operation.
+
+    \item First use of Zephyr: Support for the Zephyr RTOS was another key consideration. Zephyr provides a modern, flexible and resource-efficient platform that works well with the nRF52832 hardware. The integration of Zephyr allows us to benefit from the numerous drivers and middleware components and to use an efficient development environment.
+    
+    \item Powerful hardware: With its 64 MHz ARM Cortex M4 processor (with FPU), the microcontroller offers solid computing power for processing demanding sensor or control tasks. At the same time, up to 512 KB of Flash memory and 64 KB of RAM provide ample resources for complex firmware.
+    
+    \item Wide Range of Peripherals: The nRF52832 offers a wide range of peripherals such as SPI, TWI, I2C, PDM and a 12-bit ADC, enabling seamless integration with various external components.
+\end{enumerate}
+
+In summary, the nRF52832 was selected for its low power consumption, extensive wireless communication capabilities, integration with Zephyr, and versatile hardware specifications. These features make it an ideal choice for our project, which aims to provide an energy-efficient, secure and high-performance solution.
+\break
+\newline
+For the nodes in our system, we used the nRF52832 because its power efficiency and wireless communication capabilities make it ideal for battery-powered devices. Our gateway, on the other hand, is based on the nRF52840 because this microcontroller has two UART interfaces, which are necessary for communicating with multiple peripheral devices simultaneously.
+
+
+\begin{table} [H]
+    \centering
+    \begin{tabular}{|>{\centering\arraybackslash}p{0.12\linewidth}|>{\centering\arraybackslash}p{0.12\linewidth}|>{\centering\arraybackslash}p{0.12\linewidth}|>{\centering\arraybackslash}p{0.12\linewidth}|>{\raggedright\arraybackslash}p{0.12\linewidth}|>{\centering\arraybackslash}p{0.12\linewidth}|>{\centering\arraybackslash}p{0.1\linewidth}|} \hline 
+         Micro-controller&  Processor&  Clock frequency&  Memory&  Peripheral devices&  UART interface& Costs\\ \hline 
+         nRF52832&  64 MHz ARM Cortex-M4 with FPU&  64 MHz&  -512/256 KB Flash
+-64/32 KB RAM&  -SPI
+-TWI
+- I²C
+-I²S
+-PDM
+-QDEC
+-12-bit ADC
+-PWM
+-GPIO&  Yes (1 UART controller)& 5,48 €\\ \hline 
+         RP2040&  Dual-core ARM Cortex-M0+&  Up to 133 MHz&  - 264 KB SRAM
+- External Flash (QSPI)&  - I²C (2)
+-SPI
+-PWM
+-ADC
+-GPIO
+-PIO
+-RTC
+-DMA&  Yes (2 UART controllers)& 1,75 €\\ \hline 
+         ESP32-H2&  RISC-V 32-bit single-core&  Up to 96 MHz&  - 128 KB ROM 
+- 320 KB SRAM 
+- 2/4 MB Flash&  - I²C (2)
+-I²S
+-SPI
+-PWM
+-ADC
+-GPIO
+-CAN
+-MCPWM&  Yes (2 UART controllers)& 11,07 €\\ \hline
+    \end{tabular}
+    \caption{Microcontroller comparison}
+    \label{tab:comparison-microcontroller}
+\end{table}
+
+
+\begin{table} [H]
+    \centering
+    \begin{tabular}{|l|l|l|} \hline 
+         Microcontroller&  Operating mode& Power consumption\\ \hline 
+         nRF52832&  Idle& 1.2 µA\\ \hline 
+         &  Deep sleep& 0.3 µA\\ \hline 
+         &  RAM-Retention sleep mode& 20 nA per 4 KB\\ \hline 
+         RP2040&  Dormant mode (light sleep mode)& approx. 1.3 mA\\ \hline 
+         &  Deep Sleep (minimum function)& a few µA (depending on configuration)\\ \hline 
+ ESP32-H2& Modem sleep (with active WLAN)&approx. 3 mA\\ \hline 
+ & Light sleep&<1 mA\\ \hline 
+ & Deep sleep&approx. 7 µA\\ \hline
+    \end{tabular}
+    \caption{Microcontroller power consumption comparison}
+    \label{tab:power-consumtion-microcontroller}
+\end{table}

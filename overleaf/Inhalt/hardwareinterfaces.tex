@@ -1,0 +1,565 @@
+\section{Hardware Interfaces}
+
+In this section we discuss the architecture of shared libraries and other software parts.
+As we have multiple different projects and do not follow the best-practices in terms of project architecture, we need to copy the version of the library to each project.
+This could be improved by following best practices and defining and using zephyr-aware-libraries. This would increase the tooling complexity, as we would need to outsource each project in separate git repositories, manage a individual west workspace and would need to reconfigure the different Visual Studio Code extensions. Thus for a project of roughly 3 months we decided to stay with the copy and paste approach. 
+
+\subsection{GPIO-Abstraction}
+
+We use \verb|devicetree| to enable and configure General Purpose Input Output (GPIO) behavior.
+We add a \verb|custom_gpio| section and define the different pins we want to use. 
+
+\begin{cpp}[caption={Definition of GPIO-Pins in Devicetree}]
+custom_gpios {
+
+    compatible = "gpio-keys";
+
+    uart0_rx: uart0_rx {
+        gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
+        label = "UART0 RX";
+    };
+
+    uart1_rx: uart1_rx {
+        gpios = <&gpio1 2 0>;
+        label = "UART1 RX";
+    };
+
+    adc_converter_transistor: adc_converter_transistor {
+        gpios = <&gpio0 19 GPIO_ACTIVE_HIGH>;
+        label = "ADC Converter Transistor";
+    };
+
+    lora_reset: lora_reset {
+        gpios = <&gpio0 21 GPIO_ACTIVE_HIGH>;
+        label = "Lora reset";
+    };
+
+    sim7000e_power: sim7000e_0 {
+        gpios = <&gpio1 4 GPIO_ACTIVE_HIGH>;
+        label = "SIM7000E Power Pin";
+    };
+
+    sim7000e_dtr: sim7000e_1 {
+        gpios = <&gpio1 3 GPIO_ACTIVE_HIGH>;
+        label = "SIM7000E DTR Pin";
+    };
+};
+\end{cpp}
+
+We then define aliases for each pin, in order to access the definition in our GPIO-Abstraction later.
+Each pin can then be accessed using the Macro \cppinline{GPIO_DT_SPEC_GET_OR(DT_ALIAS(pin_alias), gpios, {0});}.
+First we need to initialize each pin in the function \cppinline{gpio_result init()} and define each pin as a output.
+Then we can use the functions \cppinline{gpio_result set(gpio_pin pin, gpio_state value)} to set the different pins.
+
+We used this functional and static approach as we only have a limited number of pins, and the function of each pin does not change during runtime.
+
+There are multiple different improvements that could be made to this implementation:
+
+\begin{itemize}
+    \item Adding support for reading digital values \newline{}Currently we only implemented setting digital values. Reading digital values is not required in the current application.
+    \item Adding interrupt support \newline{}In the UART-Abstraction we implemented a GPIO-Interrupt. This could also be implemented in the GPIO-Abstraction.
+    \item Iterative enumerative initialization \newline{} Instead of accessing the different pins individually using the alias, we could query all pins defined in the \verb|custom_gpio| section and configure them in a programatic way.
+\end{itemize}
+ 
+\subsection{ADC Handling}
+
+The ADC configuration utilizes Device Tree to define ADC channels, configuring gain, reference, acquisition time, input positive pin, and resolution for each channel.
+
+\begin{cpp}[caption={Devicetree ADC-Configuration}]
+&adc {
+    status = "okay";
+    #address-cells = <1>;
+    #size-cells = <0>;
+
+    channel@4 {
+        reg = <4>;
+        zephyr,gain = "ADC_GAIN_1_6";
+        zephyr,reference = "ADC_REF_INTERNAL";
+        zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+        zephyr,input-positive = <NRF_SAADC_AIN4>; // P0.28
+        zephyr,resolution = <12>;
+    };
+    channel@5 {
+        reg = <5>;
+        zephyr,gain = "ADC_GAIN_1_6";
+        zephyr,reference = "ADC_REF_INTERNAL";
+        zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+        zephyr,input-positive = <NRF_SAADC_AIN5>;  // P0.29
+        zephyr,resolution = <12>;
+    };
+};
+
+/{
+    zephyr,user {
+        io-channels = <&adc 4>, <&adc 5>;
+    };
+}
+\end{cpp}
+
+The \cppinline{setup()} function initializes all ADC channels, checking if each channel is ready before configuring. 
+
+The function \cppinline{read_channel()} function reads a single channel and converts raw ADC values to millivolts.
+It also temporarily activates the ADC converter transistor when reading channel 1. 
+This is done to disconnect the Node/Gateway from the Hardware and allows for load free voltage measurement.
+
+\begin{cpp}[caption={Implementation of reading a analog voltage}]
+void read_channel(int index, int32_t &voltage)
+{
+    int err;
+
+    (void)adc_sequence_init_dt(&adc_channels[index], &sequence);
+
+    if (index == 1)
+    {
+        (void)gpio::set(gpio::ADC_CONVERTER_TRANSISTOR, gpio::HIGH);
+    }
+
+    err = adc_read_dt(&adc_channels[index], &sequence);
+
+    if (index == 1)
+    {
+        (void)gpio::set(gpio::ADC_CONVERTER_TRANSISTOR, gpio::LOW);
+    }
+
+    if (err < 0)
+    {
+        LOG_ERR("Could not read (%d)", err);
+    }
+
+    /*
+     * If using differential mode, the 16 bit value
+     * in the ADC sample buffer should be a signed 2's
+     * complement value.
+     */
+    if (adc_channels[index].channel_cfg.differential)
+    {
+        voltage = (int32_t)((int16_t)buf);
+    }
+    else
+    {
+        voltage = (int32_t)buf;
+    }
+    
+    err = adc_raw_to_millivolts_dt(&adc_channels[index],
+                                   &voltage);
+    /* conversion to mV may not be supported, skip if not */
+    if (err < 0)
+    {
+        LOG_ERR(" (value in mV not available)");
+        voltage = 0;
+    }
+}
+\end{cpp}
+
+ 
+\subsection{I²C-Implementation}
+
+We built a clean abstraction layer for interacting with I²C devices. In our project we communicate with Real-Time Clocks using this serial bus. We did so in different ways.
+
+\begin{itemize}
+    \item Writing the driver by ourself (DS1307)
+    \item Using a zephyr driver (DS3231)
+\end{itemize}
+
+We use the 7-Bit addressing scheme for our modules.
+
+The I²C bus-specification stipulates the ways we can interact with a device as a master.
+
+\begin{enumerate}
+    \item Reading from a device
+    \item Writing to a device
+\end{enumerate}
+
+In Figure \ref{fig:iic-read-write-process} we can see the process or reading and writing to a device. The bit with the \verb|white| background are sent by the I²C-Master, the bit with the \verb|grey| background are sent by the I²C-Slave.
+We first send the start condition, then we address the I²C-Slave using the predetermined address. 
+After that we specify if we want to read (1) from or write (0) to that I²C-Slave. 
+The I²C-Slave then acknowledges this by pulling the data line high (we have a pull down resistor connected in case the device is not present).
+We can then start to send or receive the data acknowledging every byte. The acknowledge is either sent by the I²C-Slave (Writing) or I²C-Master (Reading).
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/IIC/IIC-Communication-RW.png}
+    \caption{Process of reading/writing from/to a device}
+    \label{fig:iic-read-write-process}
+\end{figure}
+
+Now we know how we can transmit raw data. This alone is not enough. We need to specify the protocol we are using. 
+A generic protocol is reading/writing to different registers of a device. Here we first need to write the address of a register to the I²C-Slave and immediately afterwards read from or write to that I²C-Slave.
+
+The implementation for that looks like this:
+
+\begin{cpp}
+int write_read(uint8_t *write_data, size_t write_len, uint8_t *read_data, size_t read_len, uint8_t addr){
+    int ret = write(write_data, write_len, addr);
+    if (ret < 0)
+    {
+        // Handle error
+        LOG_ERR("I2C write failed: %d, [addr=%x]", ret, addr);
+        return ret;
+    }
+
+    ret = read(read_data, read_len, addr);
+    if (ret < 0)
+    {
+        // Handle error
+        LOG_ERR("I2C read failed: %d, [addr=%x]", ret, addr);
+        return ret;
+    }
+
+    return ret;
+}
+
+int write_write(uint8_t *write_data1, size_t write_len1, uint8_t *write_data2, size_t write_len2, uint8_t addr){
+    int ret = write(write_data1, write_len1, addr);
+    if (ret < 0)
+    {
+        // Handle error
+        LOG_ERR("I2C write failed: %d, [addr=%x]", ret, addr);
+        return ret;
+    }
+
+    ret = write(write_data2, write_len2, addr);
+    if (ret < 0)
+    {
+        // Handle error
+        LOG_ERR("I2C write failed: %d, [addr=%x]", ret, addr);
+        return ret;
+    }
+
+    return ret;
+}
+\end{cpp}
+
+\subsection{Universal Asynchronous Receiver Transmitter (UART)}
+
+In our project we use Universal Asynchronous Receiver Transmitter (UART) to communicate with the SIM7000E and RYLR498 modules.
+
+\subsubsection{Requirements}
+
+After thinking about the various requirements for the UART interface, we have formulated various requirements for the UART interface, which are shown below.
+
+\begin{table} [h!]
+    \centering
+    \begin{tabular}{|>{\centering\arraybackslash}p{0.3\linewidth}|>{\centering\arraybackslash}p{0.7\linewidth}|} \hline 
+         Requirement& Description\\ \hline 
+         Use Zephyr-RTOS driver& We want to use the official Zephyr driver. This allows us to use a well tested and documented standard interface.\\ \hline 
+         Read from the interface.& Reading characters from the interface.
+Reading in messages until '\textbackslash n' or a defined character limit.\\ \hline 
+         Write to the interface.& Write arbitrary character data to the interface.\\ \hline 
+         Non-Blocking& Allow the scheduler to run other threads / tasks, while a thread waits for UART data.\\ \hline 
+         Fast runtime& Do not perform unnecesarry copying of data in the interrupt handler.\\ \hline 
+ Low power consumption&Allow the application to send the UART-Hardware-Module to sleep.\\ \hline 
+ Wake-up on data&When the module is sleeping and we detect traffic on the bus (pulling dataline low) we resume the UART-Hardware-Module.\\ \hline 
+ Logging&Log recieved data from the bus for debugging using the Zephyr-Logging-Solution.\\ \hline 
+ Static memory allocation&Do not perform dynamic memory allocation (malloc/free).\\ \hline 
+ Runtime baud-rate-configuration&Allow the application to configure the baud rate during runtime.\\ \hline
+    \end{tabular}
+    \caption{Requirements for the UART-Abstraction}
+    \label{tab:requirements_uart_interface}
+\end{table}
+
+\subsubsection{Implementation}
+
+The following section discusses interesting aspects of the UART implementation.
+
+\textbf{UART interrupt} \\
+We want to handle UART communication in a interrupt manner. For this to work, we need to enable the interrupt driver in the configuration using \\ \cppinline{CONFIG_UART_INTERRUPT_DRIVEN}.
+This enables us to receive data in a interrupt and send data using a blocking function. When receiving data we follow the flow as described in figure \ref{fig:uart_interrupt_handler}. 
+First we read in the received character. 
+If this character would cause a overflow in the ring buffer, we drop it and generate a error log. 
+If the current message is complete (either \textbackslash n is reached or the max length of a message is reached), we generate an message and add it to the queue.
+If the queue is full we drop that message an generate a error log.
+The queue then handles passing the message to the application.
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/power_testing_uart/uart_interrupt_handler.png}
+    \caption{UART interrupt handler}
+    \label{fig:uart_interrupt_handler}
+\end{figure}
+In the following is the whole implementation.
+\begin{cpp}
+// maximum size of a message
+#define UART_MAX_MESSAGE_SIZE 128
+// size of the buffer where we store the incoming messages
+#define UART_MSG_BUFFER_SIZE 1024
+
+// this is the buffer where we store the incoming messages
+char uart_msg_ring_buffer[UART_MSG_BUFFER_SIZE];
+// this indicates the occupied space in the buffer
+std::size_t uart_msg_buffer_left = 0;
+// this indicates the next position we will write to
+std::size_t uart_msg_buffer_right = 0;
+// indicates the space occupied in the buffer
+std::size_t uart_buffer_filled = 0;
+// this indicates the start of the current message
+std::size_t uart_current_message = 0;
+// this indicates the size of the current message
+std::size_t uart_current_message_size = 0;
+// this is the queue where we transmitt messages to the application
+K_MSGQ_DEFINE(uart0_msgq_rx, sizeof(uart_msg), 128, 4);
+
+// finalize the message in the buffer
+uart_msg finalize_msg_in_buffer()
+{
+    uart_msg msg{uart_current_message, uart_current_message_size, uart_msg_buffer_right};
+    uart_current_message = uart_msg_buffer_right;
+    uart_current_message_size = 0;
+    return msg;
+}
+
+// callback function for the uart device
+// this function is called when a new character is received
+// it checks if the buffer is full, if not it adds the character to the buffer
+// if a newline character is received, it finalizes the message and puts it in the message queue
+void uart_cb(const struct device *dev, void *user_data)
+{
+
+    if (!uart_irq_update(dev))
+    {
+        return;
+    }
+
+    if (!uart_irq_rx_ready(dev))
+    {
+        return;
+    }
+
+    uint8_t c;
+
+    /* read until FIFO empty */
+    while (uart_fifo_read(dev, &c, 1) == 1)
+    {
+
+        // check if the buffer is full
+        if (uart_buffer_filled == UART_MSG_BUFFER_SIZE)
+        {
+            LOG_ERR("RX buffer overflow, check if you want to increase the buffer size");
+            // reset the buffer discarding the last message
+
+            uart_msg_buffer_right = (uart_msg_buffer_right - uart_current_message_size) % UART_MSG_BUFFER_SIZE;
+            uart_buffer_filled -= uart_current_message_size;
+            uart_current_message_size = 0;
+
+            return;
+        }
+
+        // add the character to the buffer
+        uart_msg_ring_buffer[uart_msg_buffer_right] = c;
+        uart_msg_buffer_right = (uart_msg_buffer_right + 1) % UART_MSG_BUFFER_SIZE;
+        uart_current_message_size++;
+        uart_buffer_filled++;
+
+        // check if we have received a newline character
+        if (c == '\n' || uart_current_message_size > UART_MAX_MESSAGE_SIZE || uart_buffer_filled == UART_MSG_BUFFER_SIZE)
+        {
+            uart_msg msg = finalize_msg_in_buffer();
+
+            // if queue is full, drop the message
+            if (k_msgq_put(&uart0_msgq_rx, &msg, K_NO_WAIT) == -EAGAIN)
+            {
+                LOG_ERR("RX message dropped");
+                free_msg_in_buffer(msg);
+            }
+        }
+    }
+}
+\end{cpp}
+
+
+\textbf{Passing messages to the Application} \\
+In order to satisfy the requirements 'Non-Blocking', 'Fast runtime' and 'Static memory allocation', the implementation uses a queue and ring buffer in combination. 
+
+A Queue in Zephyr is a kernel object that implements a traditional queue, allowing threads and ISRs to add and remove data items of any size. \cite{ZEPHYR_QUEUE}
+
+In the ring buffer we store characters received in the UART-Interrupt handler.
+When we encounter either the message length limit or a newline character we generate a item for the queue. The item contains information about start, size and end of a message in the ring buffer. This is space is then blocked from further usage until the message is passed to the application. During a read the characters are appended to the string provided by the application, and the space free'd reassigned to the ring buffer. The implementation is as follows:
+
+\begin{cpp}
+// free the message in the buffer
+void free_msg_in_buffer(uart_msg msg)
+{
+    std::size_t start = msg.start;
+    std::size_t size = msg.size;
+    if (start != uart_msg_buffer_left)
+    {
+        return;
+    }
+
+    uart_msg_buffer_left = (uart_msg_buffer_left + size) % UART_MSG_BUFFER_SIZE;
+    uart_buffer_filled -= size;
+}
+
+read_result uart_read(std::string &response, k_timeout_t timeout)
+{
+    if (!is_initialized)
+    {
+        LOG_ERR("UART device not initialized!");
+        return read_result::UART_READ_ERROR;
+    }
+
+    uart_msg msg{0, 0};
+    std::string _response = "";
+
+    if (k_msgq_get(&uart0_msgq_rx, &msg, timeout) == 0)
+    {
+        // LOG_INF("MSG: [start=%d] [end=%d] [size=%d]", msg.start, msg.end, msg.size);
+        if (msg.start < msg.end)
+        {
+            _response = std::string(uart_msg_ring_buffer + msg.start, uart_msg_ring_buffer + msg.end);
+        }
+        else
+        {
+            _response = std::string(uart_msg_ring_buffer + msg.start, uart_msg_ring_buffer + UART_MSG_BUFFER_SIZE) + std::string(uart_msg_ring_buffer, uart_msg_ring_buffer + msg.end);
+        }
+
+        free_msg_in_buffer(msg);
+
+        LOG_INF("RX: %s", escape_response(_response).c_str());
+
+        response += _response;
+
+        return read_result::UART_READ_OK;
+    }
+
+    if (K_TIMEOUT_EQ(timeout, K_FOREVER))
+    {
+    }
+
+    return read_result::UART_READ_TIMEOUT;
+}
+\end{cpp}
+
+\textbf{Configuration} \\
+As we want to re-configure the baud rate of  SIM7000E and RYLR498 during runtime (see limitations) we need to reconfigure the zephyr driver. The support for this operation can be enabled using the \cppinline{CONFIG_UART_USE_RUNTIME_CONFIGURE}-Kconfig option.
+The actual changing process can be archived by first getting the current configuration of the zephyr driver using \cppinline{struct uart_config get(const struct device * dev, struct uart_config * cfg)}, changing the baudrate in the recieved struct and then passing that struct to the function \cppinline{uart_configure(const struct device * dev, struct uart_config * cfg)}. This then allows us to change the baud rate.
+
+\textbf{Suspending the module} \\
+We have the unusual requirements, that we do not want to consume large amounts of power but also want to be able to receive data actively. In order for this to work we have decided to implement it as described in figure \ref{fig:setting_module_to_sleep_flow}. 
+First we need to change the baud rate to 9600 or lower. This is necessary because the driver needs to be reinitialized, from the GPIO-Interrupt which takes time.
+Then we can use the device-power-management-API from Zephyr to suspend the driver, and attach a falling-edge interrupt to the UART-Rx-Pin. This interrupt resumes the device and removes itself from the UART-Rx-Pin.
+The driver then resumes normal operation, re-initializes itself, reads the data on the bus and passes it to the application.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/power_testing_uart/setting_module_to_sleep_flow.png}
+    \caption{Flow for enabling low power UART sleep mode}
+    \label{fig:setting_module_to_sleep_flow}
+\end{figure}
+
+The Implementation for sleeping / waking up the UART-Hardware-Interface is as follows:
+
+\begin{cpp}
+/* UART-Rx-Pin interrupt callback */
+static void uart_interrupt(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
+{
+    int rc;
+    rc = wakeup();
+}
+
+int sleep()
+{
+    int rc;
+
+    rc = pm_device_action_run(uart, PM_DEVICE_ACTION_SUSPEND);
+    if (rc < 0)
+    {
+        LOG_ERR("Could not suspend UART (%d)\n", rc);
+        return rc;
+    }
+
+    is_sleeping = true;
+
+    rc = gpio_add_callback(uart0_rx_gpio.port, &uart_gpio_cb_data);
+    if (rc < 0)
+    {
+        LOG_ERR("Could not add callback on uart0_rx_gpio GPIO (%d)\n", rc);
+        return rc;
+    }
+
+    return 0;
+}
+
+int wakeup()
+{
+    int rc = pm_device_action_run(uart, PM_DEVICE_ACTION_RESUME);
+    if (rc < 0)
+    {
+        LOG_ERR("Could not resume UART (%d)\n", rc);
+        return rc;
+    }
+
+    rc = gpio_remove_callback(uart0_rx_gpio.port, &uart_gpio_cb_data);
+
+    is_sleeping = false;
+    return rc;
+}
+\end{cpp}
+
+\subsubsection{Power-Consumption}
+
+We tested the different power states of the UART-Hardware-Device. 
+Me measured the power consumption using the Nordic \href{https://www.nordicsemi.com/Products/Development-hardware/Power-Profiler-Kit-2}{Power Profiler Kit II} (PPK2) using the nRF52832 and nRF52840.
+We prepared and connected the device as described in the documentation of Zephyr for the 'Ampere meter'-Mode.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/NRF52_PPK2_UART_POWER.jpg}
+    \caption{nRF52840 UART power consumtion test setup}
+    \label{fig:nRF52840-uart-power-comsumption-test-setup}
+\end{figure}
+
+In the test setup (figure \ref{fig:nRF52840-uart-power-comsumption-test-setup}) is pictured how we connected the PPK2 and a USB-to-TTL adapter for measuring the power consumption during active UART communication and no UART communication.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/power_testing_uart/power_comsumption_test_code.png}
+    \caption{UART power consumption test code}
+    \label{uart-power-comsumption-test-code}
+\end{figure}
+
+After we initialize the UART-Driver we select a baud rate of 9600 (known limitation).
+We test by first sending either 'sleep\textbackslash r\textbackslash n' or 'wakeup\textbackslash r\textbackslash n' to the device using the USB-to-TTL Adapter. This either enables or disables putting the UART-Hardware-Module to sleep (figure \ref{uart-power-comsumption-test-code}). Now we can use these simple commands to test the power consumption. The command 'sleep' sets the module to sleep-mode and the command 'wakeup' sets the module to awake-mode.
+The boards power management is managed by the Idle thread in Zephyr. Lower power consumption could be archived by powering down the board and waking up on a timer. This method does not allow to "wakeup" when data is sent on the UART-Interface as the whole module needs to be reinitialized.
+
+During idle we have on average a power requirement of 38.79 μA in sleep-mode (figure \ref{fig:uart_sleep_idle_power_comsumption}) and 829.84 μA in awake-mode (figure \ref{fig:uart_awake_idle_power_comsumption}).
+
+When receiving sample data consisting of 100 characters, we have a average power consumption of 1.16 mA over 113.5 ms in sleep-mode (figure  \ref{fig:uart_sleep_msg_test_power_comsumption_rx_only}) and 1.13 mA over 108.2 ms in awake-mode (figure  
+\ref{fig:uart_awake_msg_test_power_comsumption_rx_only}).
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/power_testing_uart/uart_sleep_msg_test_power_comsumption_rx_only.png}
+    \caption{Power consumption during reception while in sleep-mode}
+    \label{fig:uart_sleep_msg_test_power_comsumption_rx_only}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/power_testing_uart/uart_awake_msg_test_power_comsumption_rx_only.png}
+    \caption{Power consumption during reception while awake-mode}
+    \label{fig:uart_awake_msg_test_power_comsumption_rx_only}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/power_testing_uart/uart_sleep_idle_power_comsumption.png}
+    \caption{Power consumption in idle while in sleep-mode}
+    \label{fig:uart_sleep_idle_power_comsumption}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/power_testing_uart/uart_awake_idle_power_comsumption.png}
+    \caption{Power consumption in idle while in awake-mode}
+    \label{fig:uart_awake_idle_power_comsumption}
+\end{figure}
+
+\subsubsection{Limitations}
+The following limitations were found during the implementation of the UART-Abstraction.
+
+\begin{itemize}
+    \item Wake-up on Traffic\newline{}
+    When setting the module to sleep, we implement a interrupt to resume operation. The re-initialization of the UART-Hardware-Module / Driver in Zephyr takes time. This  means that we can only wake from sleep and receive data uncorrupted when transferring data at a baud rate of 9600 or lower.
+    \item Copy of data in the Application Thread\newline{}
+    When we pass data to the application we append data to the provided string object. in order for this to happen we copy the data.
+\end{itemize}

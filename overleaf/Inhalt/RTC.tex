@@ -1,0 +1,293 @@
+\selectlanguage{american}
+\section{Real Time Clocks}
+In this section we discuss the implementation and choice of a Real Time Clock (RTC).
+\subsection{Selection}
+We selected the DS1307 and DS3231 for use in our project. The clocks have a different feature set and as such can perform different operations.
+
+\subsection{DS1307}
+The DS1307 is selected for our gateway-node it can only track time.
+The operation/communication voltage of the DS1307 is 5V. This requires the use of a level shifter, depending on the operation voltage of our boards. 
+The clock uses I²C for communication and allows us to set and read time registers.
+The I²C-base-address of the clock is 0x68 and operates on standard speed of 100kHz. 
+The DS1307 registers are described in figure \ref{fig:DS1307_registers}. The values are encoded in binary coded decimal (BCD).
+The conversion is handled by the function \cppinline{struct tm convert_time_data_to_tm(uint8_t *time_data)}. It decodes the raw data of the single registers to integer values, converts and stores them in the struct tm format. 
+
+\begin{cpp}[caption={Converting DS1307 register values to struct tm data}]
+// Function to convert BCD to decimal
+uint8_t bcd_to_dec(uint8_t bcd)
+{
+    return ((bcd >> 4) * 10) + (bcd & 0x0F);
+}
+
+// Function to convert the time data from the DS1307 to struct tm
+struct tm convert_time_data_to_tm(uint8_t *time_data)
+{
+    struct tm time_info;
+
+    // Convert the time_data to struct tm
+    time_info.tm_sec = bcd_to_dec(time_data[0] & 0x7F); // Mask to get the lower 7 bits
+    time_info.tm_min = bcd_to_dec(time_data[1] & 0x7F);
+    time_info.tm_hour = bcd_to_dec(time_data[2] & 0x3F); // Mask to get the lower 6 bits
+    time_info.tm_mday = bcd_to_dec(time_data[4] & 0x3F);
+    time_info.tm_mon = bcd_to_dec(time_data[5] & 0x1F) - 1; // Month is 0-11
+    time_info.tm_year = bcd_to_dec(time_data[6]) + 100;     // Year since 1900
+
+    // Set tm_wday (day of the week) based on the DS1307 format
+    time_info.tm_wday = ((bcd_to_dec(time_data[3]) - 1) % 7); // Convert to 0-6 (0 = Sunday)
+
+    // Set tm_isdst to -1 to indicate that the DST information is not available
+    time_info.tm_isdst = -1;
+
+    return time_info;
+}
+\end{cpp}
+
+We also implemented a function to get the current time using our I²C-Abstraction layer. We first need to write the register from which we want to start reading (0x00). After that we can read the 7 bytes of raw time data into an array and convert that to a struct tm using the function described previously.
+
+\begin{cpp}
+// Function to get the current time from the DS1307
+struct tm get_current_time()
+{
+    uint8_t write_data[1] = {0x00};
+
+    uint8_t time_data[7];
+
+    int ret = iic::bus::write_read(write_data, sizeof(write_data), time_data, sizeof(time_data), 0x68);
+
+    if (ret < 0)
+    {
+        // Handle error
+        LOG_ERR("I2C write/read failed: %d", ret);
+        return (struct tm){0};
+    }
+
+    struct tm time = convert_time_data_to_tm(time_data);
+    return time;
+}
+\end{cpp}
+
+For setting the time we first employed a MEGA2560, as we thought we would only need to set the values once. We soon found out that this was not the case, as we overwrote the time during testing or lost battery contact during transportation.
+Thus we implemented setting the time in the function \cppinline{int set_time(struct tm time)}. In this function we first convert the time into the register values and then write them to the clock.
+
+\begin{cpp}
+// Function to set the specified time to the DS1307
+int set_time(struct tm time)
+{
+    // Convert the struct tm to time data for the DS1307
+    uint8_t write_data[8] = {
+        0x00,
+        dec_to_bcd(time.tm_sec),
+        dec_to_bcd(time.tm_min),
+        (uint8_t)(dec_to_bcd((uint8_t)time.tm_hour) | 0b01000000), // Set the 24-hour mode
+        (uint8_t)(time.tm_wday + 1),                               // Convert to 1-7 (1 = Sunday)
+        dec_to_bcd(time.tm_mday),
+        dec_to_bcd(time.tm_mon + 1),
+        dec_to_bcd(time.tm_year - 100)};
+
+    // execute the write/write operation
+    int ret = iic::bus::write(write_data, sizeof(write_data), 0x68);
+
+    if (ret < 0)
+    {
+        // Handle error
+        LOG_ERR("I2C write/write failed: %d", ret);
+        return ret;
+    }
+
+    return 0;
+}
+\end{cpp}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/rtc/rtc_ds1307_registers.png}
+    \caption{DS1307 register description\cite{DS1307_DATASHEET}}
+    \label{fig:DS1307_registers}
+\end{figure}
+
+
+
+\subsection{DS3231}
+
+The DS3231 is selected for our LoRa-sensor-nodes. It functions as a clock and an alarm. The alarm is necessary to wake up the node via a watchdog pin on a specified time point.  The DS3231 also operates on 5 V which resulted in the nodes also needing a level shifter. The connection interface is also I²C. A big difference to our use of the DS1307 is the use of the on-board Zephyr driver for more complex tasks like setting the alarm or initializing the rtc. To use the rtc we first added it using the respective device type in our overlay file \ref{fig:devicetree_ds3231_node}. The initialization of the rtc will be automatically handled by Zephyr once it registers the device through the name of the rtc set in compatible. After this we were able to use the rtc in our code. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{Bilder/rtc/Devicetree rtc node.png}
+    \caption{Devicetree overlay DS3231, node}
+    \label{fig:devicetree_ds3231_node}
+\end{figure}
+
+\subsubsection{Setting the time}
+
+To set the time on our RTC, we referred to the sample code provided by the driver developer and analyzed the driver's functions at a lower level in combination with the data sheet.
+The variable \cppinline{CURRENT_UNIX_TIMESTAMP} represents the time as a UNIX timestamp, which we want to set to the RTC. This variable is assigned during build time by CMake. More details on this process are provided in the next section.
+
+\begin{cpp}[caption={custom set\_date\_time function to set the current time during build}]
+    static int set_date_time(const struct device *rtc)
+{
+    uint32_t syncclock_Hz = maxim_ds3231_syncclock_frequency(rtc);
+    uint32_t syncclock = maxim_ds3231_read_syncclock(rtc);
+    struct sys_notify notify;
+    struct k_poll_signal ss;
+    struct k_poll_event sevt = K_POLL_EVENT_INITIALIZER(K_POLL_TYPE_SIGNAL,
+                                                        K_POLL_MODE_NOTIFY_ONLY,
+                                                        &ss);
+    int rc = 0;
+
+    struct maxim_ds3231_syncpoint sp = {
+        .rtc = {
+            .tv_sec = CURRENT_UNIX_TIMESTAMP,
+            .tv_nsec = (uint64_t)NSEC_PER_SEC * syncclock / syncclock_Hz,
+        },
+        .syncclock = syncclock,
+    };
+
+    uint32_t t0 = k_uptime_get_32();
+
+    int rc_set = 0;
+    rc_set = maxim_ds3231_set(rtc, &sp, &notify);
+
+    LOG_INF("Set %s at %u ms past: %d\n", format_time(sp.rtc.tv_sec, sp.rtc.tv_nsec),
+            syncclock, rc);
+
+    /* Wait for the set to complete */
+    rc = k_poll(&sevt, 1, K_FOREVER);
+
+    if (rc_set < 0)
+    {
+        LOG_ERR("Failed to set time: %d\n", rc_set);
+        return rc_set;
+    }
+
+    uint32_t t1 = k_uptime_get_32();
+    /* Delay so log messages from sync can complete */
+	k_sleep(K_MSEC(100));
+	LOG_INF("Synchronize final: %d %d in %u ms\n", rc, ss.result, t1 - t0);
+
+	rc = maxim_ds3231_get_syncpoint(rtc, &sp);
+	LOG_INF("wrote sync %d: %u %u at %u\n", rc,
+	       (uint32_t)sp.rtc.tv_sec, (uint32_t)sp.rtc.tv_nsec,
+	       sp.syncclock);
+    return 0;
+}
+\end{cpp}
+
+\subsubsection{Setting the \textbf{current} time}
+A big problem we encountered during the first use of the rtc was that the time set by the manufacturer was far in the future of the year 2036 to fix this problem we researched ways to set the current time to the rtc. During this time, we tried different approaches like setting the time via Bluetooth using the nrf52840 from our gateway which worked but was a bit clunky and not optimal for our use case. This is why we finally decided to set the rtc time for our nodes using cmake and a custom kconfig setting in Zephyr. Cmake is able to fill in a custom defined variable with the current UNIX timestamp during build, this allowed us to set the clock using this UNIX timestamp. To only flash the current time when needed we added a custom kconfig setting to Zephyr called \cppinline{FLASH_CURRENT_TIMESTAMP}. This allowed us to only flash the current time to a node when requested via the config setting. 
+
+\begin{cpp}[caption={check if the flag is set during node boot-up}]
+    // RTC time flashing based on kconfig
+#ifdef CONFIG_FLASH_CURRENT_TIMESTAMP
+    set_date_time(rtc);
+#endif
+\end{cpp}
+
+\begin{cpp}[caption={kconfig code to create the flag}]
+      config FLASH_CURRENT_TIMESTAMP
+    bool "Current Unix timestamp"
+    default n
+    help
+      If y, flashes the current timestamp in unix format to the device using cmake.
+\end{cpp}
+
+\subsubsection{Enabling the alarm}
+
+To enable the board to wake up using the RTC alarm, we reconfigured the SQW/INT pin to output a high signal instead of the default square wave pattern when the alarm is triggered, and also enabled Alarm1. Alarm1 has a second-based precision which we opted into to enable the Semcon showcase where we sent a message every minute instead of a more use case specific time interval. This required researching the data sheet to identify and configure the appropriate registers for our specific use case. To interact with the control register, we used the driver helper function.  
+
+\begin{cpp}
+    void enable_alarm_interrupt(const struct device *rtc)
+{
+    int ret;
+    uint8_t ctrl_reg;
+
+
+    ctrl_reg = 0;
+
+    // Enable the Alarm1 interrupt (A1IE bit) and the INTCN bit
+    ctrl_reg |= BIT(0); // A1IE is bit 0 in the control register (for second precision)
+    ctrl_reg |= BIT(2); // INTCN is bit 2 in the control register
+
+    // Write the new control register value
+    ret = maxim_ds3231_ctrl_update(rtc, ctrl_reg, 0);
+    if (ret < 0)
+    {
+        LOG_ERR("Failed to enable Alarm1 interrupt: %d", ret);
+        return;
+    }
+    else
+    {
+        LOG_INF("Alarm interrupt enabled.");
+    }
+
+    /* Show the DS3231 ctrl and ctrl_stat register values */
+    LOG_INF("DS3231 ctrl %02x ; ctrl_stat %02x\n",
+            maxim_ds3231_ctrl_update(rtc, 0, 0),
+            maxim_ds3231_stat_update(rtc, 0, 0));
+}
+\end{cpp}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{Bilder/rtc/ds3231_registers.png}
+    \caption{DS3231 registers}
+    \label{fig:ds3231_registers}
+\end{figure}
+
+\subsubsection{Setting the alarm}
+
+We enabled the alarm and then configured the time to wake up the board using the RTC. To do this, we created an alarm structure that defines the wake-up time and set it using the driver's function.
+We built the alarm structure by first obtaining the current time and then calculating the next transmission window for the node. This calculation used the offset assigned to each node ID and followed the formula:
+\[
+\text{min\_alarm.time} = \text{raw\_time} + (\text{offset} + 60 - (\text{raw\_time} \mod{} 60))
+\]
+To ensure that the alarm triggers every minute when the seconds match, we set the flags in the alarm structure to ignore days, hours, and minutes.
+This allowed the alarm to fire based on the seconds matching, achieving the desired behavior of triggering once every minute.
+
+\begin{cpp}[caption={set alarm based on node offset}]
+void configure_ds3231_alarm(const struct device *rtc, int NODE_ADDRESS)
+{
+    struct maxim_ds3231_alarm min_alarm;
+    struct maxim_ds3231_alarm reset_alarm;
+    int rc = 0;
+    uint32_t now = 0;
+
+    rc = counter_get_value(rtc, &now);
+
+    time_t raw_time = now;
+
+    if (rc < 0)
+    {
+        LOG_ERR("Failed to get current time: %d\n", rc);
+        return;
+    }
+
+    int offset = 0;
+
+    switch (NODE_ADDRESS)
+    {
+    case 1:
+        offset = 15;
+        break;
+    case 2:
+        offset = 30;
+        break;
+    case 3:
+        offset = 45;
+        break;
+    case 4:
+        offset = 0;
+        break;
+    default:
+        LOG_ERR("Invalid node address for alarm offset");
+    }
+
+    min_alarm.time = raw_time + (offset + 60 - (raw_time % 60));
+    min_alarm.flags = 0 | MAXIM_DS3231_ALARM_FLAGS_IGNDA | MAXIM_DS3231_ALARM_FLAGS_IGNHR | MAXIM_DS3231_ALARM_FLAGS_IGNMN;
+
+    // Configure ALARM1 for trigger at min_alarm
+    rc = maxim_ds3231_set_alarm(rtc, 0, &min_alarm);
+    LOG_INF("Set sec based alarm 1 min in the future flags %x at %u ~ %s: %d\n", min_alarm.flags,
+            (uint32_t)min_alarm.time, format_time(min_alarm.time, -1), rc);
+}
+\end{cpp}

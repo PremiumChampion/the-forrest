@@ -1,0 +1,336 @@
+\selectlanguage{american}
+
+\section{Narrowband (NB) Internet of Things (IoT)}
+In this section, we discuss the process and variables we encountered when selecting the Narrowband-IoT module, as well as the integration into our project.
+\subsection{Module Selection}
+We chose SIMCOM as our module provider, as they have a good documentation and reputation for developing wireless communication solutions. SIMCOM develops and manufactures modules and chips that enable devices to connect to cellular networks, supporting various communication standards such as GSM, GPRS, LTE, and NB-IoT.  \cite{SIMCOM_ABOUT}
+Then we looked at the different Low Power Wide Area (LPWA) Modules available and researched if there are breakout boards available for development.
+We moved forward with Waveshare as a breakout board provider as they have good customer support and provide reliable hardware. Waveshare has the following modules in their portfolio:
+\begin{itemize}
+    \item SIM7000E (europe) / SIM7000C (china) / SIM7000G (global)
+    \item SIM7070G
+    \item SIM7080G
+    \item SIM7020E (europe) / SIM7020C (china)
+    \item SIM7028
+\end{itemize}
+We moved forwards and only used modules that work in the European region.
+Our next requirement was that the module needs to be able to connect via NB-IoT or Cat-M.
+The only difference remaining is the SIM-Card compatibility, as SIM-Cards operate on different voltages (1.8V / 3V / 5V) and we do not know what sim card provider we are going to choose, and what voltage the sim card of that specific provider has.
+This has only SIM7000E and SIM7000G remaining. Waveshare provides Developement-Kits for both. The SIM7000E was 2 EUR cheaper so we moved forward with that module.
+\subsection{SIM-Card Provider}
+We have multiple different provider for IoT-Networking each with different capabilities.
+The providers we compared are: \href{https://www.thingsmobile.com/de/private/plans/individuelle-datenpakete}{Things Mobile}, \href{https://1nce.com/en-eu/1nce-connect/features/sim-cards/iot-sim-europe}{1NCE}, \href{https://onomondo.com/}{onomondo}, \href{https://www.soracom.io/pricing/eu-pricing/}{SORACOM}
+One major difference is the IP-Address type:
+\begin{enumerate}
+    \item Public static IP
+    \begin{enumerate}
+        \item Everyone who knows this IP-Address can connect to this device and send messages to it.
+    \end{enumerate}
+    \item Private static IP
+    \begin{enumerate}
+        \item We need to be connected to a VPN-solution to communicate with this device.
+    \end{enumerate}
+    \item Public dynamic IP
+    \begin{enumerate}
+        \item We have a dynamic IP, which changes every so often. When we know this IP we can connect directly to this device.
+    \end{enumerate}
+    \item Private dynamic IP
+    \begin{enumerate}
+        \item We have a dynamic IP, and need to be connected to a VPN-solution to communicate with that device.
+    \end{enumerate}
+\end{enumerate}
+The next mayor difference is the available data in the plan. Some have a total amount of data you can transmit, others provide a monthly budget, have a shared amount of data for different sim cards, have base usage and charge more for additional data and other schemes.
+Some also require a minimum order quantity of sim cards or have other features or only perform in the B2B space.
+For ease of use and cost control we decided to move forward with a free sim card from o2 from a private contract.
+\subsection{Cellular Protocols}
+Next we looked into the differences between NB-IoT and Cat-M1 and how they function. 
+LTE transmits data via Orthogonal Frequency Division Multiplexing (OFDM). The frequency is modulated by Frequency, Amplitude and PhaseShift. 
+In here we divide different bands in sub-carrier:
+1 LTE band spans a spectrum of 5 MHz. We can divide this band into 25 Physical Resource Blocks (PRB) each spanning 180 kHz. This gives us  4.5 MHz. The edges are defined as the guard band, in order to prevent interference with other LTE bands. Each guard band (2) spans 250 kHz. \cite{NBIOT_CAT1M}
+\begin{itemize}
+    \item NB-IoT allocates 1 PBR either in-band or in the guard-band.
+    \item Cat M1 allocates 6 PBR in band.
+\end{itemize}
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{LTE-Cat-M-and-NB-IoT-deployment-options-15.png}
+    \caption{Difference in Frequency allocation NB-IoT and Cat M1}
+    \label{Frequency allocation NB-IoT and Cat M1}
+\end{figure}
+
+Both protocols are optimized for IoT and low power applications. As such they define power saving modes: Extended Discontinuous Reception (eDRX) and Power Save Mode (PSM). These allow the module to keep the connection to the cellular tower open instead of the need to shutdown of and re-register with the cellular tower, which is power hungry.
+\subsection{Interactive feature testing}
+In order to get familiar with the device we first tested the different features of the device interactively. This can be archived by using the on-board USB-Interface using official drivers. We then connect to the module via a serial connection and can send AT-Commands.
+
+An AT-Command is a generic, human readable, text based way to interact with different modules. In our case it abstracts the use of cellular and other wireless protocols. Using AT-Commands it is possible to READ, SET, EXECUTE and TEST different parameter, actions and functions. \cite{DEFINITION_OF_AT_COMMANDS}
+
+We can then look in the official documentation and application notes (AT-Command Manual \cite{SIM7000E_AT_COMMAND_MAUAL}, HTTP Application Note \cite{SIM7000E_HTTP_APPLICATION_NOTE} , SSL Application Note \cite{SIM7000E_SSL_APPLICATION_NOTE}, HTTPS-Application Note \cite{SIM7000E_HTTPS_APPLICATION_NOTE} and Low Power Application Note \cite{SIM7000E_LOW_POWER_APPLICATION_NOTE}) to see how we need to interact with the module and how it behaves with different configuration options, get a understanding of the necessary commands, dependencies, and states and develop a simple flow for interacting with HTTP / HTTPS endpoints.
+
+\subsubsection{Developing generic AT-Command-Flow for HTTP-Requests}
+In the first step we worked with samples from the official Application Note \cite{SIM7000E_HTTP_APPLICATION_NOTE} to get familiar with the different notes. 
+\begin{enumerate}
+    \item   Select connection only via LTE via AT+CNMP=38\textbackslash{}r\textbackslash{}n.
+    \item  Enable NB-IoT Scrambling in order to minimize collisions via \newline{}AT+NBSC=1\textbackslash{}r\textbackslash{}n.
+    \item  Configure bearer settings for connecting to the network by using \newline{}AT+SAPBR=3,1,"APN","internet"\textbackslash{}r\textbackslash{}n and AT+SAPBR=1,1\textbackslash{}r\textbackslash{}n as well as AT+SAPBR=2,1\textbackslash{}r\textbackslash{}n.
+    \item Then we can initialize the HTTP service in the module \newline{}AT+HTTPINIT\textbackslash{}r\textbackslash{}n
+    \item In the next step we can specify the context id for the next requests (we can create multiple simultaneous http requests) \newline{}AT+HTTPPARA="CID",1\textbackslash{}r\textbackslash{}n.
+    \item In the next step we can set the url of the request \newline{}AT+HTTPPARA="URL","..."\textbackslash{}r\textbackslash{}n.
+    \item After that we can set the body of our request. We do this by first setting the body size and the timeout for the transmission: \newline{}AT+HTTPDATA=BODY-SIZE,TRANSMISSION-TIME\textbackslash{}r\textbackslash{}n and then sending the raw data to the module.
+    \item  Then we can execute that request: \newline{}AT+HTTPACTION=1\textbackslash{}r\textbackslash{}n.
+    \item When we got a response we can get the response-body: \newline{}AT+HTTPREAD\textbackslash{}r\textbackslash{}n
+    \item In the last step we can then terminate the http service with \newline{}AT+HTTPTERM\textbackslash{}r\textbackslash{}n.
+\end{enumerate}
+\subsubsection{Developing generic AT-Command-Flow for HTTPS-Requests}
+\begin{enumerate}
+    \item  Activate and setup the application network: \newline{}AT+CNACT=1,"APN"\textbackslash{}r\textbackslash{}n
+    \item  Then specify the url we wnat to connect to:\newline{}AT+SHCONF="URL","https://..."\textbackslash{}r\textbackslash{}n
+    \item  Set the buffer size for the HTTP body (max 1024):\newline{}AT+SHCONF="BODYLEN",1024\textbackslash{}r\textbackslash{}n
+    \item Set the buffer size for the HTTP headers:\newline{}AT+SHCONF="HEADERLEN",350\textbackslash{}r\textbackslash{}n
+    \item Establish the connection to the endpoint:\newline{}AT+SHCONN\textbackslash{}r\textbackslash{}n
+    \item Set the value of the HTTP body:\newline{}AT+SHBOD="BODY-VALUE",BODY-LENGTH\textbackslash{}r\textbackslash{}n
+    \item Set HTTP headers one by one\newline{}AT+SHAHEAD="key","value"\textbackslash{}r\textbackslash{}n
+    \item Execute the request: (1=GET, 2=PUT, 3=POST...)\cite{SIM7000E_HTTPS_APPLICATION_NOTE} \newline{}AT+SHREQ="https:/...",1\textbackslash{}r\textbackslash{}n
+    \item Read the response from the webserver. This can be done in a single read or in batch. \newline{}AT+SHREAD=START-INDEX,READ-LENGTH\textbackslash{}r\textbackslash{}n
+    \item Terminate the connection \newline{}AT+SHDISC\textbackslash{}r\textbackslash{}n
+\end{enumerate}
+
+During testing we discovered that we need the current time for establishing a secure connection. When the SIM7000e module looses power or is rebooted, we loose the current timestamp. Thus we added a Real-Time Clock to our hardware configuration.
+
+\subsection{Hardware Setup}
+After we got familiar with the AT-Command-Interfacing we went ahead and decided on how to connect the different modules. In figure \ref{fig:sim7000e_ds1307_nrf25840_breadboard} you can see the SIM7000E and DS1307 Real-Time-Clock connected to the nRF52840 Developement Kit. The SIM7000E is connected via UART1 and the DS1307 via I²C to the nrf52840 Developement Kit as shown in table \ref{tab:sim7000e_ds1307_nrf25840_breadboard_connection_table}.
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/Aufbau_SIM7000e+DS1307.jpg}
+    \caption{Breadboard construction of SIM7000E, DS1307 and nRF52840dk}
+    \label{fig:sim7000e_ds1307_nrf25840_breadboard}
+    \cite{NBIOT_CAT1M}
+\end{figure}
+
+\begin{table} [h!]
+    \centering
+    \begin{tabular}{|>{\centering\arraybackslash}p{0.5\linewidth}|>{\centering\arraybackslash}p{0.5\linewidth}|} \hline 
+         SIM7000e& nrf52840dk\\ \hline 
+         RX& P1.01\\ \hline 
+         TX& P1.02\\ \hline 
+         DTR-KEY& P1.03\\ \hline 
+         PWR-KEY& P1.04\\ \hline 
+         SDA& P0.26\\ \hline 
+         SCL& P0.27\\ \hline
+    \end{tabular}
+    \caption{Connections between SIM7000E, DS1307 and nRF52840dk on the breadboard}
+    \label{tab:sim7000e_ds1307_nrf25840_breadboard_connection_table}
+\end{table}
+
+\newpage
+ 
+\subsection{Implementation}
+Using the previously developed simple flow for our application, we can now define requirements for the required features and implement those programmatically.
+We use the UART Abstraction in order to send and receive messages (ending with newline) in our application.
+Using this abstraction we can send AT-Commands to the SIM7000E module and parse the response accordingly.
+
+Using those AT-Commands we implemented the following features:
+
+\subsubsection{Configuration and setup of the module}
+When configuring the module we follow these steps:
+\begin{enumerate}
+    \item Detect current baud rate of the module and waiting for the module to respond (Figure \ref{fig:detect_baud_rate})
+    \item Waiting for the module to have a connection to a cellular tower
+\newline{}When waiting for a cellular tower we wait for the module to send 'SMS Ready\textbackslash{}r\textbackslash{}n' 
+\item Select connection medium \newline{} We only want to connect via LTE. We can use AT+CNMP=38\textbackslash{}r\textbackslash{}n to archive this.
+    \item  Enable NB-IoT Scrambling. \newline{}In order to minimize collisions with other devides by setting AT+NBSC=1\textbackslash{}r\textbackslash{}n.
+    \item Configuring the Access Point Name (APN) for the internet provider
+\newline{}We set the APN with the following AT-Command: 'AT+CNACT=1,"internet"\textbackslash{}r\textbackslash{}n' and wait for the network connection to activate by waiting for the message '+APP PDP: ACTIVE\textbackslash{}r\textbackslash{}n' from the module.
+    \item Enable PSM-Event reports for state management
+\newline{}We can enable Power Save Mode by sending 'AT+CPSMSTATUS=1\textbackslash{}r\textbackslash{}n.
+    \item Configuring Power-Save-Mode-Timers 
+\newline{}Then we can configure the sleep time by sending by sending \newline{} 'AT+CPSMS=1,,,"binary\_T3412 ","binary\_T3324"\textbackslash{}r\textbackslash{}n'  to the module. The first 3 bits of a timer define the duration of a single count, from 2 seconds to 320 hours, The last 5 bits select the duration of the timer (0-31). We get the total duration of the timer by multiplying the duration of a single count with the duration of a single count. The timers both start simultaneously. The timer T3412 configures up to which time the module can sleep it defines the tracking area update messages in mobile networking. The timer T3324 defines the time the module stays in idle mode. Both can bee seen in Figure \ref{fig:psm-timers}.
+    \item Setting SSL-Version
+\newline{}We need to set the SSL-Version with 'AT+CSSLCFG="sslversion",1,3\textbackslash{}r\textbackslash{}n'.
+    \item  Trusting all SSL-Certificates
+\newline{}As we do not need to use certificate based authentication, we can use 'AT+SHSSL=1,""\textbackslash{}r\textbackslash{}n' to trust all certificates.
+    \item Setting the current time
+\newline{} When communicating with other servers, we need to have the current time set. This is necesarry to validate certificate times. This can be archived by sending the following command: 'AT+CCLK="25/01/09,17:34:24+00"\textbackslash{}r\textbackslash{}n'
+\end{enumerate}
+
+When the module is idle it automatically enters the eDRX and PSM modes according to our configuration. For this to work we need to close any open HTTP/HTTPS/... sessions after use.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{Bilder/sim7000e/select_baud_rate.png}
+    \caption{Flow for detecting the current baud rate of the SIM7000e module}
+    \label{fig:detect_baud_rate}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/sim7000e/PSM_Timer_Values.png}
+    \caption{PSM Modes \cite{SIM7000E_LOW_POWER_APPLICATION_NOTE}}
+    \label{fig:psm-timers}
+\end{figure}
+
+\subsubsection{Sending payload via HTTPS}
+
+For our module to be able to communicate via HTTPS we need a rough time ±1-2 hours this time can be provided by the Real-Time Clock (RTC) and set in the module.
+When we want to transmit data to our cloud service, we need to use HTTPS. In order to do this we need to have the following requirements met:
+
+\begin{itemize}
+    \item Module powered on
+    \item Module is not in PSM
+    \item Module has a Network connection and IP-Address
+    \item Module has the correct time set
+    \item We have configured SSL correctly
+\end{itemize}
+
+If those requirements are met, we can the begin configuring and executing the HTTPS-Request:
+
+\begin{enumerate}
+    \item First we need to configure the TLS Server Name Indication (SNI). This is required, as there are multiple different domains and cloud services handled by one Server and as such the server needs to know which certificate it should use.
+    \item  Setting the max body length for POST requests, so that the module can reserve enough storage.
+    \item Calculating and setting the length for the HTTP-Headers.
+    \item Setting the domain for the request.
+    \item Starting the HTTPS-Session. This establishes a secure socket to our cloud service.
+    \item Setting HTTP-Headers.
+    \item Setting the body.
+    \item Executing the request using the specified path and HTTP-Method. This also returns us the HTTP-Status-Code and length of the response.
+    \item Reading the response
+    \item Stopping the HTTPS-Session.
+\end{enumerate}
+
+\subsection{Power saving}
+
+As already discussed previously we have multiple different options for saving power. 
+The first is the use of Discontinuous Reception Mode (DRX). It allows the module to receive down-link messages periodically e.g. every 1.28s, 2.56s, 5.12s or 10.24s. This means that we can reach the module all the time just with a short delay \cite{SIM7000E_LOW_POWER_APPLICATION_NOTE}.
+The second mode is extended Discontinuous Reception Mode (eDRX). It is part of the NB-IoT specification and allows for the module to receive messages every 20.48s to 2.9h. This means that we can only reach the module with a delay of couple of minutes or even hours \cite{SIM7000E_LOW_POWER_APPLICATION_NOTE}.
+The third mode is Power Save Mode (PSM). This mode does not allow for receiving down-link messages. This allows us to enter a really low power state, where the module only consumes 9μA \cite{SIMCOM_SIM7000E}.
+The 3 different modes are pictured in figure \ref{fig:psm-timers} the Grey bars on top of the idle mode represent DRX or eDRX. The Green represents PSM.
+The different modes and different parameters need to be supported by the module and the network. Support for each mode might change depending on the network state, provider and used equipment in the cellular towers.
+We verified and implemented PSM in a prototype state. Figure \ref{fig:enter-exit-psm} shows how the process of entering / exiting PSM should be done. Figure \ref{fig:power-consumption-of-sim7000e} shows the power consumption of the SIM7000e over time.
+
+In order to enter sleep mode the following conditions have to be met \cite{SIM7000E_LOW_POWER_APPLICATION_NOTE}:
+
+\begin{itemize}
+    \item PSM-Parameters need to be configured (T3324, T3412)
+    \item Module needs to be idle.
+    \item PWR-KEY is pulled high.
+    \item Timer T3324 must be expired.
+\end{itemize}
+
+In order to wake up from sleep mode one of the following conditions have to be met \cite{SIM7000E_LOW_POWER_APPLICATION_NOTE}:
+
+\begin{itemize}
+    \item Timer T3412 is expired.
+    \item PWR-KEY is pulled low.
+\end{itemize}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{Bilder/sim7000e/PSM-Enter-Sleep.png}
+    \caption{Process of entering and leaving Power Save Mode}
+    \label{fig:enter-exit-psm}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/gateway/power_consumption_gateway_10_samples.png}
+    \caption{Power consumption during the lifecycle of the SIM7000E}
+    \label{fig:power-consumption-of-sim7000e}
+\end{figure}
+
+
+
+\subsection{Implementation}
+
+We can now use this to implement basic command functionality. For instance the function 'result check\textunderscore{}sim7000e\textunderscore{}present()' sends a simple AT\textbackslash{}r\textbackslash{}n and waits for "OK".
+
+\begin{cpp}[caption={AT-Ping implementation}]
+result check_sim7000e_present()
+{
+    std::string response = "";
+    return at::commands::prv::_at(get_uart_driver(), "AT\r\n", response);
+}
+\end{cpp}
+
+If we need more advanced behavior, we can implement it by accessing the UART-driver directly. One example for this is the implementation of executing the web request, as we receive a notification as soon as we get a response indicating the HTTP-Status-Code and the length of the body. Additional features are also implemented like this.
+
+\begin{cpp}[caption={Send message function and parse the HTTP-Status-Code and response length}]
+result exec(std::string url, http_method method, int &http_status_code, int &length)
+{
+    std::string response = "";
+    result r = at::commands::sim7000e::_at("AT+SHREQ=\"" + url + "\"," + std::to_string(static_cast<int>(method)) + "\r\n", response);
+    if (r != OK)
+    {
+        return r;
+    }
+    uart::uart_driver *driver = at::commands::sim7000e::get_uart_driver();
+    // wait for the response
+    int64_t start = k_uptime_get();
+    while (k_uptime_get() - start < 10000)
+    {
+        uart::read_result uart_res = driver->uart_read(response);
+        if (uart_res == uart::read_result::UART_READ_OK)
+        {
+            if (response.find("+SHREQ: ") != std::string::npos)
+            {
+                size_t start = response.find("+SHREQ: ");
+                size_t end = response.find("\r\n", start);
+
+                if (start == std::string::npos || end == std::string::npos)
+                {
+                    return ERROR;
+                }
+
+                std::string status = response.substr(start, end - start);
+                status = status.substr(8, status.size() - 8); // remove "+SHREQ: "
+
+                std::vector<std::string> parts = split(status, ',');
+                if (parts.size() != 3)
+                {
+                    return ERROR;
+                }
+
+                http_status_code = std::stoi(parts[1]);
+                length = std::stoi(parts[2]);
+
+                return OK;
+            }
+        }
+    }
+
+    return TIMEOUT;
+}
+\end{cpp}
+
+\subsection{Limitations}
+
+During the development flow we identified the following limitations:
+
+\begin{itemize}
+    \item \textbf{Body size when using HTTPS}\newline{}When communication using HTTPS we are limited to a HTTP-Body-Size of 1024. If the module is used to transfer large amounts of data, we must either split the data into multiple requests, use a space optimized binary serialization format, use socket communication or a implementation of https from zephyr.
+    \item \textbf{Communication performance}\newline{}We communicate with the SIM7000E-Module using UART. This limits the data-rate and the performance, as commands need to be parsed and interpreted first. Different Communication architectures allow for better performance.
+    \item \textbf{Error handling}\newline{}When working with AT-Commands we only get the information, that the last command returned an error and no information about what went wrong. Even when looking at the AT-Command-Manual we only get little information about what went wrong or how we could fix this error.
+\end{itemize}
+
+\subsection{Improvement options}
+
+We found multiple points during development which we could improve or change.
+
+\begin{itemize}
+    \item \textbf{Better state management}\newline{}We noticed that we need to perform better state management and analyze module behavior. For instance, after entering/exiting PSM the we need to reconfigure the TLS-Parameters.
+    \item \textbf{Use of the official drivers}\newline{}Zephyr currently only has official drivers for the SIM7080 modem. This driver partially works with the SIM7000E module, but does not support all features. For our Use Case this could be enough, but was not validated.
+    \item \textbf{Using a different thread for managing the device}\newline{}We used a functional approach when using the module. 
+    Despite the Command/Response nature of AT-Commands this architecture is not optimal. 
+    It would be better to offload the handling and configuration to a separate driver thread. 
+    This thread can then be used to perform state management, oversee different operations, and react accordingly.
+    This thread is then given a high level operation to perform, then configures the module for that operation, e.g. connects in a certain way, and performs the operation.
+    For example, we have just exited PSM and want to send a web request. Currently we have to verbosely define every option and set every necessary aspect of the device. This can lead to errors or undefined behavior.
+    It would be better to give the operation to a thread, this thread then establishes the connection, makes the request and then performs garbage collection (disconnect from server...).
+    \item \textbf{Better response parsing}\newline{}We parse the responses from the module in a primitive way. 
+    For our Use-Case this was enough, as we defined everything statically. 
+    When developing this further, we would need a better parser for different configuration options, which could decode based on the last command, optional values, and define a suitable data structure for interacting with the device.
+    \item \textbf{Validating network availability, features and options}\newline{}Currently we do not query the different network capabilities (PSM, DRX, eDRX) and set the parameters in code. This should be improved in the next iteration.
+    \item \textbf{Using TCP/UDP Sockets for communication}\newline{}
+    As discussed previously we have limitations when using high level services of the module (MQTT, HTTP, HTTPS...). 
+    We can circumvent some of these limitations by using socket communication.
+    \item \textbf{Baching commands for better performance}\newline{}
+    We can bach AT-Commands into one long command. The transmission and parsing is then more efficient, but parsing and reacting to errors more difficult.
+\end{itemize}

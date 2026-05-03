@@ -1,0 +1,339 @@
+\selectlanguage{american}
+\section{LoRa and LoRaWAN}
+This section shows our first experiments with LoRa and LoRaWAN technology, as well as how they have influenced our choice of the preferred technology used for our project. 
+
+\subsection{Choosing a frequency}
+Europe provides two allowed frequency bands, 433 MHz and 868 MHz, for the use of LoRa and subsequently LoRaWAN, both of which have advantages and disadvantages.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|}
+        \hline
+        433 MHz & 868 MHz \\ \hline
+        Twice the range & Faster transmission speed \\ \hline
+        Better transmission through foliage & Higher maximum allowed transmission power \\ \hline
+    \end{tabular}
+    \caption{Comparison of 433 MHz and 868 MHz band}
+    \label{tab:advantages_disadvantages}
+\end{table}
+\noindent Given the wooded environment of our project, we selected the 433 MHz band for its superior penetration through foliage and extended range in densely wooded areas.
+
+\subsection{First test with LoRaWAN and the Things Network}
+To get a first overview of LoRaWAN, we decided to try to set up our own LoRaWAN gateway in the things network with the hardware we already had available at the beginning of the project. This was a good method to bridge the time until our own hardware arrived and already get a first look at the technology. \hfill 
+
+\subsubsection{Setup our own custom TTN ic880a gateway}
+To establish our own custom TTN-gateway we followed the Zurich community guide which we found during our research. The guide was a perfect fit for the provided ic880a concentrator board and the supplied raspberry pi.
+
+\subsubsection{Problems during the setup}
+While following the guide and setting up the custom TTN gateway, we encountered several issues that hindered the process:
+\begin{itemize}
+    \item \textbf{GPIO port access changes in the Linux kernel:} The install script uses the python library Wiring Pi which still expected the old structure to access the GPIO ports of the raspberry PI
+    \item \textbf{Adding the gateway to the things network:} To add the gateway to the things network we had to first get familiar with the various identifiers needed to connect to the network.
+    \item \textbf{Printing the received data as clear text:} Printing of the received data as clear text again required us to understand the encryption which the TTN network uses and the various security keys used for encryption in LoRaWAN in the TTN network. Additionally, we had to use a custom bare-bones Java script handler to simply return the transmitted value.  
+\end{itemize}
+These issues were eventually resolved, but they delayed our progress and highlighted the importance of checking compatibility and the required software versions before starting the setup and actually using the software version recommended or needed by the guide.
+
+\subsubsection{Building our own LoRaWAN Node using the NRF52832 DK}
+To get first experience with the NRF52 DK and how to add LoRa modules to Zephyr, we chose to build our own LoraWAN node using the already available NR52832 DK and the LoRaWAN Pico Hat Pico-LoRa-SX1262-868M from Waveshare. Zephyr already has a driver for this Semtech LoRa chip included. This allowed us to get a first look into Zephyr's device overlays and how to use the included drivers in Zephyr.
+
+
+\subsubsection{Breaking Problems}
+While working on our own node using the Pico LoRa module on the NRF52832 DK, we encountered several issues that prevented us from completing the node as we intended in the beginning. 
+\begin{itemize}
+    \item \textbf{Different logic levels between Raspberry PI Pico and NRF52832 DK:} Raspberry Pi Pico uses different volatage levels to signal ones and zeros compared to our NRF52 DK board. This resulted in the NRF52 sending the correct initilization sequence with nothing being returned by the module. We tested this by debugging the setup using the oscilloscope which showed no response from the module after the initialization sequence. Due to no logic level shifters directly available we decided to instead work with the raspberry pi pico instead of our nrf52 DK which solved the problem and allowed us to complete our own TTN node.
+    \item \textbf{Initial setup of device overlay and usage of the Zepyhr driver system:} Due to being new to Zephyr, we struggled with the device overlays and how to use the onboard drivers of Zephyr. This resulted in additional research needed into Zephyr, which cost a lot of extra time and created unexpected overhead in the beginning of our testing phase.
+    \item \textbf{Registering the node in TTN:} Due to being new to the TTN network and LoRaWAN in general, we struggled with the activation of the device and the various parameters required to do so. This could be solved by further research on the network architecture and the LoRaWAN protocol.
+\end{itemize}
+All the above issues were eventually resolved by further research except the problem with the logic levels and the nrf52832. This could have been solved using a logic level shifter, but due to the experimental nature of this first approach, we opted to work with the raspberry pico due to the better availability of the pico and the faster testing it enabled.
+
+\subsubsection{Insights from our first LoRaWAN tests in the TTN network}
+The biggest insight we received from our first test with LoRaWAN was that the building of the gateway is not trivial and that not every node can function as a gateway in TTN because a conecentrator board is expected that listens to multiple frequencies bands in the 886 spectrum, so a simple node can \textbf{not} function as a gateway in TTN. This resulted in us reevaluating using the protocol as we did not want to order a new expensive 443 concentrator board and it seemed overkill for our use case since our primary use case was node to gateway communication on a beforehand specified frequency band in the 443 spectrum. 
+After further research into the physical layer LoRa and the capabilities provided by the base LoRa layer, we decided to use the LoRa layer directly instead of the proprietary LoRaWAN.
+
+\subsection{Choosing the correct LoRa module}
+
+In this section we will discuss the decision process for the correct LoRa-Module.
+
+\subsubsection{RAK3172 Breakout Board as LoRa module}
+Our first big decision on which module to order fell on the RAK3172 Breakout Board as it had a really low power draw in sleep mode support for our frequency band and excellent documentation while having support for LoRa and LoRaWan. It also had a pre-flashed firmware with AT commands with support for either LoRa or LoRaWan. This all came with one big problem, there was no stock at any retailer in europe and the cost + duration of shipping would hinder us in our project plan. 
+
+\subsubsection{Why not Ai-Thinker?}
+Due to the fact that our RAK3172 Breakout Board is not in stock in Europe, we chose a different module. Sadly the chosen module would have resulted in a lot of extra work due to the AT commands only being for LoRaWAN. It would have been possible to flash a custom self-written firmware to the Ai-Thinker onboard micro controller but it would have cost to much time and exceeded the scope of our project. This is why we choose to change the module once again in order to reach our final decision. 
+
+\subsubsection{Reyax RYLR498 - the final module decision}
+Based on our previous experience with different modules and previous test, we now knew that we wanted to use the LoRa base layer directly and in the best case with the fitting AT commands via the UART interface. This is why we finally decided to use the \textbf{Reyax RYLR498} module with the following advantages:
+
+\begin{itemize}
+    \item 433 MHz frequency band
+    \item built-in AT commands with good documentation based on the LoRa layer
+    \item UART interface
+    \item low energy consumption
+    \item NUVOTON MCU \& Semtech LoRa Engine
+\end{itemize}
+
+\subsection{Node \& Gateway LoRa setup using Reyax RYLR498}
+Our work on the node and gateway LoRa component could finally start after receiving the Reyax RYLR498 modules. The RYLR498 uses UART as the connection interface and has the pin configuration as seen in table \ref{tab:RYLR498_pin_overview}.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|c|}
+        \hline
+        Pin & Name & I/O & Condition \\ \hline
+        1   & VDD  & I & Power supply   \\ \hline
+        2  & NRST  & I & Reset(Active Low) 100k $\Omega$ internal pull up, Pull down at least 100ms \\ \hline
+        3  & RXD  & I  & UART data input  \\ \hline
+        4  & TXD  & O  & UART data output    \\ \hline
+        5  & GND & - & Ground \\ \hline
+    \end{tabular}
+    \caption{RYLR498 Pin overview}
+    \label{tab:RYLR498_pin_overview}
+\end{table}
+
+\noindent{}We connected the module to the pins of the node NRF52832 as seen in table \ref{tab:RYLR498_pin_connections}.
+
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|c|}
+        \hline
+        Pin RYLR498 & Pin NRF52832 \\ \hline
+         VDD  & VDD   \\ \hline
+         NRST & P.21 \\ \hline
+         RXD  & P.04    \\ \hline
+         TXD  & P.03  \\ \hline
+         GND  & GND \\ \hline
+    \end{tabular}
+    \caption{RYLR498 \& NRF52 node Pin overview}
+    \label{tab:RYLR498_pin_connections}
+\end{table} 
+
+\noindent{}For the LoRa reset pin we added a custom gpio pin to more easily access it in the main code and use it to correctly initialize the RYLR498 according to the boot-up sequence described in the data sheet of the module. 
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/RYLR498/Devicetree custom_gpios lorareset.png}
+    \caption{Devicetree uart custom pins for LoRa module}
+    \label{fig:uartdefaults}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/RYLR498/RYLR498_timing_sequence.png}
+    \caption{Datasheet timing sequence}
+    \label{fig:timing_sequence}
+\end{figure}
+
+\subsubsection{Lora Module Initialization}
+To start the RYLR498 module, we first checked the timing sequence mentioned above of the data sheet. After that we were able to implement our \cppinline{init_lora_module()} function which first checks if the lorareset pin is available and then configures the pin as an output. Then we make sure to keep the pin low for four seconds to ensure the module is ready for startup, after that we can set the pin to high and wait for one second to ensure a smooth startup of the module before we change the BAUD rate to the one listed in the data sheet and send our first AT command and wait for the module to respond with an "OK". After that we can start setting the parameters to the module by sending \texttt{AT+PARAMETER=9,7,1,12}.
+\\\
+These parameters do the following:
+\begin{itemize}
+    \item set the spreading factor to 9
+    \item set the bandwidth to 125 kHz
+    \item set the coding rate to 4/5
+    \item set the programmable preamble to 12
+\end{itemize}
+The last thing we have to set to finish the initialization of the module is the RF power and the frequency band, which can be set by sending "\texttt{AT+CRFOP=22} and \texttt{AT+BAND=433000000} to the module. After this, the module is ready and able to join the network using the \texttt{join\_network} function.
+
+\begin{cpp}
+int init_lora_module()
+{
+    if (!gpio_is_ready_dt(&reset_pin))
+    {
+        return -1;
+    }
+
+    gpio_pin_configure_dt(&reset_pin, GPIO_OUTPUT);
+
+    // Keep pin low for 4 seconds to start module correctly according to datasheet
+    k_sleep(K_MSEC(4000));
+
+    // Turn on reset pin for module startup
+    gpio_pin_set_dt(&reset_pin, 1);
+    k_sleep(K_MSEC(1000));
+    uart::uart0::change_baudrate(uart::Baud115200);
+    at::commands::result result;
+
+    do
+    {
+        result = at::commands::prv::at();
+        LOG_INF("Waiting for module to respond...");
+
+        switch (result)
+        {
+        case at::commands::result::OK:
+            LOG_INF("SUCCESS");
+            break;
+        case at::commands::result::TIMEOUT:
+            LOG_INF("TIMEOUT");
+            break;
+        default:
+            LOG_INF("UNKNOWN");
+            break;
+        }
+        
+        k_sleep(K_MSEC(1000));
+
+    } while (result != at::commands::result::OK);
+
+    LOG_INF("Setting parameters");
+
+    result = at::commands::prv::_at("AT+PARAMETER=9,7,1,12\r\n", response);
+
+    switch (result)
+    {
+    case at::commands::result::OK:
+        LOG_INF("SUCCESS");
+        break;
+    case at::commands::result::TIMEOUT:
+        LOG_INF("TIMEOUT");
+        break;
+    default:
+        LOG_INF("UNKNOWN");
+        break;
+    }
+    LOG_INF("%s", uart::escape_response(response).c_str());
+    response = "";
+
+    LOG_INF("Setting RF power");
+    at::commands::prv::_at("AT+CRFOP=22\r\n", response);
+    LOG_INF("%s", uart::escape_response(response).c_str());
+    response = "";
+
+    LOG_INF("Setting frequency band");
+    at::commands::prv::_at("AT+BAND=433000000\r\n", response);
+    LOG_INF("%s", uart::escape_response(response).c_str());
+    response = "";
+    
+    return 0;
+}
+
+\end{cpp}
+
+\subsubsection{Joining a network}
+The firmware of the RYLR498 has built-in support for networks which are able to be used as "Point to
+Point", "Point to Multipoint" or " Multipoint to Multipoint" network and can even be encrypted, although this was not in the scope of our project. All nodes with the same network id can communicate with each other.  
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/RYLR498/rylr network sample.png}
+    \caption{Network sample \cite{RYLR498_MANUAL}}
+    \label{fig:uartdefaults}
+\end{figure}
+\break
+To start joining a network we have defined a constant with the respective node address which can be set using \texttt{AT+ADDRESS=DEV\_ADDRESS} after that we have to define the network id we would like to join this will be set using \\ \texttt{AT+NETWORKID=NETWORK\_ADDRESS}. After this we are successfully connected to the network and can receive or send messages. 
+
+
+\subsubsection{Sending messages}
+After joining the network we can start sending messages, for this we read our sensor data and send them using a predefined format so the gateway can correctly parse them. 
+As dev\_address we set the address defined for the gateway. To send a message using the Lora module we can simply send the message using the AT command \texttt{AT+SEND=<Address>,<Payload Length>,<Data>}. It is important to note that the maximum payload for a message is capped at 240 bytes. 
+\\\
+
+
+\begin{cpp}[caption={Send message function + usage extract of main function}]
+void send_message(int dev_address, std::string message)
+{
+    at::commands::prv::_at("AT+SEND=" + std::to_string(dev_address) + "," + std::to_string(message.length()) + "," + message + "\r\n", response);
+    LOG_INF("%s", uart::escape_response(response).c_str());
+    response = "";
+}
+
+// send data read from ADC sensor
+int32_t voltage0 = 0;
+int32_t voltage1 = 0;
+gpio::adc::read_channel(0, voltage0);
+LOG_INF("ADC reading [%u]: %u  ", 4, voltage0);
+gpio::adc::read_channel(1, voltage1);
+LOG_INF("ADC reading [%u]: %u", 5, voltage1);
+
+send_message(GATEWAY_ADDRESS, "\"" + std::to_string(NODE_ADDRESS) + "," + std::to_string(voltage0) + "," + std::to_string(voltage1) + "\"");
+            
+\end{cpp}
+
+\subsubsection{Module Energy Saving Experiments: Sleep \& Smart Receiving Mode}
+
+\paragraph{Smart receiving mode} \hfill \break
+During our work with the Lora module we also started to think about potential energy saving strategies especially for our nodes. This is why we took a look at the smart receiving and sleep mode of the module. The smart receiving mode can be enabled using \texttt{AT+MODE=2,1000,1000}. This configuration results in a one-second receive time followed by one second of low-power mode, enabling power savings during the low-power period. According to the data sheet, the difference in current draw between low-power and high-power modes is significant, with 2.65 mA in low-power mode compared to 17.5 mA in high-power mode.
+
+\paragraph{Sleep mode} \hfill \break
+Another possible option was to set the module to sleep mode when it is not in use or no messages are expected. This can be done using \texttt{AT+MODE=1} to put the module to sleep and \texttt{AT+MODE=2} to wake the module up and continue receiving messages. The current consumption in sleep mode according to the data sheet is as low as 10 $\mu$A. \hfill
+\break
+All these power saving measures seemed promising but in the end we decided to instead wake up the complete system using the rtc via a defined wake-up pin on the nrf more about this in the next section.
+
+\subsection{Power saving duty cycle}
+
+Our final solution to power saving for our LoRa nodes was simple but effective. We researched the power management functionality of Zephyr which resulted in the conclusion that since we are using Azure to save our data points in the cloud via the gateway we have no measurements saved locally on our device. This allows us to use the extreme power saving of just simply turning the micro controller and LoRa module off with \texttt{sys\_poweroff()} after we have successfully sent the data to the gateway. We also do not need the RAM retention feature supported by the microcontroller which allows us to further decrease the energy consumption while being turned off. Before turning off the micro controller we set up a wake-up pin which is connected to the SQW pin of the RTC, this will allow us to turn on the micro controller when the alarm of the ds3231 fires and sends a high signal on the pin, more about how we implemented this wake-up in the next chapter. 
+\hfill
+\break
+\newline
+
+\noindent To measure if our power saving measures really resulted in an improvement we used the Nordic \href{https://www.nordicsemi.com/Products/Development-hardware/Power-Profiler-Kit-2}{Power Profiler Kit II} (PPK2) in ampere mode. This resulted in the measurements below:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/power_testing_node/PPK2_node.png}
+    \caption{Node power consumption}
+    \label{fig:ppk2node}
+\end{figure}
+
+In the figure, we have connected the nRF PPK 2 to one of our nodes for a certain period of time in order to analyze the power consumption. The coordinate system shows the consumption curve over an interval of one minute.\hfill
+\break
+\newline
+At the beginning, the first large peak is visible, which is caused by waking up the microcontroller. This wake-up takes place via the real-time clock (RTC), which brings the microcontroller out of sleep mode. Immediately afterwards, the boot process of the nRF chip is started, which causes a further increase in power consumption.
+\break
+\newline
+A few seconds later, the sensor data is read out and transmitted to a gateway via the LoRa module. The lower part of the illustration shows that this process takes place at regular intervals - every minute to be precise. Over the entire measurement period, we see an average power consumption of around 530 $\mu$A.
+\break
+\newline
+The following section contains the code that shuts down and restarts the microcontroller
+\break
+\newline
+
+\begin{cpp}[caption={Power the system off and waking it up}]
+static const struct gpio_dt_spec sw0 = GPIO_DT_SPEC_GET(DT_ALIAS(sw0), gpios);
+const struct device *const cons = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
+
+static const struct gpio_dt_spec wakeup_pin = GPIO_DT_SPEC_GET(DT_ALIAS(sw0), gpios);
+static struct gpio_callback wakeup_cb_data;
+
+static volatile bool wakeup_flag = false;
+
+
+static void wakeup_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
+{
+    wakeup_flag = true;
+    LOG_INF("Wake-up signal received");
+}
+
+/* Configure sw0 as input and set up interrupt */
+rc = gpio_pin_configure_dt(&sw0, GPIO_INPUT);
+if (rc < 0)
+{
+    printf("Could not configure sw0 GPIO (%d)\n", rc);
+    return 0;
+}
+
+rc = gpio_pin_interrupt_configure_dt(&sw0, GPIO_INT_EDGE_TO_ACTIVE);
+if (rc < 0)
+{
+    printf("Could not configure sw0 GPIO interrupt (%d)\n", rc);
+    return 0;
+}
+
+gpio_init_callback(&wakeup_cb_data, wakeup_callback, BIT(wakeup_pin.pin));
+gpio_add_callback(wakeup_pin.port, &wakeup_cb_data);
+
+wakeup_flag = false;
+
+while (!wakeup_flag)
+{
+    sys_poweroff();
+}
+            
+\end{cpp}
+
+The GPIO pin that serves as the wake-up source is defined at the beginning. This pin is referenced via the devicetree alias sw0. In addition, a volatile variable wakeup\_flag is introduced to save the wake-up status. Another important component is a GPIO callback structure that enables the pin to be linked to the callback function.
+
+The callback function wakeup\_callback is called when an interrupt occurs. It sets the wakeup\_flag variable to true to indicate that a wake-up signal has been received.
+
+In the next step, the GPIO pin is configured. It is defined as an input to recognize external signals. In addition, an interrupt is activated that reacts to a rising signal edge. This interrupt ensures that the callback function is triggered as soon as a corresponding signal is detected on the pin. The GPIO callback is then linked to the pin and registered.
+
+After configuration, the microcontroller is set to energy-saving mode. This takes place in a loop that maintains the power-saving mode (sys\_poweroff()) until the wakeup\_flag variable is set to true. As soon as the wake-up signal is received, the interrupt ends the loop, which reactivates the microcontroller.

@@ -1,0 +1,78 @@
+\section{Prototyping phase until our decision}
+
+With the start of our Embedded Systems course, we started brainstorming early to get a selection of different use cases for our Low-Power Sensor Mesh project, which will be mentioned in these first pages of this documentation. We conducted interviews, contacted various organizations, and created many potential prototypes in the early stages before committing to a specific project.
+
+\subsection{Introducing potential projects}
+
+In this chapter we want to give and overlook about various potential projects, where we started and how we got to our final decision on the project we started working on.
+
+\subsection{Bird station}
+
+One of our first prototypes was a smart bird station that uses a variety of technologies, including GPS, weight measurement to determine the amount of birdseed left, and a camera to potentially count specific bird species. This was not only limited to bird stations, but could also be used as a feeding station for various animals in the forest.
+
+But the biggest problem we encountered with this project was that it had no practical use and was more of a gimmick to promote the image of a company or school.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.5\linewidth]{Bilder/prototypes/Vogelstation_light.png}
+    \caption{Bird station prototype}
+    \label{fig:enter-label}
+\end{figure}
+
+\subsection{Emergency button in nursing homes}
+
+Another project idea for the Low Power Sensor Mesh project was the emergency button in nursing homes. The idea was to use different nodes and base stations to locate elderly people in need of care using GPS when they press the emergency button.
+
+For this idea of the project, we spoke with a representative of a nursing home, where we were told that a project of this kind was already being worked on. This was not necessarily a bad indication, as such a project has a real use case. Another problem we faced here was that it is much better and more reliable to just use Bluetooth instead of a low-mesh technology for this kind of project.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/prototypes/Notfallortung_light.png}
+    \caption{Emergency button prototype}
+    \label{fig:enter-label}
+\end{figure}
+
+\subsection{Disaster and flood warning system}
+
+The idea for this project was to measure different water levels in a river over a very large area. In many parts of Germany, floods occur during the rainy season in May and June, causing disasters in many parts of the country. Often it can be seen that heavy rainfall upstream has caused the water level to rise, which means that the water must flow downstream at some point. This means that an early warning system could allow people downstream to respond to potential flooding before it happens, preventing damage to property.
+The idea was to create different nodes along the river and measure the water level and flow. And when nodes measure thresholds, they send push notifications so that people can react in advance if necessary.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.5\linewidth]{Bilder/prototypes/Disaster_light.png}
+    \caption{Disaster and flood warning system prototype}
+    \label{fig:enter-label}
+\end{figure}
+
+\subsection{The Forest}
+
+Our final idea, also the one we will choose after our prototyping phase to build a final product for the Embedded Systems course.
+The main idea of the forest project is to build a network of different gateways and nodes to transmit various sensor information via LoRa from the nodes to the gateway, and via narrowband IoT to a cloud service to store data for further use.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.5\linewidth]{Bilder/prototypes/forrestprototype_light.png}
+    \caption{Node and Gateway prototype}
+    \label{fig:enter-label}
+\end{figure}
+
+During the brainstorming we also thought about different use cases from our previous prototypes and whether we could implement them in this new project idea. For example, the feeding stations for animals, an emergency button for hunters. 
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.5\linewidth]{Bilder/prototypes/network2.jpg}
+    \caption{LoRa network rapid prototype - top view}
+    \label{fig:enter-label}
+\end{figure}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.5\linewidth]{Bilder/prototypes/network1.jpg}
+    \caption{LoRa network rapid prototype - side view}
+    \label{fig:enter-label}
+\end{figure}
+
+However, the main use case for this project was to prevent forest fires by using soil moisture sensors at different points in a forest area. By measuring this data and sending it to a cloud service for further processing, it would be possible to create an application that would display the individual nodes and create a heat map with the collected data that could alert the authorities if certain thresholds were exceeded. 
+
+We conducted interviews with hunters, who frequently are in a forest, with the school, which also has an internal project for a climate forest within the schools perimeter. All in all, we received very positive feedback which motivated us to take on this project idea.
+
+

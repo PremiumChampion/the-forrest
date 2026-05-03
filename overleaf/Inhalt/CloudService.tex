@@ -1,0 +1,121 @@
+\selectlanguage{american}
+
+\section{Cloud Service}
+
+As described in our technical architecture we want to store the measured data in a database for later analysis.
+We decided to use \href{https://www.mongodb.com/de-de}{MongoDB} as the product \href{https://www.mongodb.com/products/platform/atlas-database}{MongoDB Atlas} has a generous free tier with 512 MB storage.
+For our cloud platform we decided to use \href{https://azure.microsoft.com/de-de/products/functions/}{Azure Functions} from Microsoft. 
+It is a serverless product for executing custom code on custom events (in our case a HTTPS-POST-Request).
+When the function is executed the following steps are executed:
+
+\begin{enumerate}
+    \item establish a connection to the previously mentioned database.
+    \item crate a record indicating that the function was invoked (useful for debugging connections).
+    \item after that we decode the received body.
+    \item add the current time to the data.
+    \item store the body information in the database
+    \item return the current time as a response. This is necessary, as the Real-Time Clock drifts depending on the used oscillator crystal.
+\end{enumerate}
+
+The code below is written in python and implements the steps discussed above. It is a very, very crude implementation and should only be used in a prototype or evaluation.
+
+\begin{python}[caption={Implementation of a azure function to store incoming data}]
+import azure.functions as func
+import os
+from pymongo import MongoClient
+import datetime
+
+MongoDB_URI = os.environ["MONGODB_CONNECTION_STRING"]
+
+app = func.FunctionApp()
+
+@app.route(route="save_to_db", auth_level="anonymous", methods=["POST"])
+def save_to_db(req: func.HttpRequest) -> func.HttpResponse:
+
+    client = MongoClient(MongoDB_URI)
+    # create db and collection if not exists
+    db = client['TheForrest']
+    collection = db['Writes']
+
+    # insert current date and time and access ip
+    collection.insert_one({"date": datetime.datetime.now(), "ip": req.headers.get('x-forwarded-for')})
+
+    collection = db['TestData']
+
+    try: 
+        req_body = req.get_json()
+        req_body["server_time"] = datetime.datetime.now()
+        collection.insert_one(req_body)
+    except ValueError:
+        req_text = req.get_body().decode('utf-8')
+        collection.insert_one({"data": req_text})
+        return func.HttpResponse("Invalid JSON", status_code=400) 
+    
+    time = datetime.datetime.now(tz=datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+    return func.HttpResponse(time, status_code=200)
+\end{python}
+
+The collected data is then visualized in a live \href{https://charts.mongodb.com/charts-project-0-kgbwnwv/public/dashboards/67872274-405b-4a6d-8a79-8702a92f3a80}{Dashboard} (see figure \ref{fig:dashboard_humidity} and \ref{fig:dashboard_battery}). It can be configured to display the the data for a specific time period, by device for humidity and battery level.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/dashbaord.png}
+    \caption{Humidity graph of the dashboard}
+    \label{fig:dashboard_humidity}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/dashboard_battery.png}
+    \caption{Battery graph of our dashboard}
+    \label{fig:dashboard_battery}
+\end{figure}
+
+The query used for the dashboard is as follows:
+
+\begin{enumerate}
+    \item It checks for the presence of a data array, and the server time.
+    \item Sort the remaining entries by the server time (newest first).
+    \item Extract the data-points from the data array.
+    \item Convert and label the data-points for the dashboard.
+\end{enumerate}
+
+\begin{python}[caption={Implementation of a MongoDB Aggregation query for our data}]
+from pymongo import MongoClient
+
+client = MongoClient('mongodb+srv://.../')
+result = client['TheForrest']['TestData'].aggregate([
+    {
+        '$match': {
+            'server_time': {
+                '$exists': True
+            }, 
+            'data': {
+                '$exists': True
+            }
+        }
+    }, {
+        '$sort': {
+            'server_time': -1
+        }
+    }, {
+        '$unwind': '$data'
+    }, {
+        '$project': {
+            'id': '$data.id', 
+            'server_time': 1, 
+            'timestamp': {
+                '$toDate': {
+                    '$multiply': [
+                        '$data.t', 1000
+                    ]
+                }
+            }, 
+            'humidity': '$data.mV_1', 
+            'battery': '$data.mV_2'
+        }
+    }
+])
+\end{python}
+

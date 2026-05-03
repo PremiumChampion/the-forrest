@@ -1,0 +1,101 @@
+\section{{Moisture Sensor}}
+
+This section contains all relevant information about the moisture sensor used in our project.
+
+\subsection{Introduction}
+
+A soil moisture sensor is used to measure the moisture content in the soil. Through measurement of changes in electrical properties due to moisture in the soil, it is possible to convert them into readable electrical signals. 
+In our project, it plays a critical role because our main use case is to track soil moisture levels at different locations with different nodes spread throughout the forest. These nodes measure soil moisture levels at a set interval and send them via LoRa to the gateway, which handles the data. Since we are working with a LoRa-based system, it should meet some specific requirements such as low power consumption and compatibility with our microcontroller. Also, since these nodes are intended to be out in the forest for the long term, there are also requirements for the hardware such as water resistance and corrosion resistance.
+
+\subsection{Choosing the right sensor for our project}
+
+List of criteria considered for selecting the sensor:
+
+\begin{itemize}
+    \item Cost
+    \item Availability
+    \item Energy consumption
+    \item Compatibility with the microcontroller (e.g., signal transmission) 
+    \item Sensor type (e.g., resistive sensor, capacitive sensor)
+    \item Environmental durability (e.g., corrosion resistance, waterproofing)
+\end{itemize}
+
+When deciding on potential sensors for our project, we initially used the above criteria to choose the right sensor. This led to a list of many different sensors suitable for our use case, which then led to a finer selection of sensors, broken down by sensor type and environmental durability. As environmental durability is related to the sensor type, in this case, corrosion resistance, we had to decide between capacitive and resistive sensors.
+    
+\subsection{Capacitive Sensor vs. Resistive Sensor}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/sensor/CapacativeSensor.drawio.png}
+    \caption{Schematic illustration of the function of the capacitive sensor}
+    \label{fig:enter-label}
+\end{figure}
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/sensor/ResistiveSensor.png}
+    \caption{Schematic illustration of the function of the resistive sensor}
+    \label{fig:enter-label}
+\end{figure}
+
+
+\textbf{Capacitive sensors:}
+
+\begin{itemize}
+    \item Measure the dielectric properties of the surrounding material (e.g. soil, air)
+    \item Can measure small changes in moisture levels 
+    \item Non-contact measurement 
+    \item Longer lifespan due to no moving parts
+    \item No corrosion
+    \item Less susceptible to wear and environmental influences
+\end{itemize}
+
+This sensor sends an electrical field to the ground and measures how the field changes with moisture.
+
+\textbf{Resistive sensors:} 
+
+\begin{itemize}
+    \item Measures the electrical conductivity of the surrounding material between the electrodes (e.g. soil, air)
+        \item Corrodes more easily due to the two metal electrodes
+        \item Shorter lifespan
+        \item For smaller projects
+\end{itemize}
+
+Resistance decreases as soil moisture increases. The water in the soil acts as a conductor, and the dry soil increases resistance.
+
+For our project, we chose capacitive sensors because they do not corrode and there are waterproof devices that can be used outdoors for extended periods.  During development we chose the Capacitive Soil Moisture Sensor v.1.2, but for our final prototype we switched to the Capacitive Soil Moisture Sensor v.1.0.  And for long term outdoor use the DFRobot Analog Waterproof could be a viable option after the project is finished. 
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{Bilder/sensor/MoistureSensorv1.2.png}
+    \caption{Capacitive Soil Moisture Sensor v1.2}
+    \label{fig:enter-label}
+\end{figure}
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/sensor/MoistureSensorWaterproof.png}
+    \caption{DFRobot Analog Waterproof}
+    \label{fig:enter-label}
+\end{figure}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{Bilder/sensor/MoistureSensorv1.0.png}
+    \caption{Capacitive Soil Moisture Sensor v1.0}
+    \label{fig:enter-label}
+\end{figure}
+
+\subsection{Interfacing with the Microcontroller}
+
+The Capacitive Soil Moisture Sensors use analog signal transmission and are therefore connected to a single pin on the microcontroller. In our overlay configuration, we have decided that the pin will be P0.28. The Sensor also uses 5V to operate, which is provided by the power supply. The nRF52832 microcontroller is designed with GPIO pins that operate at a maximum input voltage of 3.3V. Exceeding this voltage level may damage the pins of the microcontroller or affect its functionality, so we had to include a voltage divider to limit the maximum voltage to 3.3V. 
+For the finished prototype, we realised that the soil moisture sensor v1.0 would also work with an operating voltage of 3.3V, making the voltage divider unnecessary, because we were able to connect the analogue output directly to the microcontroller.
+
+The sensor provides raw analog output voltage proportional to the moisture level of the soil. The range of voltages that are expected are between: 
+
+\begin{itemize}
+    \item Dry Soil: Higher output voltage (around 2V)
+    \item Wet Soil\textbf{:} Lower output voltage (around 1V)
+\end{itemize}
+
+The raw voltage readings measured by the capacitive soil moisture sensor are transmitted as-is from the node over the gateway to the cloud. The interpretation, calibration and conversion of these voltage values into meaningful soil moisture percentages is handled in a potential backend system.
+

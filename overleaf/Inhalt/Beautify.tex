@@ -1,0 +1,103 @@
+\selectlanguage{american}
+
+\section{Final hardware design}
+
+In this section, we will discuss the final hardware design of the gateway and node, focusing on soldering techniques, connection configurations, voltage requirements, and the integration of various modules. 
+
+\subsection{Node}
+
+The figure \ref{fig:hw-design-node-hat} shows how we soldered the breadboard for the node. Originally, we had planned to use a larger breadboard that would cover all the pins of the nRF52832 DK. Unfortunately, it turned out that this was not possible due to the different pin spacing. In particular, pins P0.19 to P0.27 see figure \ref{fig:nrf52832 pins} have a different spacing than the other pins of the DevKit, which made it impossible to use a standard breadboard directly.
+
+For this reason, we decided to use a slightly smaller breadboard. In order to still provide the necessary functionality, we integrated five cables that can be connected to the corresponding pins of the DevKit via plug pins. This additional wiring provides a flexible connection that ensures the functionality of the node.
+
+The additional pins include the 3V and 5V power supply pins, the ground pin, and the I2C interface pins (SCL and SDA). The 5V power supply is required to operate the DS3231 RTC. To ensure correct voltage matching between the components, the voltage is raised to the required level by a level shifter. This is necessary because some of the components used operate at different voltage levels.
+
+This solution allowed us to create a stable and functional connection between the breadboard and the nRF52832 DK, despite the limitations.
+
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/Node/Lochplatine_Node.png}
+    \caption{Hardware design for Node-Hat}
+    \label{fig:hw-design-node-hat}
+\end{figure}
+
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{Bilder/Node/nRF52832.jpg}
+    \caption{nRF52832 deviating pins}
+    \label{fig:nrf52832 pins}
+\end{figure}
+
+The following figures \ref{fig:comparison-node-views} show the fully soldered board from different perspectives: the top, the bottom, and the position on the nRF52832 DK.
+
+The top and bottom view of the board clearly show the solder joints and connections that connect the individual components. Each connection has been carefully made to ensure stable and reliable operation of the node. Special care was taken to ensure that all pins were soldered correctly and that there were no short circuits.
+
+The next figure \ref{fig:node-hat-with-components-and-nrf} shows the assembled board in its final position on the nRF52832 DK. It clearly shows how the breadboard is connected to the development kit using the additional pins and cable connections. This design ensures a stable connection that is both mechanically and electrically reliable.
+
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}[b]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{Bilder/Node/node_breadboard_top_view.jpg}
+        \caption{Top view}
+        \label{fig:top-view-hat}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{Bilder/Node/node_breadboard_bottom_view.jpg}
+        \caption{Bottom view}
+        \label{fig:bottom-view-hat}
+    \end{subfigure}
+    \caption{Comparison of top and bottom views of the solder job of the Node}
+    \label{fig:comparison-node-views}
+\end{figure}
+
+\begin{figure} [h!]
+    \centering
+    \begin{subfigure}[b]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{Bilder/Node/node_breadboard_with_components.jpg}
+        \caption{Node-Hat with components }
+        \label{fig:node-hat-with-components}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{Bilder/Node/node_hat_with_nrf.jpg}
+        \caption{Node-Hat on nRF52832 DK}
+        \label{fig:node-hat-on-nrf}
+    \end{subfigure}
+    \caption{Soldered Node-Hat with components on top of the nRF52832 DK}
+    \label{fig:node-hat-with-components-and-nrf}
+\end{figure}
+
+\subsection{Gateway}
+
+In the figures \ref{fig:hw-design-gateway-hat}, \ref{fig:hat-on-gateway} and \ref{fig:gateway-hat-bottom-solder-job} we can see the logical hardware design and final hardware result of the gateway.
+The Gateway uses two different voltage levels: 3.3 V and 5 V. We need 3.3 V for the RYLR498; the other modules can operate on 5 V. We generate the 3.3 V using an LM2596 DC-DC converter, which lets us step down a input voltage in the range of 4.5 V to 40 V to a configurable output voltage (in our case 3.3 V). We use a level-shifter to convert between 5 V and 3.3 V in both directions.
+
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{Bilder/gateway/gateway_hat_on_nrf.jpg}
+        \caption{Gateway connected to the nRF52840 with a external power supply}
+        \label{fig:hat-on-gateway}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{Bilder/gateway/gateway_bottom.jpg}
+        \caption{Bottom view of the solder job of the gateway}
+        \label{fig:gateway-hat-bottom-solder-job}
+    \end{subfigure}
+\end{figure}
+
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.75\linewidth]{Bilder/gateway/Verkabelung_Gateway.png}
+    \caption{Hardware design for Gateway-Hat}
+    \label{fig:hw-design-gateway-hat}
+\end{figure}

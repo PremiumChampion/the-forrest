@@ -1,0 +1,52 @@
+\section{Technical concept}
+
+This part presents the technical concept of our project, which involves the design and development of a low-power IoT system. The architecture is based on three components: Nodes, a gateway and a cloud service to store the data using azure functions.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{Bilder/TechnicalConceptPics/TechnicalOverview.drawio.png}
+    \caption{Technical concept overview}
+    \label{fig:enter-label}
+\end{figure}
+\subsection{Gateway}
+
+The gateway acts as an intermediary between the nodes and the cloud service. It aggregates data from multiple nodes and forwards it to the cloud for storage. 
+
+It consists of a microcontroller that manages data between LoRa and NB-IoT modules, a LoRa module to communicate with each node, a SIM7000E module that supports NB-IoT to transfer data to the cloud, and also a battery with charging capabilities. 
+
+The gateway listens for data packets sent by the nodes and forwards them to the cloud via NB-IoT.
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/TechnicalConceptPics/Gateway.drawio.png}
+    \caption{Gateway concept }
+    \label{fig:enter-label}
+\end{figure}
+\subsection{Nodes}
+
+The nodes are responsible for collecting environmental data such as soil moisture in our primary use case.
+
+It consists of a microcontroller that processes sensor data and manages communication, a LoRa module for long-range communication, and a moisture sensor that collects data via an analog input. It also contains a rechargeable battery that can be monitored by a voltage divider to measure the voltage without additional load.
+
+The node periodically wakes from sleep mode to collect sensor data and transmit it to the gateway via LoRa communication. It maintains minimal power consumption to enable long-term operation in remote environments.
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/TechnicalConceptPics/Node.drawio (1).png}
+    \caption{Node concept}
+    \label{fig:enter-label}
+\end{figure}
+
+\section{Project Schedule}
+
+Figure \ref{fig:project-timeline} shows the project's development timeline, highlighting the key milestones and activities from the initial brainstorming phase to the final testing and completion. The project involved the use of various hardware and software components, including microcontroller units (MCU), sensors, Universal Asynchronous Receiver-Transmitter (UART), SIM7000E, LoRa, Real-Time Clock (RTC), battery, and cloud services.
+
+The project started with a brainstorming session on October 14, 2024, followed by selecting "The Forrest" and drafting a technical concept. On October 25, 2024, we drafted a project plan and selected necessary hardware. The project kickoff and environment setup took place on October 30, 2024, and we began implementing various features such as blinking LEDs, analog input, simple UART communication, and getting familiar with AT-Commands.
+
+Throughout November and December 2024, we continued implementing various features, including UART abstraction, HTTP and HTTPS requests, time synchronization, LoRa P2P communication, sensor implementation, power management, and final application implementation. We also built cases, soldered the different hardware modules to a threw hole PCB and conducted power consumption measurements.
+
+The project was completed on January 16, 2025, with the final testing and completion of the project's functionality.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{Bilder/zeitplan_the_forrest.png}
+    \caption{Timeline of our project}
+    \label{fig:project-timeline}
+\end{figure}

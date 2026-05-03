@@ -1,0 +1,36 @@
+\section{Battery Monitoring}
+
+This chapter contains information on the planned built-in battery monitoring and no-load voltage measuring.
+
+\subsection{Introduction}
+
+One of our goal for the project is to make it possible for the nodes and the gateway to be placed in an area for a long period of time without the need for maintenance. So we put a lot of emphasis on being as power efficient as possible to increase the amount of time a gateway or node can be up and running. To ensure that we could determine the battery life of the gateways and nodes, we wanted to implement a battery monitoring system in our project that would be able to transmit the current battery voltage values to the cloud as a raw voltage value.
+
+\subsection{Battery Voltage Levels}
+
+In the project we want to use a 3.7V LiPo battery as the primary power source. However, the voltage of 3.7V does not directly match the operating voltage requirements of our gateway and nodes, so a voltage conversion is required.
+
+The gateway in our system requires a stable 5V supply to operate. To achieve this, a boost converter is used to bring the battery voltage up to 5V.
+
+On the other hand, our nodes only need 3.3V to operate. A step-down converter is used to ensure that the battery voltage is converted to a stable 3.3V.
+
+\subsection{Interfacing with the Microcontroller}
+
+To monitor the system's battery voltage, we have implemented a function to read the raw battery voltage values using the analogue-to-digital converter pin P0.29. However, as the battery voltage is connected directly to the ADC pin of the microcontroller for the nodes, we needed to implement a voltage divider circuit to safely connect the battery to the ADC. This circuit scales the battery voltage level down to a level that the microcontroller can safely measure.
+
+\subsection{No-load measurement}
+
+Because direct measurement of the battery voltage while the system is operating can lead to inaccuracies on the voltage reading, we have integrated a no-load measurement function into the circuit to provide a more accurate reading of the battery voltage level.
+
+To achieve this, we implemented a transistor and a capacitor in the circuit, then by sending a digital output of 5V to the transistor, we could cut off the connection to the microcontroller's battery for a short time and measure the battery level directly without load, while the microcontroller was still powered by the capacitor in the meantime.
+
+\subsection{Difficulties in the implementation}
+
+During the development of the battery monitoring system, we encountered voltage level problems that prevented us from including this feature in the final prototype. 
+
+The use of a step-up and step-down converter prevented us from achieving the stable voltage levels required for the gateways and nodes in combination with other parts used in the circuit at the same time.
+
+Another major problem was the transistor used in the no-load voltage measurement circuit. While the transistor was essential for the no-load measurement, it introduced a significant 2V voltage drop when active.
+
+Using the humidity sensor and battery monitoring circuit in a single design also caused problems, as using two different voltage dividers for sensor and battery monitoring meant that the microcontroller only received 1.7V. This made it inoperable.
+
